@@ -6,13 +6,27 @@
   
   <title>Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta property="og:type" content="website">
+  <meta name="description" content="什么是Canalcanal译意为水道&#x2F;管道&#x2F;沟渠，主要用途是基于 MySQL 数据库增量日志解析，提供增量数据订阅和消费。从这句话理解到了什么？基于MySQL，并且通过MySQL日志进行的增量解析，这也就意味着对原有的业务代码完全是无侵入性的。工作原理：解析MySQL的binlog日志，提供增量数据。 Canal能做什么基于日志增量订阅和消费的业务包括  数据库镜像 数据库实时">
+<meta property="og:type" content="article">
 <meta property="og:title" content="Hexo">
-<meta property="og:url" content="http://example.com/index.html">
+<meta property="og:url" content="http://example.com/2023/02/15/Canal/index.html">
 <meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="什么是Canalcanal译意为水道&#x2F;管道&#x2F;沟渠，主要用途是基于 MySQL 数据库增量日志解析，提供增量数据订阅和消费。从这句话理解到了什么？基于MySQL，并且通过MySQL日志进行的增量解析，这也就意味着对原有的业务代码完全是无侵入性的。工作原理：解析MySQL的binlog日志，提供增量数据。 Canal能做什么基于日志增量订阅和消费的业务包括  数据库镜像 数据库实时">
 <meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2022/png/25873401/1650355686553-164622a0-3c7c-4356-82f8-3778ee9975a6.png#averageHue=%23f3f2f2&clientId=ub5d898f2-92c2-4&from=paste&id=ub5e1132e&originHeight=569&originWidth=1080&originalType=url&ratio=1&rotation=0&showTitle=false&status=done&style=none&taskId=ua4319a32-b052-48db-a60d-bc7965ab4c2&title=">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2022/jpeg/25873401/1650355699488-47931f43-dbf5-4368-94c1-4c0df391ca21.jpeg#averageHue=%23e78379&clientId=ub5d898f2-92c2-4&from=paste&id=u0c2ffed1&originHeight=265&originWidth=640&originalType=url&ratio=1&rotation=0&showTitle=false&status=done&style=none&taskId=u4e2a647e-3eb9-4b25-ac5c-8ed1645131d&title=">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2022/png/25873401/1650356266972-8003453b-8323-4e12-85a7-4af4f9de6e64.png#averageHue=%23fefdfd&clientId=ub5d898f2-92c2-4&from=paste&height=858&id=uc284655e&name=image.png&originHeight=858&originWidth=867&originalType=binary&ratio=1&rotation=0&showTitle=false&size=87200&status=done&style=none&taskId=u56ed93ae-9eb9-4a89-a9d3-10c32925cfe&title=&width=867">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2022/png/25873401/1650356447084-372caebe-0c97-466d-820b-e231d9421234.png#averageHue=%23fefaf9&clientId=ub5d898f2-92c2-4&from=paste&height=326&id=u7de74c62&name=image.png&originHeight=326&originWidth=863&originalType=binary&ratio=1&rotation=0&showTitle=false&size=26771&status=done&style=none&taskId=ub0e23bb0-04b7-4b3c-bc70-ae83c9bc074&title=&width=863">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2022/png/25873401/1650356460373-1b23ca59-a31d-4651-8c65-6457e88c3399.png#averageHue=%23fefdfd&clientId=ub5d898f2-92c2-4&from=paste&id=ubfec025c&originHeight=223&originWidth=985&originalType=url&ratio=1&rotation=0&showTitle=false&status=done&style=none&taskId=u8473ca90-4285-446d-8011-ee8cb593e37&title=">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2022/png/25873401/1650356683237-bd7aa4dd-0249-4367-a4f1-d18fd642b151.png#averageHue=%23f8f7f7&clientId=ue7f6981a-5aa6-4&from=paste&id=u84bc14bb&originHeight=242&originWidth=700&originalType=url&ratio=1&rotation=0&showTitle=false&status=done&style=none&taskId=ub5a2273f-91e8-454f-82f8-f436dcbfb34&title=">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2022/png/25873401/1650356701506-8b6915b7-a13c-4bf4-b2b8-be891699bd1a.png#averageHue=%232e2c2a&clientId=ue7f6981a-5aa6-4&from=paste&id=uc58fbd70&originHeight=315&originWidth=1080&originalType=url&ratio=1&rotation=0&showTitle=false&status=done&style=none&taskId=u899d291e-03ac-4e87-9905-4a09ece2ef3&title=">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2022/png/25873401/1650356727749-58f14d0b-4d67-4390-b426-8c4f12bda6a6.png#averageHue=%23fcfcfc&clientId=ue7f6981a-5aa6-4&from=paste&id=u20a8b6dd&originHeight=164&originWidth=1080&originalType=url&ratio=1&rotation=0&showTitle=false&status=done&style=none&taskId=ucc2b654f-0461-4176-96b2-09bb8aae423&title=">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2022/png/25873401/1650357369053-2135bca0-7417-422d-a9ae-23ced9f4a203.png#averageHue=%233d4143&clientId=ue7f6981a-5aa6-4&from=paste&height=779&id=u1ae9689a&name=image.png&originHeight=779&originWidth=818&originalType=binary&ratio=1&rotation=0&showTitle=false&size=63356&status=done&style=none&taskId=uea85711c-4dbe-4e2d-9f1a-6889877ef0a&title=&width=818">
+<meta property="article:published_time" content="2023-02-15T08:59:30.374Z">
+<meta property="article:modified_time" content="2023-02-15T08:59:51.732Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.nlark.com/yuque/0/2022/png/25873401/1650355686553-164622a0-3c7c-4356-82f8-3778ee9975a6.png#averageHue=%23f3f2f2&clientId=ub5d898f2-92c2-4&from=paste&id=ub5e1132e&originHeight=569&originWidth=1080&originalType=url&ratio=1&rotation=0&showTitle=false&status=done&style=none&taskId=ua4319a32-b052-48db-a60d-bc7965ab4c2&title=">
   
     <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
   
@@ -69,9 +83,7 @@
 </header>
 
       <div class="outer">
-        <section id="main">
-  
-    <article id="post-Canal" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+        <section id="main"><article id="post-Canal" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2023/02/15/Canal/" class="article-date">
   <time class="dt-published" datetime="2023-02-15T08:59:30.374Z" itemprop="datePublished">2023-02-15</time>
@@ -138,11 +150,9 @@
     </footer>
   </div>
   
-</article>
-
-
-
+    
   
+</article>
 
 
 </section>
