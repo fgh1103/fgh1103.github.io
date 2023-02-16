@@ -23,27 +23,27 @@
   <meta name="description" content="一个普通的JAVA开发的博客">
 <meta property="og:type" content="website">
 <meta property="og:title" content="进学阁">
-<meta property="og:url" content="http://example.com/index.html">
+<meta property="og:url" content="http://example.com/archives/2022/06/index.html">
 <meta property="og:site_name" content="进学阁">
 <meta property="og:description" content="一个普通的JAVA开发的博客">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:author" content="139">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://example.com/">
+<link rel="canonical" href="http://example.com/archives/2022/06/">
 
 
 <script id="page-configurations">
   // https://hexo.io/docs/variables.html
   CONFIG.page = {
     sidebar: "",
-    isHome : true,
+    isHome : false,
     isPost : false,
     lang   : 'zh-CN'
   };
 </script>
 
-  <title>进学阁</title>
+  <title>归档 | 进学阁</title>
   
 
 
@@ -185,104 +185,49 @@
         <div class="content-wrap">
           
 
-          <div class="content index posts-expand">
+          <div class="content archive">
             
-      
+
   
   
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/06/11/Canal/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/custom/avatar.jpg">
-      <meta itemprop="name" content="139">
-      <meta itemprop="description" content="一个普通的JAVA开发的博客">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="进学阁">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/06/11/Canal/" class="post-title-link" itemprop="url">Canal</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2022-06-11 10:10:23" itemprop="dateCreated datePublished" datetime="2022-06-11T10:10:23+08:00">2022-06-11</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2023-02-16 12:50:00" itemprop="dateModified" datetime="2023-02-16T12:50:00+08:00">2023-02-16</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%B7%A5%E5%85%B7/" itemprop="url" rel="index"><span itemprop="name">工具</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
+  
+  <div class="post-block">
+    <div class="posts-collapse">
+      <div class="collection-title">
+        <span class="collection-header">嗯..! 目前共计 1 篇日志。 继续努力。</span>
+      </div>
 
       
-          <h2 id="什么是Canal"><a href="#什么是Canal" class="headerlink" title="什么是Canal"></a>什么是Canal</h2><p>canal译意为水道&#x2F;管道&#x2F;沟渠，主要用途是基于 MySQL 数据库增量日志解析，提供增量数据订阅和消费。<br>从这句话理解到了什么？<br>基于MySQL，并且通过MySQL日志进行的增量解析，这也就意味着对原有的业务代码完全是无侵入性的。<br><strong>工作原理</strong>：解析MySQL的binlog日志，提供增量数据。</p>
-<h2 id="Canal能做什么"><a href="#Canal能做什么" class="headerlink" title="Canal能做什么"></a>Canal能做什么</h2><p>基于日志增量订阅和消费的业务包括</p>
-<ul>
-<li>数据库镜像</li>
-<li>数据库实时备份</li>
-<li>索引构建和实时维护(拆分异构索引、倒排索引等)</li>
-<li>业务 cache 刷新</li>
-<li>带业务逻辑的增量数据处理</li>
-</ul>
-<p>当前的 canal 支持源端 MySQL 版本包括 5.1.x , 5.5.x , 5.6.x , 5.7.x , 8.0.x。<br>官方文档：<a target="_blank" rel="noopener" href="https://github.com/alibaba/canal">https://github.com/alibaba/canal</a></p>
-<h2 id="Canal数据如何传输？"><a href="#Canal数据如何传输？" class="headerlink" title="Canal数据如何传输？"></a>Canal数据如何传输？</h2><p>先来一张官方图：<br><img src="https://cdn.nlark.com/yuque/0/2022/png/25873401/1650355686553-164622a0-3c7c-4356-82f8-3778ee9975a6.png#averageHue=%23f3f2f2&clientId=ub5d898f2-92c2-4&from=paste&id=ub5e1132e&originHeight=569&originWidth=1080&originalType=url&ratio=1&rotation=0&showTitle=false&status=done&style=none&taskId=ua4319a32-b052-48db-a60d-bc7965ab4c2&title="><br>Canal分为服务端和客户端，这也是阿里常用的套路：</p>
-<ul>
-<li>服务端：负责解析MySQL的binlog日志，传递增量数据给客户端或者消息中间件</li>
-<li>客户端：负责解析服务端传过来的数据，然后定制自己的业务处理。</li>
-</ul>
-<p>目前为止支持的消息中间件很全面了，比如Kafka、RocketMQ，RabbitMQ。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2022/06/11/Canal/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
+    <div class="collection-year">
+      <span class="collection-header">2022</span>
     </div>
 
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
+  <article itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
 
+      <div class="post-meta">
+        <time itemprop="dateCreated"
+              datetime="2022-06-11T10:10:23+08:00"
+              content="2022-06-11">
+          06-11
+        </time>
+      </div>
+
+      <div class="post-title">
+          <a class="post-title-link" href="/2022/06/11/Canal/" itemprop="url">
+            <span itemprop="name">Canal</span>
+          </a>
+      </div>
+
+    </header>
+  </article>
+
+
+    </div>
+  </div>
+  
+  
+  
 
   
 
