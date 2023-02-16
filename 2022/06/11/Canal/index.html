@@ -20,12 +20,12 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="什么是Canalcanal译意为水道&#x2F;管道&#x2F;沟渠，主要用途是基于 MySQL 数据库增量日志解析，提供增量数据订阅和消费。从这句话理解到了什么？基于MySQL，并且通过MySQL日志进行的增量解析，这也就意味着对原有的业务代码完全是无侵入性的。工作原理：解析MySQL的binlog日志，提供增量数据。 Canal能做什么基于日志增量订阅和消费的业务包括  数据库镜像 数据库实时">
+  <meta name="description" content="什么是Canalcanal译意为水道&#x2F;管道&#x2F;沟渠，主要用途是基于 MySQL 数据库增量日志解析，提供增量数据订阅和消费。从这句话理解到了什么？基于MySQL，并且通过MySQL日志进行的增量解析，这也就意味着对原有的业务代码完全是无侵入性的。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Canal">
 <meta property="og:url" content="http://example.com/2022/06/11/Canal/index.html">
 <meta property="og:site_name" content="进学阁">
-<meta property="og:description" content="什么是Canalcanal译意为水道&#x2F;管道&#x2F;沟渠，主要用途是基于 MySQL 数据库增量日志解析，提供增量数据订阅和消费。从这句话理解到了什么？基于MySQL，并且通过MySQL日志进行的增量解析，这也就意味着对原有的业务代码完全是无侵入性的。工作原理：解析MySQL的binlog日志，提供增量数据。 Canal能做什么基于日志增量订阅和消费的业务包括  数据库镜像 数据库实时">
+<meta property="og:description" content="什么是Canalcanal译意为水道&#x2F;管道&#x2F;沟渠，主要用途是基于 MySQL 数据库增量日志解析，提供增量数据订阅和消费。从这句话理解到了什么？基于MySQL，并且通过MySQL日志进行的增量解析，这也就意味着对原有的业务代码完全是无侵入性的。">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://cdn.nlark.com/yuque/0/2022/png/25873401/1650355686553-164622a0-3c7c-4356-82f8-3778ee9975a6.png#averageHue=%23f3f2f2&clientId=ub5d898f2-92c2-4&from=paste&id=ub5e1132e&originHeight=569&originWidth=1080&originalType=url&ratio=1&rotation=0&showTitle=false&status=done&style=none&taskId=ua4319a32-b052-48db-a60d-bc7965ab4c2&title=">
 <meta property="og:image" content="https://cdn.nlark.com/yuque/0/2022/jpeg/25873401/1650355699488-47931f43-dbf5-4368-94c1-4c0df391ca21.jpeg#averageHue=%23e78379&clientId=ub5d898f2-92c2-4&from=paste&id=u0c2ffed1&originHeight=265&originWidth=640&originalType=url&ratio=1&rotation=0&showTitle=false&status=done&style=none&taskId=u4e2a647e-3eb9-4b25-ac5c-8ed1645131d&title=">
@@ -37,7 +37,7 @@
 <meta property="og:image" content="https://cdn.nlark.com/yuque/0/2022/png/25873401/1650356727749-58f14d0b-4d67-4390-b426-8c4f12bda6a6.png#averageHue=%23fcfcfc&clientId=ue7f6981a-5aa6-4&from=paste&id=u20a8b6dd&originHeight=164&originWidth=1080&originalType=url&ratio=1&rotation=0&showTitle=false&status=done&style=none&taskId=ucc2b654f-0461-4176-96b2-09bb8aae423&title=">
 <meta property="og:image" content="https://cdn.nlark.com/yuque/0/2022/png/25873401/1650357369053-2135bca0-7417-422d-a9ae-23ced9f4a203.png#averageHue=%233d4143&clientId=ue7f6981a-5aa6-4&from=paste&height=779&id=u1ae9689a&name=image.png&originHeight=779&originWidth=818&originalType=binary&ratio=1&rotation=0&showTitle=false&size=63356&status=done&style=none&taskId=uea85711c-4dbe-4e2d-9f1a-6889877ef0a&title=&width=818">
 <meta property="article:published_time" content="2022-06-11T02:10:23.000Z">
-<meta property="article:modified_time" content="2023-02-16T04:50:00.358Z">
+<meta property="article:modified_time" content="2023-02-16T04:56:41.006Z">
 <meta property="article:author" content="139">
 <meta property="article:tag" content="mysql">
 <meta property="article:tag" content="springboot">
@@ -238,7 +238,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2023-02-16 12:50:00" itemprop="dateModified" datetime="2023-02-16T12:50:00+08:00">2023-02-16</time>
+                <time title="修改时间：2023-02-16 12:56:41" itemprop="dateModified" datetime="2023-02-16T12:56:41+08:00">2023-02-16</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -268,7 +268,9 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h2 id="什么是Canal"><a href="#什么是Canal" class="headerlink" title="什么是Canal"></a>什么是Canal</h2><p>canal译意为水道&#x2F;管道&#x2F;沟渠，主要用途是基于 MySQL 数据库增量日志解析，提供增量数据订阅和消费。<br>从这句话理解到了什么？<br>基于MySQL，并且通过MySQL日志进行的增量解析，这也就意味着对原有的业务代码完全是无侵入性的。<br><strong>工作原理</strong>：解析MySQL的binlog日志，提供增量数据。</p>
+        <h2 id="什么是Canal"><a href="#什么是Canal" class="headerlink" title="什么是Canal"></a>什么是Canal</h2><p>canal译意为水道&#x2F;管道&#x2F;沟渠，主要用途是基于 MySQL 数据库增量日志解析，提供增量数据订阅和消费。<br>从这句话理解到了什么？<br>基于MySQL，并且通过MySQL日志进行的增量解析，这也就意味着对原有的业务代码完全是无侵入性的。</p>
+<span id="more"></span>
+<p><strong>工作原理</strong>：解析MySQL的binlog日志，提供增量数据。</p>
 <h2 id="Canal能做什么"><a href="#Canal能做什么" class="headerlink" title="Canal能做什么"></a>Canal能做什么</h2><p>基于日志增量订阅和消费的业务包括</p>
 <ul>
 <li>数据库镜像</li>

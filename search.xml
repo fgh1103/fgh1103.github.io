@@ -3,7 +3,9 @@
   <entry>
     <title>Canal</title>
     <url>/2022/06/11/Canal/</url>
-    <content><![CDATA[<h2 id="什么是Canal"><a href="#什么是Canal" class="headerlink" title="什么是Canal"></a>什么是Canal</h2><p>canal译意为水道&#x2F;管道&#x2F;沟渠，主要用途是基于 MySQL 数据库增量日志解析，提供增量数据订阅和消费。<br>从这句话理解到了什么？<br>基于MySQL，并且通过MySQL日志进行的增量解析，这也就意味着对原有的业务代码完全是无侵入性的。<br><strong>工作原理</strong>：解析MySQL的binlog日志，提供增量数据。</p>
+    <content><![CDATA[<h2 id="什么是Canal"><a href="#什么是Canal" class="headerlink" title="什么是Canal"></a>什么是Canal</h2><p>canal译意为水道&#x2F;管道&#x2F;沟渠，主要用途是基于 MySQL 数据库增量日志解析，提供增量数据订阅和消费。<br>从这句话理解到了什么？<br>基于MySQL，并且通过MySQL日志进行的增量解析，这也就意味着对原有的业务代码完全是无侵入性的。</p>
+<span id="more"></span>
+<p><strong>工作原理</strong>：解析MySQL的binlog日志，提供增量数据。</p>
 <h2 id="Canal能做什么"><a href="#Canal能做什么" class="headerlink" title="Canal能做什么"></a>Canal能做什么</h2><p>基于日志增量订阅和消费的业务包括</p>
 <ul>
 <li>数据库镜像</li>
