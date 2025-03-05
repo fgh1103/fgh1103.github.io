@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="概念新版本中的springcloud已经将springcloudoauth2包取消掉，oauth2新增了一个spring-authorization-server的项目，在spring-authorization-server下现在已经有3个可用版本，其中0.3.0对应的是jdk11版本， 0.4.0对应的是jdk8版本，1.0版本对应的是jdk17。以下的实例是以jdk11为例 建立授权服务创建">
+<meta property="og:type" content="article">
+<meta property="og:title" content="集成Oauth2.1认证中心">
+<meta property="og:url" content="http://example.com/2024/03/11/%E9%9B%86%E6%88%90Oauth2.1%E8%AE%A4%E8%AF%81%E4%B8%AD%E5%BF%83/index.html">
+<meta property="og:site_name" content="进学阁">
+<meta property="og:description" content="概念新版本中的springcloud已经将springcloudoauth2包取消掉，oauth2新增了一个spring-authorization-server的项目，在spring-authorization-server下现在已经有3个可用版本，其中0.3.0对应的是jdk11版本， 0.4.0对应的是jdk8版本，1.0版本对应的是jdk17。以下的实例是以jdk11为例 建立授权服务创建">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2023/png/25873401/1678243822906-ab077efe-c963-4e24-a89d-e5fc2beb53e8.png">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2023/png/25873401/1678243858497-5b68bed5-2d79-48fb-9209-c2e3639c258b.png">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2023/png/25873401/1678244026029-0c3c4817-9483-481e-9899-69e8fb636d3b.png">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2023/png/25873401/1678244264220-25530875-31db-4c3d-bd62-a4b910934a98.png">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2023/png/25873401/1678244286055-479c09a7-92be-4354-9e80-831a3295a893.png">
+<meta property="article:published_time" content="2024-03-11T12:10:23.000Z">
+<meta property="article:modified_time" content="2025-03-05T08:41:46.267Z">
+<meta property="article:author" content="139">
+<meta property="article:tag" content="oauth2,SpringCloud,SpringSecurity">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.nlark.com/yuque/0/2023/png/25873401/1678243822906-ab077efe-c963-4e24-a89d-e5fc2beb53e8.png">
+
+<link rel="canonical" href="http://example.com/2024/03/11/%E9%9B%86%E6%88%90Oauth2.1%E8%AE%A4%E8%AF%81%E4%B8%AD%E5%BF%83/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>集成Oauth2.1认证中心 | 进学阁</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">进学阁</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">业精于勤荒于嬉，行成于思毁于随</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">5</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">2</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">7</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/03/11/%E9%9B%86%E6%88%90Oauth2.1%E8%AE%A4%E8%AF%81%E4%B8%AD%E5%BF%83/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          集成Oauth2.1认证中心
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-03-11 20:10:23" itemprop="dateCreated datePublished" datetime="2024-03-11T20:10:23+08:00">2024-03-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-05 16:41:46" itemprop="dateModified" datetime="2025-03-05T16:41:46+08:00">2025-03-05</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%8E%88%E6%9D%83/" itemprop="url" rel="index"><span itemprop="name">授权</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h2><p>新版本中的springcloud已经将springcloudoauth2包取消掉，oauth2新增了一个spring-authorization-server的项目，在spring-authorization-server下现在已经有3个可用版本，其中0.3.0对应的是jdk11版本， 0.4.0对应的是jdk8版本，1.0版本对应的是jdk17。以下的实例是以jdk11为例</p>
+<h2 id="建立授权服务"><a href="#建立授权服务" class="headerlink" title="建立授权服务"></a>建立授权服务</h2><p>创建服务的过程这里不做赘述，项目需要的pom文件如下</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">&lt;!--jdbc--&gt;</span><br><span class="line">      &lt;dependency&gt;</span><br><span class="line">          &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;</span><br><span class="line">          &lt;artifactId&gt;spring-boot-starter-jdbc&lt;/artifactId&gt;</span><br><span class="line">      &lt;/dependency&gt;</span><br><span class="line">      &lt;dependency&gt;</span><br><span class="line">          &lt;groupId&gt;mysql&lt;/groupId&gt;</span><br><span class="line">          &lt;artifactId&gt;mysql-connector-java&lt;/artifactId&gt;</span><br><span class="line">      &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"> &lt;!--auth --&gt;</span><br><span class="line">      &lt;dependency&gt;</span><br><span class="line">          &lt;groupId&gt;org.springframework.security&lt;/groupId&gt;</span><br><span class="line">          &lt;artifactId&gt;spring-security-oauth2-authorization-server&lt;/artifactId&gt;</span><br><span class="line">      &lt;/dependency&gt;</span><br></pre></td></tr></table></figure>
+
+<h2 id="创建数据表"><a href="#创建数据表" class="headerlink" title="创建数据表"></a>创建数据表</h2><p><font style="color:rgb(18, 18, 18);background-color:rgb(246, 246, 246);">Spring authorization Server</font><font style="color:rgb(18, 18, 18);">的建表文件在：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">org/springframework/security/oauth2/server/authorization/oauth2-authorization-consent-schema.sql</span><br><span class="line"></span><br><span class="line">org/springframework/security/oauth2/server/authorization/oauth2-authorization-schema.sql</span><br><span class="line"></span><br><span class="line">org/springframework/security/oauth2/server/authorization/client/oauth2-registered-client-schema.sql</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(18, 18, 18);background-color:rgb(246, 246, 246);">Spring Security</font><font style="color:rgb(18, 18, 18);">的建表语句在</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">org/springframework/security/core/userdetails/jdbc/users.ddl</span><br></pre></td></tr></table></figure>
+
+<p>总共5张表，这里放出0.3.0版本的sql其他版本需要自己找一下</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE oauth2_authorization_consent (</span><br><span class="line">    registered_client_id varchar(100) NOT NULL,</span><br><span class="line">    principal_name varchar(200) NOT NULL,</span><br><span class="line">    authorities varchar(1000) NOT NULL,</span><br><span class="line">    PRIMARY KEY (registered_client_id, principal_name)</span><br><span class="line">);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">/*</span><br><span class="line">IMPORTANT:</span><br><span class="line">    If using PostgreSQL, update ALL columns defined with &#x27;blob&#x27; to &#x27;text&#x27;,</span><br><span class="line">    as PostgreSQL does not support the &#x27;blob&#x27; data type.</span><br><span class="line">*/</span><br><span class="line">CREATE TABLE oauth2_authorization (</span><br><span class="line">    id varchar(100) NOT NULL,</span><br><span class="line">    registered_client_id varchar(100) NOT NULL,</span><br><span class="line">    principal_name varchar(200) NOT NULL,</span><br><span class="line">    authorization_grant_type varchar(100) NOT NULL,</span><br><span class="line">    attributes blob DEFAULT NULL,</span><br><span class="line">    state varchar(500) DEFAULT NULL,</span><br><span class="line">    authorization_code_value blob DEFAULT NULL,</span><br><span class="line">    authorization_code_issued_at timestamp DEFAULT NULL,</span><br><span class="line">    authorization_code_expires_at timestamp DEFAULT NULL,</span><br><span class="line">    authorization_code_metadata blob DEFAULT NULL,</span><br><span class="line">    access_token_value blob DEFAULT NULL,</span><br><span class="line">    access_token_issued_at timestamp DEFAULT NULL,</span><br><span class="line">    access_token_expires_at timestamp DEFAULT NULL,</span><br><span class="line">    access_token_metadata blob DEFAULT NULL,</span><br><span class="line">    access_token_type varchar(100) DEFAULT NULL,</span><br><span class="line">    access_token_scopes varchar(1000) DEFAULT NULL,</span><br><span class="line">    oidc_id_token_value blob DEFAULT NULL,</span><br><span class="line">    oidc_id_token_issued_at timestamp DEFAULT NULL,</span><br><span class="line">    oidc_id_token_expires_at timestamp DEFAULT NULL,</span><br><span class="line">    oidc_id_token_metadata blob DEFAULT NULL,</span><br><span class="line">    refresh_token_value blob DEFAULT NULL,</span><br><span class="line">    refresh_token_issued_at timestamp DEFAULT NULL,</span><br><span class="line">    refresh_token_expires_at timestamp DEFAULT NULL,</span><br><span class="line">    refresh_token_metadata blob DEFAULT NULL,</span><br><span class="line">    PRIMARY KEY (id)</span><br><span class="line">);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">CREATE TABLE oauth2_registered_client (</span><br><span class="line">    id varchar(100) NOT NULL,</span><br><span class="line">    client_id varchar(100) NOT NULL,</span><br><span class="line">    client_id_issued_at timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,</span><br><span class="line">    client_secret varchar(200) DEFAULT NULL,</span><br><span class="line">    client_secret_expires_at timestamp DEFAULT NULL,</span><br><span class="line">    client_name varchar(200) NOT NULL,</span><br><span class="line">    client_authentication_methods varchar(1000) NOT NULL,</span><br><span class="line">    authorization_grant_types varchar(1000) NOT NULL,</span><br><span class="line">    redirect_uris varchar(1000) DEFAULT NULL,</span><br><span class="line">    scopes varchar(1000) NOT NULL,</span><br><span class="line">    client_settings varchar(2000) NOT NULL,</span><br><span class="line">    token_settings varchar(2000) NOT NULL,</span><br><span class="line">    PRIMARY KEY (id)</span><br><span class="line">);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">create table users</span><br><span class="line">(</span><br><span class="line">    username varchar(50)  not null</span><br><span class="line">        primary key,</span><br><span class="line">    password varchar(500) not null,</span><br><span class="line">    enabled  tinyint(1)   not null</span><br><span class="line">);</span><br><span class="line"></span><br><span class="line">create table authorities</span><br><span class="line">(</span><br><span class="line">    username  varchar(50) not null,</span><br><span class="line">    authority varchar(50) not null,</span><br><span class="line">    constraint ix_auth_username</span><br><span class="line">        unique (username, authority),</span><br><span class="line">    constraint fk_authorities_users</span><br><span class="line">        foreign key (username) references users (username)</span><br><span class="line">);</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="修改配置文件"><a href="#修改配置文件" class="headerlink" title="修改配置文件"></a>修改配置文件</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"># Tomcat</span><br><span class="line">server:</span><br><span class="line">  port: 1067</span><br><span class="line">spring:</span><br><span class="line">  main:</span><br><span class="line">    allow-bean-definition-overriding: true</span><br><span class="line">  datasource:</span><br><span class="line">    driver-class-name: com.mysql.cj.jdbc.Driver</span><br><span class="line">    url: jdbc:mysql://127.0.0.1:3306/oauth2?useUnicode=true&amp;characterEncoding=utf8&amp;zeroDateTimeBehavior=convertToNull&amp;useSSL=true&amp;serverTimezone=GMT%2B8</span><br><span class="line">    username: root</span><br><span class="line">    password: root</span><br></pre></td></tr></table></figure>
+
+<h2 id="自定义授权服务器"><a href="#自定义授权服务器" class="headerlink" title="自定义授权服务器"></a>自定义授权服务器</h2><p>在springsecurity5.6以后配置文件为新建Configuration，然后覆盖Bean的形式进行配置，所以这里我们创建配置文件</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br></pre></td><td class="code"><pre><span class="line">@Configuration(proxyBeanMethods = false)</span><br><span class="line">@EnableWebSecurity</span><br><span class="line">public class AuthorizationServerConfig &#123;</span><br><span class="line">    @Autowired()</span><br><span class="line">    JdbcTemplate jdbcTemplate;</span><br><span class="line">    @Autowired()</span><br><span class="line">    DataSource dataSource;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 这是个Spring security 的过滤器链，默认会配置</span><br><span class="line">     * &lt;p&gt;</span><br><span class="line">     * OAuth2 Authorization endpoint</span><br><span class="line">     * &lt;p&gt;</span><br><span class="line">     * OAuth2 Token endpoint</span><br><span class="line">     * &lt;p&gt;</span><br><span class="line">     * OAuth2 Token Introspection endpoint</span><br><span class="line">     * &lt;p&gt;</span><br><span class="line">     * OAuth2 Token Revocation endpoint</span><br><span class="line">     * &lt;p&gt;</span><br><span class="line">     * OAuth2 Authorization Server Metadata endpoint</span><br><span class="line">     * &lt;p&gt;</span><br><span class="line">     * JWK Set endpoint</span><br><span class="line">     * &lt;p&gt;</span><br><span class="line">     * OpenID Connect 1.0 Provider Configuration endpoint</span><br><span class="line">     * &lt;p&gt;</span><br><span class="line">     * OpenID Connect 1.0 UserInfo endpoint</span><br><span class="line">     * 这些协议端点，只有配置了他才能够访问的到接口地址（类似mvc的controller）。</span><br><span class="line">     *</span><br><span class="line">     * @param http</span><br><span class="line">     * @return</span><br><span class="line">     * @throws Exception</span><br><span class="line">     */</span><br><span class="line">    @Bean</span><br><span class="line">    @Order(1)</span><br><span class="line">    public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http)</span><br><span class="line">            throws Exception &#123;</span><br><span class="line">        OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);</span><br><span class="line">        http</span><br><span class="line">                // Redirect to the login page when not authenticated from the</span><br><span class="line">                // authorization endpoint</span><br><span class="line">                .exceptionHandling((exceptions) -&gt; exceptions</span><br><span class="line">                        .authenticationEntryPoint(</span><br><span class="line">                                new LoginUrlAuthenticationEntryPoint(&quot;/login&quot;))</span><br><span class="line">                );</span><br><span class="line"></span><br><span class="line">        return http.build();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 这个也是个Spring Security的过滤器链，用于Spring Security的身份认证。</span><br><span class="line">     * @param http</span><br><span class="line">     * @return</span><br><span class="line">     * @throws Exception</span><br><span class="line">     */</span><br><span class="line">    @Bean</span><br><span class="line">    @Order(2)</span><br><span class="line">    public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http)</span><br><span class="line">            throws Exception &#123;</span><br><span class="line">        http</span><br><span class="line">                .authorizeHttpRequests((authorize) -&gt; authorize</span><br><span class="line">                        .anyRequest().authenticated()</span><br><span class="line">                )</span><br><span class="line">                // Form login handles the redirect to the login page from the</span><br><span class="line">                // authorization server filter chain</span><br><span class="line">                .formLogin(Customizer.withDefaults());</span><br><span class="line"></span><br><span class="line">        return http.build();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 配置用户信息，或者配置用户数据来源，主要用于用户的检索。</span><br><span class="line">     * @return</span><br><span class="line">     */</span><br><span class="line">    @Bean</span><br><span class="line">    public UserDetailsService userDetailsService() &#123;</span><br><span class="line">//        UserDetails userDetails = User.withDefaultPasswordEncoder()</span><br><span class="line">//                .username(&quot;user&quot;)</span><br><span class="line">//                .password(&quot;password&quot;)</span><br><span class="line">//                .roles(&quot;USER&quot;)</span><br><span class="line">//                .build();</span><br><span class="line">//       return new InMemoryUserDetailsManager();</span><br><span class="line"></span><br><span class="line">        return new JdbcUserDetailsManager(dataSource);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * oauth2 用于第三方认证，RegisteredClientRepository 主要用于管理第三方（每个第三方就是一个客户端）</span><br><span class="line">     * @return</span><br><span class="line">     */</span><br><span class="line">    @Bean</span><br><span class="line">    public RegisteredClientRepository registeredClientRepository() &#123;</span><br><span class="line">//        RegisteredClient registeredClient = RegisteredClient.withId(UUID.randomUUID().toString())</span><br><span class="line">//                .clientId(&quot;messaging-client&quot;)</span><br><span class="line">//                .clientSecret(&quot;&#123;noop&#125;secret&quot;)</span><br><span class="line">//                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)</span><br><span class="line">//                .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)</span><br><span class="line">//                .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)</span><br><span class="line">//                .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)</span><br><span class="line">//                .redirectUri(&quot;http://127.0.0.1:1067/login/oauth2/code/messaging-client-oidc&quot;)</span><br><span class="line">//                .redirectUri(&quot;http://127.0.0.1:1067/authorized&quot;)</span><br><span class="line">//                .scope(OidcScopes.OPENID)</span><br><span class="line">//                .scope(&quot;message.read&quot;)</span><br><span class="line">//                .scope(&quot;message.write&quot;)</span><br><span class="line">//                .clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build())</span><br><span class="line">//                .build();</span><br><span class="line">//</span><br><span class="line">//        return new InMemoryRegisteredClientRepository(registeredClient);</span><br><span class="line">        return new JdbcRegisteredClientRepository(jdbcTemplate);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 用于给access_token签名使用。</span><br><span class="line">     * @return</span><br><span class="line">     */</span><br><span class="line">    @Bean</span><br><span class="line">    public JWKSource&lt;SecurityContext&gt; jwkSource() &#123;</span><br><span class="line">        KeyPair keyPair = generateRsaKey();</span><br><span class="line">        RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();</span><br><span class="line">        RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();</span><br><span class="line">        RSAKey rsaKey = new RSAKey.Builder(publicKey)</span><br><span class="line">                .privateKey(privateKey)</span><br><span class="line">                .keyID(UUID.randomUUID().toString())</span><br><span class="line">                .build();</span><br><span class="line">        JWKSet jwkSet = new JWKSet(rsaKey);</span><br><span class="line">        return new ImmutableJWKSet&lt;&gt;(jwkSet);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 生成秘钥对，为jwkSource提供服务。</span><br><span class="line">     * @return</span><br><span class="line">     */</span><br><span class="line">    private static KeyPair generateRsaKey() &#123;</span><br><span class="line">        KeyPair keyPair;</span><br><span class="line">        try &#123;</span><br><span class="line">            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(&quot;RSA&quot;);</span><br><span class="line">            keyPairGenerator.initialize(2048);</span><br><span class="line">            keyPair = keyPairGenerator.generateKeyPair();</span><br><span class="line">        &#125; catch (Exception ex) &#123;</span><br><span class="line">            throw new IllegalStateException(ex);</span><br><span class="line">        &#125;</span><br><span class="line">        return keyPair;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Bean</span><br><span class="line">    public OAuth2AuthorizationService authorizationService() &#123;</span><br><span class="line">        return new JdbcOAuth2AuthorizationService(jdbcTemplate, registeredClientRepository());</span><br><span class="line">    &#125;</span><br><span class="line">    @Bean</span><br><span class="line">    public OAuth2AuthorizationConsentService authorizationConsentService() &#123;</span><br><span class="line">        return new JdbcOAuth2AuthorizationConsentService(jdbcTemplate, registeredClientRepository());</span><br><span class="line">    &#125;</span><br><span class="line">    /**</span><br><span class="line">     * 配置Authorization Server实例</span><br><span class="line">     * @return</span><br><span class="line">     */</span><br><span class="line">    @Bean</span><br><span class="line">    public ProviderSettings providerSettings() &#123;</span><br><span class="line">        return ProviderSettings.builder().build();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>在spring-authorization-server中实现了jdbc模式的可以直接链接数据库进行操作</p>
+<h2 id="添加用户"><a href="#添加用户" class="headerlink" title="添加用户"></a>添加用户</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">    @Autowired</span><br><span class="line">    private UserDetailsManager userDetailsManager;</span><br><span class="line">  @Test</span><br><span class="line">void testSaveUser() &#123;</span><br><span class="line">        UserDetails userDetails = User.builder().passwordEncoder(s -&gt; &quot;&#123;bcrypt&#125;&quot; + new BCryptPasswordEncoder().encode(s))</span><br><span class="line">                .username(&quot;user&quot;)</span><br><span class="line">                .password(&quot;password&quot;)</span><br><span class="line">                .roles(&quot;ADMIN&quot;)</span><br><span class="line">                .build();</span><br><span class="line">        userDetailsManager.createUser(userDetails);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>使用 UserDetailsManager 创建用户</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">    @Autowired</span><br><span class="line">    private RegisteredClientRepository registeredClientRepository;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">@Test</span><br><span class="line">    void testSaveClient() &#123;</span><br><span class="line">        RegisteredClient registeredClient = RegisteredClient.withId(UUID.randomUUID().toString())</span><br><span class="line">                .clientId(&quot;messaging-client&quot;)</span><br><span class="line">                .clientSecret(&quot;&#123;bcrypt&#125;&quot; + new BCryptPasswordEncoder().encode(&quot;secret&quot;))</span><br><span class="line">                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)</span><br><span class="line">                .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)</span><br><span class="line">                .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)</span><br><span class="line">                .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)</span><br><span class="line">                .redirectUri(&quot;http://127.0.0.1:1069/login/oauth2/code/messaging-client-oidc&quot;)</span><br><span class="line">                .redirectUri(&quot;http://127.0.0.1:1069/authorized&quot;)</span><br><span class="line">                .scope(OidcScopes.OPENID).scope(&quot;message.read&quot;)</span><br><span class="line">                .scope(&quot;message.write&quot;)</span><br><span class="line">                .clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build())</span><br><span class="line">                .build();</span><br><span class="line">        registeredClientRepository.save(registeredClient);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>以registeredClientRepository创建客户端</p>
+<h2 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h2><p>打开：<a target="_blank" rel="noopener" href="http://127.0.0.1:1067/oauth2/authorize?response_type=code&client_id=messaging-client&scope=message.read&redirect_uri=http://127.0.0.1:1067/authorized">http://127.0.0.1:1067/oauth2/authorize?response_type&#x3D;code&amp;client_id&#x3D;messaging-client&amp;scope&#x3D;message.read&amp;redirect_uri&#x3D;http://127.0.0.1:1067/authorized</a></p>
+<p><img src="https://cdn.nlark.com/yuque/0/2023/png/25873401/1678243822906-ab077efe-c963-4e24-a89d-e5fc2beb53e8.png"></p>
+<p>输入前面的添加的账号密码</p>
+<p><img src="https://cdn.nlark.com/yuque/0/2023/png/25873401/1678243858497-5b68bed5-2d79-48fb-9209-c2e3639c258b.png"></p>
+<p>报错了，不过没关系。因为在oath2中第一步是拿到code 拿到code之后才能换取token</p>
+<p>我们只要拿到地址栏后面的code信息就好。复制出code信息，打开postman进行post请求</p>
+<p><img src="https://cdn.nlark.com/yuque/0/2023/png/25873401/1678244026029-0c3c4817-9483-481e-9899-69e8fb636d3b.png"></p>
+<p><img src="https://cdn.nlark.com/yuque/0/2023/png/25873401/1678244264220-25530875-31db-4c3d-bd62-a4b910934a98.png"></p>
+<p>点击访问</p>
+<p><img src="https://cdn.nlark.com/yuque/0/2023/png/25873401/1678244286055-479c09a7-92be-4354-9e80-831a3295a893.png"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/oauth2-SpringCloud-SpringSecurity/" rel="tag"><i class="fa fa-tag"></i> oauth2,SpringCloud,SpringSecurity</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/06/11/Canal/" rel="prev" title="Canal">
+      <i class="fa fa-chevron-left"></i> Canal
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2024/03/11/%E8%87%AA%E5%AE%9A%E4%B9%89%E7%94%A8%E6%88%B7%E4%BF%A1%E6%81%AF/" rel="next" title="自定义用户信息">
+      自定义用户信息 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E5%BF%B5"><span class="nav-number">1.</span> <span class="nav-text">概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BB%BA%E7%AB%8B%E6%8E%88%E6%9D%83%E6%9C%8D%E5%8A%A1"><span class="nav-number">2.</span> <span class="nav-text">建立授权服务</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E6%95%B0%E6%8D%AE%E8%A1%A8"><span class="nav-number">3.</span> <span class="nav-text">创建数据表</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BF%AE%E6%94%B9%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6"><span class="nav-number">4.</span> <span class="nav-text">修改配置文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89%E6%8E%88%E6%9D%83%E6%9C%8D%E5%8A%A1%E5%99%A8"><span class="nav-number">5.</span> <span class="nav-text">自定义授权服务器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B7%BB%E5%8A%A0%E7%94%A8%E6%88%B7"><span class="nav-number">6.</span> <span class="nav-text">添加用户</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B5%8B%E8%AF%95"><span class="nav-number">7.</span> <span class="nav-text">测试</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="139"
+      src="/images/custom/avatar.jpg">
+  <p class="site-author-name" itemprop="name">139</p>
+  <div class="site-description" itemprop="description">一个普通的JAVA开发的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+  <div class="beian"><a href="https://beian.miit.gov.cn/" rel="noopener" target="_blank">浙ICP备2023004484号-1 </a>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">139</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

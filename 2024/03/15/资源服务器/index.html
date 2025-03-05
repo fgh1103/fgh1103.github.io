@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="简介：在oauth2中授权服务器颁发过令牌后，用户就可以对资源进行访问，这时会有一个问题就是需要验证令牌，而前边文章中令牌使用的jwt格式，所以需要一个统一的资源管理器来验证令牌解析令牌 源码分析:12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455">
+<meta property="og:type" content="article">
+<meta property="og:title" content="资源服务器鉴权处理">
+<meta property="og:url" content="http://example.com/2024/03/15/%E8%B5%84%E6%BA%90%E6%9C%8D%E5%8A%A1%E5%99%A8/index.html">
+<meta property="og:site_name" content="进学阁">
+<meta property="og:description" content="简介：在oauth2中授权服务器颁发过令牌后，用户就可以对资源进行访问，这时会有一个问题就是需要验证令牌，而前边文章中令牌使用的jwt格式，所以需要一个统一的资源管理器来验证令牌解析令牌 源码分析:12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679304403339-c483e02f-5dc0-44ee-ab67-dd137794d4f8.png">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679304459217-12582e36-cc83-4a25-80db-d973ec10e1c7.png">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679304562201-a7dc64ca-0218-438a-9a16-003074b4e014.png">
+<meta property="article:published_time" content="2024-03-15T11:53:16.000Z">
+<meta property="article:modified_time" content="2025-03-05T08:44:53.400Z">
+<meta property="article:author" content="139">
+<meta property="article:tag" content="oauth2,SpringCloud,SpringSecurity">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679304403339-c483e02f-5dc0-44ee-ab67-dd137794d4f8.png">
+
+<link rel="canonical" href="http://example.com/2024/03/15/%E8%B5%84%E6%BA%90%E6%9C%8D%E5%8A%A1%E5%99%A8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>资源服务器鉴权处理 | 进学阁</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">进学阁</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">业精于勤荒于嬉，行成于思毁于随</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">5</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">2</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">7</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/03/15/%E8%B5%84%E6%BA%90%E6%9C%8D%E5%8A%A1%E5%99%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          资源服务器鉴权处理
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-03-15 19:53:16" itemprop="dateCreated datePublished" datetime="2024-03-15T19:53:16+08:00">2024-03-15</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-05 16:44:53" itemprop="dateModified" datetime="2025-03-05T16:44:53+08:00">2025-03-05</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%8E%88%E6%9D%83/" itemprop="url" rel="index"><span itemprop="name">授权</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="简介："><a href="#简介：" class="headerlink" title="简介："></a>简介：</h2><p>在oauth2中授权服务器颁发过令牌后，用户就可以对资源进行访问，这时会有一个问题就是需要验证令牌，而前边文章中令牌使用的jwt格式，所以需要一个统一的资源管理器来验证令牌解析令牌</p>
+<h2 id="源码分析"><a href="#源码分析" class="headerlink" title="源码分析:"></a>源码分析:</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br></pre></td><td class="code"><pre><span class="line">public final class BearerTokenAuthenticationFilter extends OncePerRequestFilter &#123;</span><br><span class="line"></span><br><span class="line">	private final AuthenticationManagerResolver&lt;HttpServletRequest&gt; authenticationManagerResolver;</span><br><span class="line"></span><br><span class="line">	private AuthenticationEntryPoint authenticationEntryPoint = new BearerTokenAuthenticationEntryPoint();</span><br><span class="line"></span><br><span class="line">	private AuthenticationFailureHandler authenticationFailureHandler = (request, response, exception) -&gt; &#123;</span><br><span class="line">		if (exception instanceof AuthenticationServiceException) &#123;</span><br><span class="line">			throw exception;</span><br><span class="line">		&#125;</span><br><span class="line">		this.authenticationEntryPoint.commence(request, response, exception);</span><br><span class="line">	&#125;;</span><br><span class="line"></span><br><span class="line">	private BearerTokenResolver bearerTokenResolver = new DefaultBearerTokenResolver();</span><br><span class="line"></span><br><span class="line">	private AuthenticationDetailsSource&lt;HttpServletRequest, ?&gt; authenticationDetailsSource = new WebAuthenticationDetailsSource();</span><br><span class="line"></span><br><span class="line">	/**</span><br><span class="line">	 * Construct a &#123;@code BearerTokenAuthenticationFilter&#125; using the provided parameter(s)</span><br><span class="line">	 * @param authenticationManagerResolver</span><br><span class="line">	 */</span><br><span class="line">	public BearerTokenAuthenticationFilter(</span><br><span class="line">			AuthenticationManagerResolver&lt;HttpServletRequest&gt; authenticationManagerResolver) &#123;</span><br><span class="line">		Assert.notNull(authenticationManagerResolver, &quot;authenticationManagerResolver cannot be null&quot;);</span><br><span class="line">		this.authenticationManagerResolver = authenticationManagerResolver;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	/**</span><br><span class="line">	 * Construct a &#123;@code BearerTokenAuthenticationFilter&#125; using the provided parameter(s)</span><br><span class="line">	 * @param authenticationManager</span><br><span class="line">	 */</span><br><span class="line">	public BearerTokenAuthenticationFilter(AuthenticationManager authenticationManager) &#123;</span><br><span class="line">		Assert.notNull(authenticationManager, &quot;authenticationManager cannot be null&quot;);</span><br><span class="line">		this.authenticationManagerResolver = (request) -&gt; authenticationManager;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	/**</span><br><span class="line">	 * Extract any</span><br><span class="line">	 * &lt;a href=&quot;https://tools.ietf.org/html/rfc6750#section-1.2&quot; target=&quot;_blank&quot;&gt;Bearer</span><br><span class="line">	 * Token&lt;/a&gt; from the request and attempt an authentication.</span><br><span class="line">	 * @param request</span><br><span class="line">	 * @param response</span><br><span class="line">	 * @param filterChain</span><br><span class="line">	 * @throws ServletException</span><br><span class="line">	 * @throws IOException</span><br><span class="line">	 */</span><br><span class="line">	@Override</span><br><span class="line">	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)</span><br><span class="line">			throws ServletException, IOException &#123;</span><br><span class="line">		String token;</span><br><span class="line">		try &#123;</span><br><span class="line">			token = this.bearerTokenResolver.resolve(request);</span><br><span class="line">		&#125;</span><br><span class="line">		catch (OAuth2AuthenticationException invalid) &#123;</span><br><span class="line">			this.logger.trace(&quot;Sending to authentication entry point since failed to resolve bearer token&quot;, invalid);</span><br><span class="line">			this.authenticationEntryPoint.commence(request, response, invalid);</span><br><span class="line">			return;</span><br><span class="line">		&#125;</span><br><span class="line">		if (token == null) &#123;</span><br><span class="line">			this.logger.trace(&quot;Did not process request since did not find bearer token&quot;);</span><br><span class="line">			filterChain.doFilter(request, response);</span><br><span class="line">			return;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		BearerTokenAuthenticationToken authenticationRequest = new BearerTokenAuthenticationToken(token);</span><br><span class="line">		authenticationRequest.setDetails(this.authenticationDetailsSource.buildDetails(request));</span><br><span class="line"></span><br><span class="line">		try &#123;</span><br><span class="line">			AuthenticationManager authenticationManager = this.authenticationManagerResolver.resolve(request);</span><br><span class="line">			Authentication authenticationResult = authenticationManager.authenticate(authenticationRequest);</span><br><span class="line">			SecurityContext context = SecurityContextHolder.createEmptyContext();</span><br><span class="line">			context.setAuthentication(authenticationResult);</span><br><span class="line">			SecurityContextHolder.setContext(context);</span><br><span class="line">			if (this.logger.isDebugEnabled()) &#123;</span><br><span class="line">				this.logger.debug(LogMessage.format(&quot;Set SecurityContextHolder to %s&quot;, authenticationResult));</span><br><span class="line">			&#125;</span><br><span class="line">			filterChain.doFilter(request, response);</span><br><span class="line">		&#125;</span><br><span class="line">		catch (AuthenticationException failed) &#123;</span><br><span class="line">			SecurityContextHolder.clearContext();</span><br><span class="line">			this.logger.trace(&quot;Failed to process authentication request&quot;, failed);</span><br><span class="line">			this.authenticationFailureHandler.onAuthenticationFailure(request, response, failed);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	/**</span><br><span class="line">	 * Set the &#123;@link BearerTokenResolver&#125; to use. Defaults to</span><br><span class="line">	 * &#123;@link DefaultBearerTokenResolver&#125;.</span><br><span class="line">	 * @param bearerTokenResolver the &#123;@code BearerTokenResolver&#125; to use</span><br><span class="line">	 */</span><br><span class="line">	public void setBearerTokenResolver(BearerTokenResolver bearerTokenResolver) &#123;</span><br><span class="line">		Assert.notNull(bearerTokenResolver, &quot;bearerTokenResolver cannot be null&quot;);</span><br><span class="line">		this.bearerTokenResolver = bearerTokenResolver;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	/**</span><br><span class="line">	 * Set the &#123;@link AuthenticationEntryPoint&#125; to use. Defaults to</span><br><span class="line">	 * &#123;@link BearerTokenAuthenticationEntryPoint&#125;.</span><br><span class="line">	 * @param authenticationEntryPoint the &#123;@code AuthenticationEntryPoint&#125; to use</span><br><span class="line">	 */</span><br><span class="line">	public void setAuthenticationEntryPoint(final AuthenticationEntryPoint authenticationEntryPoint) &#123;</span><br><span class="line">		Assert.notNull(authenticationEntryPoint, &quot;authenticationEntryPoint cannot be null&quot;);</span><br><span class="line">		this.authenticationEntryPoint = authenticationEntryPoint;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	/**</span><br><span class="line">	 * Set the &#123;@link AuthenticationFailureHandler&#125; to use. Default implementation invokes</span><br><span class="line">	 * &#123;@link AuthenticationEntryPoint&#125;.</span><br><span class="line">	 * @param authenticationFailureHandler the &#123;@code AuthenticationFailureHandler&#125; to use</span><br><span class="line">	 * @since 5.2</span><br><span class="line">	 */</span><br><span class="line">	public void setAuthenticationFailureHandler(final AuthenticationFailureHandler authenticationFailureHandler) &#123;</span><br><span class="line">		Assert.notNull(authenticationFailureHandler, &quot;authenticationFailureHandler cannot be null&quot;);</span><br><span class="line">		this.authenticationFailureHandler = authenticationFailureHandler;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	/**</span><br><span class="line">	 * Set the &#123;@link AuthenticationDetailsSource&#125; to use. Defaults to</span><br><span class="line">	 * &#123;@link WebAuthenticationDetailsSource&#125;.</span><br><span class="line">	 * @param authenticationDetailsSource the &#123;@code AuthenticationConverter&#125; to use</span><br><span class="line">	 * @since 5.5</span><br><span class="line">	 */</span><br><span class="line">	public void setAuthenticationDetailsSource(</span><br><span class="line">			AuthenticationDetailsSource&lt;HttpServletRequest, ?&gt; authenticationDetailsSource) &#123;</span><br><span class="line">		Assert.notNull(authenticationDetailsSource, &quot;authenticationDetailsSource cannot be null&quot;);</span><br><span class="line">		this.authenticationDetailsSource = authenticationDetailsSource;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>JwtAuthenticationProvider的  jwt的主流程处理中心</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line">public final class JwtAuthenticationProvider implements AuthenticationProvider &#123;</span><br><span class="line"></span><br><span class="line">	private final Log logger = LogFactory.getLog(getClass());</span><br><span class="line"></span><br><span class="line">	private final JwtDecoder jwtDecoder;</span><br><span class="line"></span><br><span class="line">	private Converter&lt;Jwt, ? extends AbstractAuthenticationToken&gt; jwtAuthenticationConverter = new JwtAuthenticationConverter();</span><br><span class="line"></span><br><span class="line">	public JwtAuthenticationProvider(JwtDecoder jwtDecoder) &#123;</span><br><span class="line">		Assert.notNull(jwtDecoder, &quot;jwtDecoder cannot be null&quot;);</span><br><span class="line">		this.jwtDecoder = jwtDecoder;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	/**</span><br><span class="line">	 * Decode and validate the</span><br><span class="line">	 * &lt;a href=&quot;https://tools.ietf.org/html/rfc6750#section-1.2&quot; target=&quot;_blank&quot;&gt;Bearer</span><br><span class="line">	 * Token&lt;/a&gt;.</span><br><span class="line">	 * @param authentication the authentication request object.</span><br><span class="line">	 * @return A successful authentication</span><br><span class="line">	 * @throws AuthenticationException if authentication failed for some reason</span><br><span class="line">	 */</span><br><span class="line">	@Override</span><br><span class="line">	public Authentication authenticate(Authentication authentication) throws AuthenticationException &#123;</span><br><span class="line">		BearerTokenAuthenticationToken bearer = (BearerTokenAuthenticationToken) authentication;</span><br><span class="line">		Jwt jwt = getJwt(bearer);</span><br><span class="line">		AbstractAuthenticationToken token = this.jwtAuthenticationConverter.convert(jwt);</span><br><span class="line">		token.setDetails(bearer.getDetails());</span><br><span class="line">		this.logger.debug(&quot;Authenticated token&quot;);</span><br><span class="line">		return token;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	private Jwt getJwt(BearerTokenAuthenticationToken bearer) &#123;</span><br><span class="line">		try &#123;</span><br><span class="line">			return this.jwtDecoder.decode(bearer.getToken());</span><br><span class="line">		&#125;</span><br><span class="line">		catch (BadJwtException failed) &#123;</span><br><span class="line">			this.logger.debug(&quot;Failed to authenticate since the JWT was invalid&quot;);</span><br><span class="line">			throw new InvalidBearerTokenException(failed.getMessage(), failed);</span><br><span class="line">		&#125;</span><br><span class="line">		catch (JwtException failed) &#123;</span><br><span class="line">			throw new AuthenticationServiceException(failed.getMessage(), failed);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	@Override</span><br><span class="line">	public boolean supports(Class&lt;?&gt; authentication) &#123;</span><br><span class="line">		return BearerTokenAuthenticationToken.class.isAssignableFrom(authentication);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	public void setJwtAuthenticationConverter(</span><br><span class="line">			Converter&lt;Jwt, ? extends AbstractAuthenticationToken&gt; jwtAuthenticationConverter) &#123;</span><br><span class="line">		Assert.notNull(jwtAuthenticationConverter, &quot;jwtAuthenticationConverter cannot be null&quot;);</span><br><span class="line">		this.jwtAuthenticationConverter = jwtAuthenticationConverter;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>分析doFilterInternal方法我们可知：</p>
+<ul>
+<li>请求会被 BearerTokenAuthenticationFilter 拦截器拦截，通过bearerTokenResolver解析出token字符串如果没有解析出来，则由下一个过滤器处理。如果失败将被AuthenticationEntryPoint统一拦截处理</li>
+<li>解析出来则构建一个BearerTokenAuthenticationToken对象。</li>
+<li>将HttpServletRequest传递给AuthenticationManagerResolver对象，由它选择出AuthenticationManager对象，然后将 BearerTokenAuthenticationToken传递给AuthenticationManager对象进行认证。AuthenticationManager对象的实现，取决于我们的token对象是JWT还是opaque token</li>
+<li>在AuthenticationManager由多个Provider对Authentication进行处理最终返回结果，当对象为jwt时处理对象为JwtAuthenticationProvider，在JwtAuthenticationProvider会先通过jwtDecoder解析jwt字符串，最终对JwtAuthenticationConverter将jwt字符串处理的为AbstractAuthenticationToken</li>
+<li>验证失败<ul>
+<li>清空 SecurityContextHolder 对象。</li>
+<li>交由AuthenticationFailureHandler对象处理。</li>
+</ul>
+</li>
+<li>验证成功<ul>
+<li>将 Authentication对象设置到SecurityContextHolder中。</li>
+<li>交由余下的过滤器继续处理。</li>
+</ul>
+</li>
+</ul>
+<h2 id="具体实现："><a href="#具体实现：" class="headerlink" title="具体实现："></a>具体实现：</h2><p>pom文件：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">&lt;dependency&gt;</span><br><span class="line">    &lt;groupId&gt;org.springframework.security&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;spring-security-oauth2-resource-server&lt;/artifactId&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br><span class="line">&lt;dependency&gt;</span><br><span class="line">    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;spring-boot-starter-security&lt;/artifactId&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">&lt;dependency&gt;</span><br><span class="line">    &lt;groupId&gt;org.springframework.security&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;spring-security-oauth2-jose&lt;/artifactId&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>ResourceServerConfiguration</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line">@Configuration</span><br><span class="line">@EnableMethodSecurity</span><br><span class="line">@RequiredArgsConstructor</span><br><span class="line">public class ResourceServerConfiguration &#123;</span><br><span class="line">    @Autowired</span><br><span class="line">    private RedisService redisService;</span><br><span class="line"></span><br><span class="line">    private final HttpSecurity http;</span><br><span class="line"></span><br><span class="line">    @Bean</span><br><span class="line">    public SecurityFilterChain filterChain() throws Exception &#123;</span><br><span class="line">        http</span><br><span class="line">                .authorizeHttpRequests(authorize -&gt; authorize</span><br><span class="line">                        .antMatchers(&quot;/actuator/**&quot;, &quot;/v3/api-docs/**&quot;, &quot;/swagger-ui/**&quot;,</span><br><span class="line">                                &quot;/swagger-ui.html&quot;).permitAll()</span><br><span class="line">                        .anyRequest().authenticated()</span><br><span class="line">                )</span><br><span class="line"></span><br><span class="line">                .oauth2ResourceServer(oauth2 -&gt; oauth2</span><br><span class="line">                        .authenticationEntryPoint(luckAuthenticationEntryPoint())</span><br><span class="line">                        .bearerTokenResolver(new LuckBearerTokenResolver(redisService))</span><br><span class="line">                        .jwt());</span><br><span class="line">        return http.build();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Bean</span><br><span class="line">    public JwtAuthenticationConverter jwtAuthenticationConverter() &#123;</span><br><span class="line">        JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();</span><br><span class="line">        grantedAuthoritiesConverter.setAuthorityPrefix(&quot;&quot;);</span><br><span class="line">        grantedAuthoritiesConverter.setAuthoritiesClaimName(&quot;authorities&quot;);</span><br><span class="line"></span><br><span class="line">        JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();</span><br><span class="line">        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);</span><br><span class="line">        return jwtAuthenticationConverter;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Bean</span><br><span class="line">    public LuckAuthenticationEntryPoint luckAuthenticationEntryPoint() &#123;</span><br><span class="line">        return new LuckAuthenticationEntryPoint();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Bean</span><br><span class="line">    public PasswordEncoder passwordEncoder() &#123;</span><br><span class="line">        return PasswordEncoderFactories.createDelegatingPasswordEncoder();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Bean(&quot;pms&quot;)</span><br><span class="line">    public PermissionHandler permissionHandler() &#123;</span><br><span class="line">        return new PermissionHandler();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>异常定义</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">@Getter</span><br><span class="line">public class LuckAuth2AuthencticationException extends OAuth2AuthenticationException &#123;</span><br><span class="line">    private final String code;</span><br><span class="line"></span><br><span class="line">    public LuckAuth2AuthencticationException(ResponseStatusEnum status) &#123;</span><br><span class="line">        super(new OAuth2Error(status.getMsg()), status.getMsg());</span><br><span class="line">        this.code = status.getCode();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>检查异常处理</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">public class LuckAuthenticationEntryPoint implements AuthenticationEntryPoint &#123;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    @SneakyThrows</span><br><span class="line">    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException &#123;</span><br><span class="line">        ServletServerHttpResponse servletServerHttpResponse = new ServletServerHttpResponse(response);</span><br><span class="line">        AjaxResult&lt;?&gt; error;</span><br><span class="line">        if(authException instanceof InvalidBearerTokenException)&#123;</span><br><span class="line">            servletServerHttpResponse.setStatusCode(HttpStatus.FAILED_DEPENDENCY);</span><br><span class="line">            error = AjaxResult.error(ResponseStatusEnum.INVALID_GRANT, authException.getMessage());</span><br><span class="line">        &#125;else&#123;</span><br><span class="line">            servletServerHttpResponse.setStatusCode(HttpStatus.UNAUTHORIZED);</span><br><span class="line">            error = AjaxResult.error(ResponseStatusEnum.UNAUTHORIZED, authException.getMessage());</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        HttpEndpointUtils.writeWithMessageConverters(error, servletServerHttpResponse);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>令牌适配器</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br></pre></td><td class="code"><pre><span class="line">@RequiredArgsConstructor</span><br><span class="line">public class LuckBearerTokenResolver implements BearerTokenResolver &#123;</span><br><span class="line"></span><br><span class="line">    private final RedisService redisService;</span><br><span class="line"></span><br><span class="line">    private static final Pattern AUTHORIZATION_PATTERN = Pattern.compile(&quot;^Bearer (?&lt;token&gt;[a-zA-Z0-9-._~+/]+=*)$&quot;,</span><br><span class="line">            Pattern.CASE_INSENSITIVE);</span><br><span class="line"></span><br><span class="line">    private boolean allowFormEncodedBodyParameter = false;</span><br><span class="line"></span><br><span class="line">    private boolean allowUriQueryParameter = false;</span><br><span class="line"></span><br><span class="line">    private String bearerTokenHeaderName = HttpHeaders.AUTHORIZATION;</span><br><span class="line"></span><br><span class="line">//    public  LuckBearerTokenResolver(RedisService redisService)&#123;</span><br><span class="line">//        this.redisService = redisService;</span><br><span class="line">//    &#125;</span><br><span class="line">    @Override</span><br><span class="line">    public String resolve(HttpServletRequest request) &#123;</span><br><span class="line">            final String authorizationHeaderToken = resolveFromAuthorizationHeader(request);</span><br><span class="line">            final String parameterToken = isParameterTokenSupportedForRequest(request)</span><br><span class="line">                    ? resolveFromRequestParameters(request) : null;</span><br><span class="line">            if (authorizationHeaderToken != null) &#123;</span><br><span class="line">                if (parameterToken != null) &#123;</span><br><span class="line">                    final BearerTokenError error = BearerTokenErrors</span><br><span class="line">                            .invalidRequest(&quot;Found multiple bearer tokens in the request&quot;);</span><br><span class="line">                    throw new OAuth2AuthenticationException(error);</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                return authorizationHeaderToken;</span><br><span class="line">            &#125;</span><br><span class="line">            if (parameterToken != null &amp;&amp; isParameterTokenEnabledForRequest(request)) &#123;</span><br><span class="line">                return parameterToken;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">        return null;</span><br><span class="line">    &#125;</span><br><span class="line">    /**</span><br><span class="line">     * Set if transport of access token using form-encoded body parameter is supported.</span><br><span class="line">     * Defaults to &#123;@code false&#125;.</span><br><span class="line">     *</span><br><span class="line">     * @param allowFormEncodedBodyParameter if the form-encoded body parameter is</span><br><span class="line">     *                                      supported</span><br><span class="line">     */</span><br><span class="line">    public void setAllowFormEncodedBodyParameter(boolean allowFormEncodedBodyParameter) &#123;</span><br><span class="line">        this.allowFormEncodedBodyParameter = allowFormEncodedBodyParameter;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * Set if transport of access token using URI query parameter is supported. Defaults</span><br><span class="line">     * to &#123;@code false&#125;.</span><br><span class="line">     * &lt;p&gt;</span><br><span class="line">     * The spec recommends against using this mechanism for sending bearer tokens, and</span><br><span class="line">     * even goes as far as stating that it was only included for completeness.</span><br><span class="line">     *</span><br><span class="line">     * @param allowUriQueryParameter if the URI query parameter is supported</span><br><span class="line">     */</span><br><span class="line">    public void setAllowUriQueryParameter(boolean allowUriQueryParameter) &#123;</span><br><span class="line">        this.allowUriQueryParameter = allowUriQueryParameter;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * Set this value to configure what header is checked when resolving a Bearer Token.</span><br><span class="line">     * This value is defaulted to &#123;@link HttpHeaders#AUTHORIZATION&#125;.</span><br><span class="line">     * &lt;p&gt;</span><br><span class="line">     * This allows other headers to be used as the Bearer Token source such as</span><br><span class="line">     * &#123;@link HttpHeaders#PROXY_AUTHORIZATION&#125;</span><br><span class="line">     *</span><br><span class="line">     * @param bearerTokenHeaderName the header to check when retrieving the Bearer Token.</span><br><span class="line">     * @since 5.4</span><br><span class="line">     */</span><br><span class="line">    public void setBearerTokenHeaderName(String bearerTokenHeaderName) &#123;</span><br><span class="line">        this.bearerTokenHeaderName = bearerTokenHeaderName;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private String resolveFromAuthorizationHeader(HttpServletRequest request) &#123;</span><br><span class="line">        String authorization = request.getHeader(this.bearerTokenHeaderName);</span><br><span class="line">        if (!StringUtils.startsWithIgnoreCase(authorization, &quot;bearer&quot;)) &#123;</span><br><span class="line">            return null;</span><br><span class="line">        &#125;</span><br><span class="line">        Matcher matcher = AUTHORIZATION_PATTERN.matcher(authorization);</span><br><span class="line">        if (!matcher.matches()) &#123;</span><br><span class="line">            BearerTokenError error = BearerTokenErrors.invalidToken(&quot;Bearer token is malformed&quot;);</span><br><span class="line">            throw new OAuth2AuthenticationException(error);</span><br><span class="line">        &#125;</span><br><span class="line">        return matcher.group(&quot;token&quot;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private static String resolveFromRequestParameters(HttpServletRequest request) &#123;</span><br><span class="line">        String[] values = request.getParameterValues(&quot;access_token&quot;);</span><br><span class="line">        if (values == null || values.length == 0) &#123;</span><br><span class="line">            return null;</span><br><span class="line">        &#125;</span><br><span class="line">        if (values.length == 1) &#123;</span><br><span class="line">            return values[0];</span><br><span class="line">        &#125;</span><br><span class="line">        BearerTokenError error = BearerTokenErrors.invalidRequest(&quot;Found multiple bearer tokens in the request&quot;);</span><br><span class="line">        throw new OAuth2AuthenticationException(error);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private boolean isParameterTokenSupportedForRequest(final HttpServletRequest request) &#123;</span><br><span class="line">        return ((&quot;POST&quot;.equals(request.getMethod())</span><br><span class="line">                &amp;&amp; MediaType.APPLICATION_FORM_URLENCODED_VALUE.equals(request.getContentType()))</span><br><span class="line">                || &quot;GET&quot;.equals(request.getMethod()));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private boolean isParameterTokenEnabledForRequest(final HttpServletRequest request) &#123;</span><br><span class="line">        return ((this.allowFormEncodedBodyParameter &amp;&amp; &quot;POST&quot;.equals(request.getMethod())</span><br><span class="line">                &amp;&amp; MediaType.APPLICATION_FORM_URLENCODED_VALUE.equals(request.getContentType()))</span><br><span class="line">                || (this.allowUriQueryParameter &amp;&amp; &quot;GET&quot;.equals(request.getMethod())));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 构建 token key</span><br><span class="line">     * @param token token</span><br><span class="line">     * @return token key</span><br><span class="line">     */</span><br><span class="line">    private String buildKey(String token) &#123;</span><br><span class="line">        return String.format(&quot;%s:%s:%s&quot;, CacheConstants.TOKEN, OAuth2ParameterNames.ACCESS_TOKEN, token);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<p>配置文件：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">spring:</span><br><span class="line">  security:</span><br><span class="line">    oauth2:</span><br><span class="line">      resourceserver:</span><br><span class="line">        jwt:</span><br><span class="line">          issuer-uri: http://192.168.1.186:1067</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="服务引用统一的资源服务器配置："><a href="#服务引用统一的资源服务器配置：" class="headerlink" title="服务引用统一的资源服务器配置："></a>服务引用统一的资源服务器配置：</h2><p>pom:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&lt;dependency&gt;</span><br><span class="line">    &lt;groupId&gt;com.luck.sugar&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;luck-common-security&lt;/artifactId&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br></pre></td></tr></table></figure>
+
+<p>controller</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">@RestController</span><br><span class="line">public class HomeController &#123;</span><br><span class="line"></span><br><span class="line">    @PostMapping(&quot;test&quot;)</span><br><span class="line">    @PreAuthorize(&quot;hasAuthority(&#x27;ROLE_ADMIN&#x27;)&quot;)</span><br><span class="line">    public String test()&#123;</span><br><span class="line">        return &quot;test&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="测试："><a href="#测试：" class="headerlink" title="测试："></a>测试：</h2><p>先到授权服务器获取token</p>
+<p><img src="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679304403339-c483e02f-5dc0-44ee-ab67-dd137794d4f8.png"></p>
+<p>然后在资源服务器中添加key为<font style="color:rgb(33, 33, 33);">Authorization的headers</font></p>
+<p><img src="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679304459217-12582e36-cc83-4a25-80db-d973ec10e1c7.png">接着在token后面加数字1</p>
+<p><img src="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679304562201-a7dc64ca-0218-438a-9a16-003074b4e014.png"></p>
+<p>抛出异常An error occurred while attempting to decode the Jwt: Signed JWT rejected: Invalid signature</p>
+<h2 id="总结："><a href="#总结：" class="headerlink" title="总结："></a>总结：</h2><p>在资源服务器的流程中有多个扩展点必须的扩展点为</p>
+<p>jwtAuthenticationConverter  他定义了权限信息从jwt的那个Claims下取出，之前的授权服务器中将权限信息放入了authorities 所以上面的的例子定义了权限信息从authorities中获取</p>
+<p>BearerTokenResolver：提取令牌</p>
+<p>AuthenticationManagerResolver ：获取认证中心，一般使用默认的AuthenticationManager</p>
+<p>JwtDecoder：他定义了jwt解析，可以结合jwtAuthenticationConverter 完成从缓存中获取权限信息</p>
+<p>AuthenticationProvider：身份验证实现，如果身份验证有特殊处理可以增加</p>
+<p>AuthenticationEntryPoint:BearerTokenResolver 获取失败的错误提示处理</p>
+<p>AuthenticationFailureHandler: 授权失败错误处理</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/oauth2-SpringCloud-SpringSecurity/" rel="tag"><i class="fa fa-tag"></i> oauth2,SpringCloud,SpringSecurity</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2024/03/14/%E6%94%B9%E9%80%A0%E7%BD%91%E5%85%B3%E5%AE%9E%E7%8E%B0%E6%8E%88%E6%9D%83/" rel="prev" title="改造网关实现授权">
+      <i class="fa fa-chevron-left"></i> 改造网关实现授权
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AE%80%E4%BB%8B%EF%BC%9A"><span class="nav-number">1.</span> <span class="nav-text">简介：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90"><span class="nav-number">2.</span> <span class="nav-text">源码分析:</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B7%E4%BD%93%E5%AE%9E%E7%8E%B0%EF%BC%9A"><span class="nav-number">3.</span> <span class="nav-text">具体实现：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E5%BC%95%E7%94%A8%E7%BB%9F%E4%B8%80%E7%9A%84%E8%B5%84%E6%BA%90%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%85%8D%E7%BD%AE%EF%BC%9A"><span class="nav-number">4.</span> <span class="nav-text">服务引用统一的资源服务器配置：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B5%8B%E8%AF%95%EF%BC%9A"><span class="nav-number">5.</span> <span class="nav-text">测试：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93%EF%BC%9A"><span class="nav-number">6.</span> <span class="nav-text">总结：</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="139"
+      src="/images/custom/avatar.jpg">
+  <p class="site-author-name" itemprop="name">139</p>
+  <div class="site-description" itemprop="description">一个普通的JAVA开发的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+  <div class="beian"><a href="https://beian.miit.gov.cn/" rel="noopener" target="_blank">浙ICP备2023004484号-1 </a>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">139</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

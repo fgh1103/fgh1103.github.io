@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="前言：先看下认证授权的过程，认证客户端的认证是最先被认证的，只有先认证客户端可会进行token的认证，而我们不应该把客户端的信息暴漏在外面所以客户端的信息只能通过网关转发的时候注入到请求中  直接请求认证服务器的流程请求&#x2F;oauth2&#x2F;token 输入表单信息   Authorization设置为Basic Auth  获得结果">
+<meta property="og:type" content="article">
+<meta property="og:title" content="改造网关实现授权">
+<meta property="og:url" content="http://example.com/2024/03/14/%E6%94%B9%E9%80%A0%E7%BD%91%E5%85%B3%E5%AE%9E%E7%8E%B0%E6%8E%88%E6%9D%83/index.html">
+<meta property="og:site_name" content="进学阁">
+<meta property="og:description" content="前言：先看下认证授权的过程，认证客户端的认证是最先被认证的，只有先认证客户端可会进行token的认证，而我们不应该把客户端的信息暴漏在外面所以客户端的信息只能通过网关转发的时候注入到请求中  直接请求认证服务器的流程请求&#x2F;oauth2&#x2F;token 输入表单信息   Authorization设置为Basic Auth  获得结果">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2022/png/27343190/1667726854430-5c1f32f8-d71b-4c75-815c-c75de9cac331.png">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679132164269-3335ac9d-d4a6-4464-81aa-b9753aae6360.png">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679132230680-00619d4b-b0be-436a-8431-cf863ddfb67c.png">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679132311409-b4aac947-0f53-4d41-a529-549fadb993b5.png">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679133263303-ffd2f328-09fa-4bd4-9a53-9c5ded039cf4.png">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679133272368-1c2b04a7-f9b0-49ac-90e4-dce9298e5f8d.png">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679133290397-da9266f6-dd79-4b06-ac87-736203474128.png">
+<meta property="article:published_time" content="2024-03-14T13:21:13.000Z">
+<meta property="article:modified_time" content="2025-03-05T08:43:59.748Z">
+<meta property="article:author" content="139">
+<meta property="article:tag" content="oauth2,SpringCloud,SpringSecurity">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.nlark.com/yuque/0/2022/png/27343190/1667726854430-5c1f32f8-d71b-4c75-815c-c75de9cac331.png">
+
+<link rel="canonical" href="http://example.com/2024/03/14/%E6%94%B9%E9%80%A0%E7%BD%91%E5%85%B3%E5%AE%9E%E7%8E%B0%E6%8E%88%E6%9D%83/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>改造网关实现授权 | 进学阁</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">进学阁</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">业精于勤荒于嬉，行成于思毁于随</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">5</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">2</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">7</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/03/14/%E6%94%B9%E9%80%A0%E7%BD%91%E5%85%B3%E5%AE%9E%E7%8E%B0%E6%8E%88%E6%9D%83/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          改造网关实现授权
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-03-14 21:21:13" itemprop="dateCreated datePublished" datetime="2024-03-14T21:21:13+08:00">2024-03-14</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-05 16:43:59" itemprop="dateModified" datetime="2025-03-05T16:43:59+08:00">2025-03-05</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%8E%88%E6%9D%83/" itemprop="url" rel="index"><span itemprop="name">授权</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="前言："><a href="#前言：" class="headerlink" title="前言："></a>前言：</h2><p>先看下认证授权的过程，认证客户端的认证是最先被认证的，只有先认证客户端可会进行token的认证，而我们不应该把客户端的信息暴漏在外面所以客户端的信息只能通过网关转发的时候注入到请求中</p>
+<p><img src="https://cdn.nlark.com/yuque/0/2022/png/27343190/1667726854430-5c1f32f8-d71b-4c75-815c-c75de9cac331.png"></p>
+<h2 id="直接请求认证服务器的流程"><a href="#直接请求认证服务器的流程" class="headerlink" title="直接请求认证服务器的流程"></a>直接请求认证服务器的流程</h2><p>请求<font style="color:rgb(33, 33, 33);">&#x2F;oauth2&#x2F;token 输入表单信息</font></p>
+<p><img src="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679132164269-3335ac9d-d4a6-4464-81aa-b9753aae6360.png"></p>
+<p><font style="color:rgb(107, 107, 107);"> </font>Authorization设置为Basic Auth</p>
+<p><img src="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679132230680-00619d4b-b0be-436a-8431-cf863ddfb67c.png"></p>
+<p>获得结果</p>
+<p><img src="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679132311409-b4aac947-0f53-4d41-a529-549fadb993b5.png"></p>
+<p>使用网关转发请求和注入服务的时候，当客户端不能直接提供客户端信息的时候，需要在网关转发时注入</p>
+<h2 id="改造网关"><a href="#改造网关" class="headerlink" title="改造网关"></a>改造网关</h2><h3 id="增加局部过滤器"><a href="#增加局部过滤器" class="headerlink" title="增加局部过滤器"></a>增加局部过滤器</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br></pre></td><td class="code"><pre><span class="line">@Component</span><br><span class="line">public class LoginFilter extends AbstractGatewayFilterFactory&lt;LoginFilter.Config&gt; &#123;</span><br><span class="line">    @Autowired</span><br><span class="line">    private  ObjectMapper objectMapper;</span><br><span class="line"></span><br><span class="line">    @Autowired</span><br><span class="line">    private ClientProperties clientProperties;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    public LoginFilter() &#123;</span><br><span class="line">        super(Config.class);</span><br><span class="line">    &#125;</span><br><span class="line">    /**</span><br><span class="line">     * Token URL 标识</span><br><span class="line">     */</span><br><span class="line">    private static final String TOKEN_URL_IDENTIFY = &quot;oauth2/token&quot;;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public GatewayFilter apply(Config config) &#123;</span><br><span class="line">        return (exchange, chain) -&gt; &#123;</span><br><span class="line">            try &#123;</span><br><span class="line">                ServerHttpRequest request = exchange.getRequest();</span><br><span class="line">                //判断是否是请求token</span><br><span class="line">                String path = request.getURI().getPath();</span><br><span class="line">                if (!StrUtil.containsIgnoreCase(path, TOKEN_URL_IDENTIFY)) &#123;</span><br><span class="line">                    return chain.filter(exchange);</span><br><span class="line">                &#125;</span><br><span class="line">                //TODO:后续可以增加验证码验证</span><br><span class="line">                //注入客户端信息</span><br><span class="line">                ServerHttpRequest.Builder mutate = request.mutate();</span><br><span class="line">                String clientStr =String.format(&quot;%s:%s&quot;,clientProperties.getClientId(),clientProperties.getClientSecret());</span><br><span class="line">                String base = Base64.encode(clientStr);</span><br><span class="line">                addHeader(mutate,&quot;Authorization&quot;,String.format(&quot;Basic %s&quot;,base));</span><br><span class="line">            &#125;catch (UnauthorizedException ex)&#123;</span><br><span class="line">                getErrResponse(exchange, AjaxResult.error(ResponseStatusEnum.UNAUTHORIZED,ex.getMessage()));</span><br><span class="line">            &#125;catch (Exception e) &#123;</span><br><span class="line">                return getErrResponse(exchange, AjaxResult.error(ResponseStatusEnum.SYS_ERROR, e.getMessage()));</span><br><span class="line">            &#125;</span><br><span class="line">            return chain.filter(exchange);</span><br><span class="line">        &#125;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    public static class Config &#123;</span><br><span class="line">        // 在这里可以定义配置属性</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private void addHeader(ServerHttpRequest.Builder mutate, String name, Object value)</span><br><span class="line">    &#123;</span><br><span class="line">        if (value == null)</span><br><span class="line">        &#123;</span><br><span class="line">            return;</span><br><span class="line">        &#125;</span><br><span class="line">        String valueStr = value.toString();</span><br><span class="line">        String valueEncode = valueStr;</span><br><span class="line">        mutate.header(name, valueEncode);</span><br><span class="line">    &#125;</span><br><span class="line">    private Mono&lt;Void&gt; getErrResponse(ServerWebExchange exchange, Object errInfo) &#123;</span><br><span class="line">        ServerHttpResponse response = exchange.getResponse();</span><br><span class="line">        response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);</span><br><span class="line">        response.getHeaders().setContentType(MediaType.APPLICATION_JSON);</span><br><span class="line">        return response.writeWith(Mono.create(monoSink -&gt; &#123;</span><br><span class="line">            try &#123;</span><br><span class="line">                byte[] bytes = objectMapper.writeValueAsBytes(errInfo);</span><br><span class="line">                DataBuffer dataBuffer = response.bufferFactory().wrap(bytes);</span><br><span class="line">                monoSink.success(dataBuffer);</span><br><span class="line">            &#125; catch (JsonProcessingException jsonProcessingException) &#123;</span><br><span class="line">                log.error(jsonProcessingException.getMessage());</span><br><span class="line">                monoSink.error(jsonProcessingException);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="配置客户端信息"><a href="#配置客户端信息" class="headerlink" title="配置客户端信息"></a>配置客户端信息</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">@Configuration</span><br><span class="line">@RefreshScope</span><br><span class="line">@ConfigurationProperties(prefix = &quot;security.client&quot;)</span><br><span class="line">public class ClientProperties &#123;</span><br><span class="line">    private String clientId;</span><br><span class="line">    private String clientSecret;</span><br><span class="line"></span><br><span class="line">    public String getClientId() &#123;</span><br><span class="line">        return clientId;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void setClientId(String clientId) &#123;</span><br><span class="line">        this.clientId = clientId;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public String getClientSecret() &#123;</span><br><span class="line">        return clientSecret;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void setClientSecret(String clientSecret) &#123;</span><br><span class="line">        this.clientSecret = clientSecret;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">security:</span><br><span class="line">  client:</span><br><span class="line">    clientId: messaging-client</span><br><span class="line">    clientSecret: secret</span><br></pre></td></tr></table></figure>
+
+<h3 id="路由中添加过滤器"><a href="#路由中添加过滤器" class="headerlink" title="路由中添加过滤器"></a>路由中添加过滤器</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">- id: luck-auth</span><br><span class="line">  uri: lb://luck-auth</span><br><span class="line">  predicates:</span><br><span class="line">    - Path=/auth/**</span><br><span class="line">  filters:</span><br><span class="line">    - StripPrefix=1</span><br><span class="line">    - CacheRequestFilter</span><br><span class="line">    - LoginFilter</span><br></pre></td></tr></table></figure>
+
+
+
+<p>测试：</p>
+<p><img src="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679133263303-ffd2f328-09fa-4bd4-9a53-9c5ded039cf4.png"></p>
+<p><img src="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679133272368-1c2b04a7-f9b0-49ac-90e4-dce9298e5f8d.png"></p>
+<p><img src="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679133290397-da9266f6-dd79-4b06-ac87-736203474128.png"></p>
+<h2 id="总结："><a href="#总结：" class="headerlink" title="总结："></a>总结：</h2><p>Authorization设置为Basic Auth 的实际操作为在Header中新增一个key为Authorization value为 Basic +base64({clientId}:{clientSecret}) 。这里Basic后面是有一个空格的需要注意。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/oauth2-SpringCloud-SpringSecurity/" rel="tag"><i class="fa fa-tag"></i> oauth2,SpringCloud,SpringSecurity</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2024/03/12/%E8%87%AA%E5%AE%9A%E4%B9%89%E5%AF%86%E7%A0%81%E6%A8%A1%E5%BC%8F/" rel="prev" title="自定义密码模式">
+      <i class="fa fa-chevron-left"></i> 自定义密码模式
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2024/03/15/%E8%B5%84%E6%BA%90%E6%9C%8D%E5%8A%A1%E5%99%A8/" rel="next" title="资源服务器鉴权处理">
+      资源服务器鉴权处理 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E8%A8%80%EF%BC%9A"><span class="nav-number">1.</span> <span class="nav-text">前言：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%9B%B4%E6%8E%A5%E8%AF%B7%E6%B1%82%E8%AE%A4%E8%AF%81%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E6%B5%81%E7%A8%8B"><span class="nav-number">2.</span> <span class="nav-text">直接请求认证服务器的流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%94%B9%E9%80%A0%E7%BD%91%E5%85%B3"><span class="nav-number">3.</span> <span class="nav-text">改造网关</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A2%9E%E5%8A%A0%E5%B1%80%E9%83%A8%E8%BF%87%E6%BB%A4%E5%99%A8"><span class="nav-number">3.1.</span> <span class="nav-text">增加局部过滤器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E5%AE%A2%E6%88%B7%E7%AB%AF%E4%BF%A1%E6%81%AF"><span class="nav-number">3.2.</span> <span class="nav-text">配置客户端信息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%B7%AF%E7%94%B1%E4%B8%AD%E6%B7%BB%E5%8A%A0%E8%BF%87%E6%BB%A4%E5%99%A8"><span class="nav-number">3.3.</span> <span class="nav-text">路由中添加过滤器</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93%EF%BC%9A"><span class="nav-number">4.</span> <span class="nav-text">总结：</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="139"
+      src="/images/custom/avatar.jpg">
+  <p class="site-author-name" itemprop="name">139</p>
+  <div class="site-description" itemprop="description">一个普通的JAVA开发的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+  <div class="beian"><a href="https://beian.miit.gov.cn/" rel="noopener" target="_blank">浙ICP备2023004484号-1 </a>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">139</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

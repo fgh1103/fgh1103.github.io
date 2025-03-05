@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="简介 在官方的说明中我们可以看到OAuth 2.1 废弃了 OAuth 2.0 中的密码模式，只提供了三种授权类型：授权码、刷新令牌、客户端凭证。 oauth2.1中授权码模式的流程为：  由上图可知我们想要沿用密码模式会有两种方案 1.自定义密码模式    2.修改授权码模式，自定义授权页面，使用授权页面自动提交获取token。 自定义密码模式：在官网中对自定义配置的描述">
+<meta property="og:type" content="article">
+<meta property="og:title" content="自定义密码模式">
+<meta property="og:url" content="http://example.com/2024/03/12/%E8%87%AA%E5%AE%9A%E4%B9%89%E5%AF%86%E7%A0%81%E6%A8%A1%E5%BC%8F/index.html">
+<meta property="og:site_name" content="进学阁">
+<meta property="og:description" content="简介 在官方的说明中我们可以看到OAuth 2.1 废弃了 OAuth 2.0 中的密码模式，只提供了三种授权类型：授权码、刷新令牌、客户端凭证。 oauth2.1中授权码模式的流程为：  由上图可知我们想要沿用密码模式会有两种方案 1.自定义密码模式    2.修改授权码模式，自定义授权页面，使用授权页面自动提交获取token。 自定义密码模式：在官网中对自定义配置的描述">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679106524585-028d887a-7d9d-4e18-af56-f2bcdc192049.png">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2023/jpeg/25873401/1679108178925-bf9d2710-85d2-45f0-a277-cfe3fe0595a5.jpeg">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679109031954-9f6a10bf-a4a8-4c0b-9bee-229c07ae5844.png">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679109044969-a5836447-2dc8-4a6c-b58b-dcad2c8d05f7.png">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679109474910-3209f835-9aba-42bd-b42e-4a60b946d3b3.png">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679126686151-d9dce2ff-ee10-4965-9c54-2744170deb62.png">
+<meta property="article:published_time" content="2024-03-12T11:21:00.000Z">
+<meta property="article:modified_time" content="2025-03-05T08:42:36.747Z">
+<meta property="article:author" content="139">
+<meta property="article:tag" content="oauth2,SpringCloud,SpringSecurity">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679106524585-028d887a-7d9d-4e18-af56-f2bcdc192049.png">
+
+<link rel="canonical" href="http://example.com/2024/03/12/%E8%87%AA%E5%AE%9A%E4%B9%89%E5%AF%86%E7%A0%81%E6%A8%A1%E5%BC%8F/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>自定义密码模式 | 进学阁</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">进学阁</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">业精于勤荒于嬉，行成于思毁于随</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">5</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">2</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">7</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/03/12/%E8%87%AA%E5%AE%9A%E4%B9%89%E5%AF%86%E7%A0%81%E6%A8%A1%E5%BC%8F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          自定义密码模式
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-03-12 19:21:00" itemprop="dateCreated datePublished" datetime="2024-03-12T19:21:00+08:00">2024-03-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-05 16:42:36" itemprop="dateModified" datetime="2025-03-05T16:42:36+08:00">2025-03-05</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%8E%88%E6%9D%83/" itemprop="url" rel="index"><span itemprop="name">授权</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p><img src="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679106524585-028d887a-7d9d-4e18-af56-f2bcdc192049.png"></p>
+<p>在官方的说明中我们可以看到OAuth 2.1 废弃了 OAuth 2.0 中的密码模式，只提供了三种授权类型：授权码、刷新令牌、客户端凭证。</p>
+<p>oauth2.1中授权码模式的流程为：</p>
+<p><img src="https://cdn.nlark.com/yuque/0/2023/jpeg/25873401/1679108178925-bf9d2710-85d2-45f0-a277-cfe3fe0595a5.jpeg" alt="画板"></p>
+<p>由上图可知我们想要沿用密码模式会有两种方案</p>
+<p>1.自定义密码模式   </p>
+<p>2.修改授权码模式，自定义授权页面，使用授权页面自动提交获取token。</p>
+<h2 id="自定义密码模式："><a href="#自定义密码模式：" class="headerlink" title="自定义密码模式："></a>自定义密码模式：</h2><p>在官网中对自定义配置的描述<img src="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679109031954-9f6a10bf-a4a8-4c0b-9bee-229c07ae5844.png"></p>
+<p><img src="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679109044969-a5836447-2dc8-4a6c-b58b-dcad2c8d05f7.png"></p>
+<p>这里可以看到在授权断点是可以实现自定义的，于是就有了接下来的思路：</p>
+<p>直接略过前面的密码验证、用户确认， 直接自定义授权端点。在自定义的端点中处理授权信息，打开</p>
+<p>7 <font style="color:rgb(25, 30, 30);">authorizationEndpoint</font></p>
+<p><img src="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679109474910-3209f835-9aba-42bd-b42e-4a60b946d3b3.png"></p>
+<p>这里可以看到自定义一个oauth2的授权请求需要定义一个处理器 一个主处理器，但是官方并没有给具体的例子所以需要看下其他授权端点的做法来完成自定义，以code授权的源码为例分析</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line">public final class OAuth2AuthorizationCodeAuthenticationConverter implements AuthenticationConverter &#123;</span><br><span class="line"></span><br><span class="line">	@Nullable</span><br><span class="line">	@Override</span><br><span class="line">	public Authentication convert(HttpServletRequest request) &#123;</span><br><span class="line">		// grant_type (REQUIRED)</span><br><span class="line">		String grantType = request.getParameter(OAuth2ParameterNames.GRANT_TYPE);</span><br><span class="line">		if (!AuthorizationGrantType.AUTHORIZATION_CODE.getValue().equals(grantType)) &#123;</span><br><span class="line">			return null;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		Authentication clientPrincipal = SecurityContextHolder.getContext().getAuthentication();</span><br><span class="line"></span><br><span class="line">		MultiValueMap&lt;String, String&gt; parameters = OAuth2EndpointUtils.getParameters(request);</span><br><span class="line"></span><br><span class="line">		// code (REQUIRED)</span><br><span class="line">		String code = parameters.getFirst(OAuth2ParameterNames.CODE);</span><br><span class="line">		if (!StringUtils.hasText(code) ||</span><br><span class="line">				parameters.get(OAuth2ParameterNames.CODE).size() != 1) &#123;</span><br><span class="line">			OAuth2EndpointUtils.throwError(</span><br><span class="line">					OAuth2ErrorCodes.INVALID_REQUEST,</span><br><span class="line">					OAuth2ParameterNames.CODE,</span><br><span class="line">					OAuth2EndpointUtils.ACCESS_TOKEN_REQUEST_ERROR_URI);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		// redirect_uri (REQUIRED)</span><br><span class="line">		// Required only if the &quot;redirect_uri&quot; parameter was included in the authorization request</span><br><span class="line">		String redirectUri = parameters.getFirst(OAuth2ParameterNames.REDIRECT_URI);</span><br><span class="line">		if (StringUtils.hasText(redirectUri) &amp;&amp;</span><br><span class="line">				parameters.get(OAuth2ParameterNames.REDIRECT_URI).size() != 1) &#123;</span><br><span class="line">			OAuth2EndpointUtils.throwError(</span><br><span class="line">					OAuth2ErrorCodes.INVALID_REQUEST,</span><br><span class="line">					OAuth2ParameterNames.REDIRECT_URI,</span><br><span class="line">					OAuth2EndpointUtils.ACCESS_TOKEN_REQUEST_ERROR_URI);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		Map&lt;String, Object&gt; additionalParameters = new HashMap&lt;&gt;();</span><br><span class="line">		parameters.forEach((key, value) -&gt; &#123;</span><br><span class="line">			if (!key.equals(OAuth2ParameterNames.GRANT_TYPE) &amp;&amp;</span><br><span class="line">					!key.equals(OAuth2ParameterNames.CLIENT_ID) &amp;&amp;</span><br><span class="line">					!key.equals(OAuth2ParameterNames.CODE) &amp;&amp;</span><br><span class="line">					!key.equals(OAuth2ParameterNames.REDIRECT_URI)) &#123;</span><br><span class="line">				additionalParameters.put(key, value.get(0));</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;);</span><br><span class="line"></span><br><span class="line">		return new OAuth2AuthorizationCodeAuthenticationToken(</span><br><span class="line">				code, clientPrincipal, redirectUri, additionalParameters);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>这里可以看出Converter的主要作用是对参数整理然后生成一个新得OAuth2AuthorizationCodeAuthenticationToken 对象，接着看下OAuth2AuthorizationCodeAuthenticationToken的代码</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">public class OAuth2AuthorizationCodeAuthenticationToken extends OAuth2AuthorizationGrantAuthenticationToken &#123;</span><br><span class="line">	private final String code;</span><br><span class="line">	private final String redirectUri;</span><br><span class="line"></span><br><span class="line">	/**</span><br><span class="line">	 * Constructs an &#123;@code OAuth2AuthorizationCodeAuthenticationToken&#125; using the provided parameters.</span><br><span class="line">	 *</span><br><span class="line">	 * @param code the authorization code</span><br><span class="line">	 * @param clientPrincipal the authenticated client principal</span><br><span class="line">	 * @param redirectUri the redirect uri</span><br><span class="line">	 * @param additionalParameters the additional parameters</span><br><span class="line">	 */</span><br><span class="line">	public OAuth2AuthorizationCodeAuthenticationToken(String code, Authentication clientPrincipal,</span><br><span class="line">			@Nullable String redirectUri, @Nullable Map&lt;String, Object&gt; additionalParameters) &#123;</span><br><span class="line">		super(AuthorizationGrantType.AUTHORIZATION_CODE, clientPrincipal, additionalParameters);</span><br><span class="line">		Assert.hasText(code, &quot;code cannot be empty&quot;);</span><br><span class="line">		this.code = code;</span><br><span class="line">		this.redirectUri = redirectUri;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	/**</span><br><span class="line">	 * Returns the authorization code.</span><br><span class="line">	 *</span><br><span class="line">	 * @return the authorization code</span><br><span class="line">	 */</span><br><span class="line">	public String getCode() &#123;</span><br><span class="line">		return this.code;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	/**</span><br><span class="line">	 * Returns the redirect uri.</span><br><span class="line">	 *</span><br><span class="line">	 * @return the redirect uri</span><br><span class="line">	 */</span><br><span class="line">	@Nullable</span><br><span class="line">	public String getRedirectUri() &#123;</span><br><span class="line">		return this.redirectUri;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里主要是保存参数对象的。</p>
+<p>接着再看下主处理的代码</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br></pre></td><td class="code"><pre><span class="line">public final class OAuth2AuthorizationCodeAuthenticationProvider implements AuthenticationProvider &#123;</span><br><span class="line">	private static final String ERROR_URI = &quot;https://datatracker.ietf.org/doc/html/rfc6749#section-5.2&quot;;</span><br><span class="line">	private static final OAuth2TokenType AUTHORIZATION_CODE_TOKEN_TYPE =</span><br><span class="line">			new OAuth2TokenType(OAuth2ParameterNames.CODE);</span><br><span class="line">	private static final OAuth2TokenType ID_TOKEN_TOKEN_TYPE =</span><br><span class="line">			new OAuth2TokenType(OidcParameterNames.ID_TOKEN);</span><br><span class="line">	private final OAuth2AuthorizationService authorizationService;</span><br><span class="line">	private final OAuth2TokenGenerator&lt;? extends OAuth2Token&gt; tokenGenerator;</span><br><span class="line"></span><br><span class="line">	/**</span><br><span class="line">	 * Constructs an &#123;@code OAuth2AuthorizationCodeAuthenticationProvider&#125; using the provided parameters.</span><br><span class="line">	 *</span><br><span class="line">	 * @param authorizationService the authorization service</span><br><span class="line">	 * @param tokenGenerator the token generator</span><br><span class="line">	 * @since 0.2.3</span><br><span class="line">	 */</span><br><span class="line">	public OAuth2AuthorizationCodeAuthenticationProvider(OAuth2AuthorizationService authorizationService,</span><br><span class="line">			OAuth2TokenGenerator&lt;? extends OAuth2Token&gt; tokenGenerator) &#123;</span><br><span class="line">		Assert.notNull(authorizationService, &quot;authorizationService cannot be null&quot;);</span><br><span class="line">		Assert.notNull(tokenGenerator, &quot;tokenGenerator cannot be null&quot;);</span><br><span class="line">		this.authorizationService = authorizationService;</span><br><span class="line">		this.tokenGenerator = tokenGenerator;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	@Override</span><br><span class="line">	public Authentication authenticate(Authentication authentication) throws AuthenticationException &#123;</span><br><span class="line">		OAuth2AuthorizationCodeAuthenticationToken authorizationCodeAuthentication =</span><br><span class="line">				(OAuth2AuthorizationCodeAuthenticationToken) authentication;</span><br><span class="line"></span><br><span class="line">		OAuth2ClientAuthenticationToken clientPrincipal =</span><br><span class="line">				getAuthenticatedClientElseThrowInvalidClient(authorizationCodeAuthentication);</span><br><span class="line">		RegisteredClient registeredClient = clientPrincipal.getRegisteredClient();</span><br><span class="line"></span><br><span class="line">		OAuth2Authorization authorization = this.authorizationService.findByToken(</span><br><span class="line">				authorizationCodeAuthentication.getCode(), AUTHORIZATION_CODE_TOKEN_TYPE);</span><br><span class="line">		if (authorization == null) &#123;</span><br><span class="line">			throw new OAuth2AuthenticationException(OAuth2ErrorCodes.INVALID_GRANT);</span><br><span class="line">		&#125;</span><br><span class="line">		OAuth2Authorization.Token&lt;OAuth2AuthorizationCode&gt; authorizationCode =</span><br><span class="line">				authorization.getToken(OAuth2AuthorizationCode.class);</span><br><span class="line"></span><br><span class="line">		OAuth2AuthorizationRequest authorizationRequest = authorization.getAttribute(</span><br><span class="line">				OAuth2AuthorizationRequest.class.getName());</span><br><span class="line"></span><br><span class="line">		if (!registeredClient.getClientId().equals(authorizationRequest.getClientId())) &#123;</span><br><span class="line">			if (!authorizationCode.isInvalidated()) &#123;</span><br><span class="line">				// Invalidate the authorization code given that a different client is attempting to use it</span><br><span class="line">				authorization = OAuth2AuthenticationProviderUtils.invalidate(authorization, authorizationCode.getToken());</span><br><span class="line">				this.authorizationService.save(authorization);</span><br><span class="line">			&#125;</span><br><span class="line">			throw new OAuth2AuthenticationException(OAuth2ErrorCodes.INVALID_GRANT);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		if (StringUtils.hasText(authorizationRequest.getRedirectUri()) &amp;&amp;</span><br><span class="line">				!authorizationRequest.getRedirectUri().equals(authorizationCodeAuthentication.getRedirectUri())) &#123;</span><br><span class="line">			throw new OAuth2AuthenticationException(OAuth2ErrorCodes.INVALID_GRANT);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		if (!authorizationCode.isActive()) &#123;</span><br><span class="line">			throw new OAuth2AuthenticationException(OAuth2ErrorCodes.INVALID_GRANT);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		// @formatter:off</span><br><span class="line">		DefaultOAuth2TokenContext.Builder tokenContextBuilder = DefaultOAuth2TokenContext.builder()</span><br><span class="line">				.registeredClient(registeredClient)</span><br><span class="line">				.principal(authorization.getAttribute(Principal.class.getName()))</span><br><span class="line">				.providerContext(ProviderContextHolder.getProviderContext())</span><br><span class="line">				.authorization(authorization)</span><br><span class="line">				.authorizedScopes(authorization.getAttribute(OAuth2Authorization.AUTHORIZED_SCOPE_ATTRIBUTE_NAME))</span><br><span class="line">				.authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)</span><br><span class="line">				.authorizationGrant(authorizationCodeAuthentication);</span><br><span class="line">		// @formatter:on</span><br><span class="line"></span><br><span class="line">		OAuth2Authorization.Builder authorizationBuilder = OAuth2Authorization.from(authorization);</span><br><span class="line"></span><br><span class="line">		// ----- Access token -----</span><br><span class="line">		OAuth2TokenContext tokenContext = tokenContextBuilder.tokenType(OAuth2TokenType.ACCESS_TOKEN).build();</span><br><span class="line">		OAuth2Token generatedAccessToken = this.tokenGenerator.generate(tokenContext);</span><br><span class="line">		if (generatedAccessToken == null) &#123;</span><br><span class="line">			OAuth2Error error = new OAuth2Error(OAuth2ErrorCodes.SERVER_ERROR,</span><br><span class="line">					&quot;The token generator failed to generate the access token.&quot;, ERROR_URI);</span><br><span class="line">			throw new OAuth2AuthenticationException(error);</span><br><span class="line">		&#125;</span><br><span class="line">		OAuth2AccessToken accessToken = new OAuth2AccessToken(OAuth2AccessToken.TokenType.BEARER,</span><br><span class="line">				generatedAccessToken.getTokenValue(), generatedAccessToken.getIssuedAt(),</span><br><span class="line">				generatedAccessToken.getExpiresAt(), tokenContext.getAuthorizedScopes());</span><br><span class="line">		if (generatedAccessToken instanceof ClaimAccessor) &#123;</span><br><span class="line">			authorizationBuilder.token(accessToken, (metadata) -&gt;</span><br><span class="line">					metadata.put(OAuth2Authorization.Token.CLAIMS_METADATA_NAME, ((ClaimAccessor) generatedAccessToken).getClaims()));</span><br><span class="line">		&#125; else &#123;</span><br><span class="line">			authorizationBuilder.accessToken(accessToken);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		// ----- Refresh token -----</span><br><span class="line">		OAuth2RefreshToken refreshToken = null;</span><br><span class="line">		if (registeredClient.getAuthorizationGrantTypes().contains(AuthorizationGrantType.REFRESH_TOKEN) &amp;&amp;</span><br><span class="line">				// Do not issue refresh token to public client</span><br><span class="line">				!clientPrincipal.getClientAuthenticationMethod().equals(ClientAuthenticationMethod.NONE)) &#123;</span><br><span class="line"></span><br><span class="line">			tokenContext = tokenContextBuilder.tokenType(OAuth2TokenType.REFRESH_TOKEN).build();</span><br><span class="line">			OAuth2Token generatedRefreshToken = this.tokenGenerator.generate(tokenContext);</span><br><span class="line">			if (!(generatedRefreshToken instanceof OAuth2RefreshToken)) &#123;</span><br><span class="line">				OAuth2Error error = new OAuth2Error(OAuth2ErrorCodes.SERVER_ERROR,</span><br><span class="line">						&quot;The token generator failed to generate the refresh token.&quot;, ERROR_URI);</span><br><span class="line">				throw new OAuth2AuthenticationException(error);</span><br><span class="line">			&#125;</span><br><span class="line">			refreshToken = (OAuth2RefreshToken) generatedRefreshToken;</span><br><span class="line">			authorizationBuilder.refreshToken(refreshToken);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		// ----- ID token -----</span><br><span class="line">		OidcIdToken idToken;</span><br><span class="line">		if (authorizationRequest.getScopes().contains(OidcScopes.OPENID)) &#123;</span><br><span class="line">			tokenContext = tokenContextBuilder.tokenType(ID_TOKEN_TOKEN_TYPE).build();</span><br><span class="line">			OAuth2Token generatedIdToken = this.tokenGenerator.generate(tokenContext);</span><br><span class="line">			if (!(generatedIdToken instanceof Jwt)) &#123;</span><br><span class="line">				OAuth2Error error = new OAuth2Error(OAuth2ErrorCodes.SERVER_ERROR,</span><br><span class="line">						&quot;The token generator failed to generate the ID token.&quot;, ERROR_URI);</span><br><span class="line">				throw new OAuth2AuthenticationException(error);</span><br><span class="line">			&#125;</span><br><span class="line">			idToken = new OidcIdToken(generatedIdToken.getTokenValue(), generatedIdToken.getIssuedAt(),</span><br><span class="line">					generatedIdToken.getExpiresAt(), ((Jwt) generatedIdToken).getClaims());</span><br><span class="line">			authorizationBuilder.token(idToken, (metadata) -&gt;</span><br><span class="line">					metadata.put(OAuth2Authorization.Token.CLAIMS_METADATA_NAME, idToken.getClaims()));</span><br><span class="line">		&#125; else &#123;</span><br><span class="line">			idToken = null;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		authorization = authorizationBuilder.build();</span><br><span class="line"></span><br><span class="line">		// Invalidate the authorization code as it can only be used once</span><br><span class="line">		authorization = OAuth2AuthenticationProviderUtils.invalidate(authorization, authorizationCode.getToken());</span><br><span class="line"></span><br><span class="line">		this.authorizationService.save(authorization);</span><br><span class="line"></span><br><span class="line">		Map&lt;String, Object&gt; additionalParameters = Collections.emptyMap();</span><br><span class="line">		if (idToken != null) &#123;</span><br><span class="line">			additionalParameters = new HashMap&lt;&gt;();</span><br><span class="line">			additionalParameters.put(OidcParameterNames.ID_TOKEN, idToken.getTokenValue());</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		return new OAuth2AccessTokenAuthenticationToken(</span><br><span class="line">				registeredClient, clientPrincipal, accessToken, refreshToken, additionalParameters);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	@Override</span><br><span class="line">	public boolean supports(Class&lt;?&gt; authentication) &#123;</span><br><span class="line">		return OAuth2AuthorizationCodeAuthenticationToken.class.isAssignableFrom(authentication);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里可以看到token的生成详细信息。</p>
+<h3 id="自定义授权扩展"><a href="#自定义授权扩展" class="headerlink" title="自定义授权扩展"></a>自定义授权扩展</h3><p>以此为参展自定义一个模式总共需要三个类</p>
+<p>OAuth2PasswordAuthenticationConverter</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line">public class OAuth2PasswordAuthenticationConverter  implements AuthenticationConverter &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public Authentication convert(HttpServletRequest request) &#123;</span><br><span class="line">        // grant_type (REQUIRED)</span><br><span class="line">        String grantType = request.getParameter(OAuth2ParameterNames.GRANT_TYPE);</span><br><span class="line">        if (!AuthorizationGrantType.PASSWORD.getValue().equals(grantType)) &#123;</span><br><span class="line">            return null;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        Authentication clientPrincipal = SecurityContextHolder.getContext().getAuthentication();</span><br><span class="line"></span><br><span class="line">        MultiValueMap&lt;String, String&gt; parameters = getParameters(request);</span><br><span class="line"></span><br><span class="line">        // username (REQUIRED)</span><br><span class="line">        String username = parameters.getFirst(OAuth2ParameterNames.USERNAME);</span><br><span class="line">        if (StrUtil.isEmpty(username) ||</span><br><span class="line">                parameters.get(OAuth2ParameterNames.USERNAME).size() != 1) &#123;</span><br><span class="line">            throw new LuckOAuth2AuthencticationException(ResponseStatusEnum.ACCOUNT_NOT_EXIST, &quot;username cannot be null&quot;);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        // password (REQUIRED)</span><br><span class="line">        String password = parameters.getFirst(OAuth2ParameterNames.PASSWORD);</span><br><span class="line">        if (StrUtil.isEmpty(password) ||</span><br><span class="line">                parameters.get(OAuth2ParameterNames.PASSWORD).size() != 1) &#123;</span><br><span class="line">            throw new LuckOAuth2AuthencticationException(ResponseStatusEnum.PASSWORD_INCORRECT, &quot;password cannot be null&quot;);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        Map&lt;String, Object&gt; additionalParameters = new HashMap&lt;&gt;();</span><br><span class="line">        parameters.forEach((key, value) -&gt; &#123;</span><br><span class="line">            if (!key.equals(OAuth2ParameterNames.GRANT_TYPE) &amp;&amp;</span><br><span class="line">                    !key.equals(OAuth2ParameterNames.USERNAME) &amp;&amp;</span><br><span class="line">                    !key.equals(OAuth2ParameterNames.PASSWORD)) &#123;</span><br><span class="line">                additionalParameters.put(key, value.get(0));</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">        return new OAuth2PasswordAuthenticationToken(username, password, clientPrincipal, additionalParameters);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    public MultiValueMap&lt;String, String&gt; getParameters(HttpServletRequest request) &#123;</span><br><span class="line">        Map&lt;String, String[]&gt; parameterMap = request.getParameterMap();</span><br><span class="line">        MultiValueMap&lt;String, String&gt; parameters = new LinkedMultiValueMap&lt;&gt;(parameterMap.size());</span><br><span class="line">        parameterMap.forEach((key, values) -&gt; &#123;</span><br><span class="line">            if (values.length &gt; 0) &#123;</span><br><span class="line">                for (String value : values) &#123;</span><br><span class="line">                    parameters.add(key, value);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">        return parameters;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<p>OAuth2PasswordAuthenticationToken</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">public class OAuth2PasswordAuthenticationToken extends OAuth2AuthorizationGrantAuthenticationToken &#123;</span><br><span class="line">    @Getter</span><br><span class="line">    private final String username;</span><br><span class="line">    @Getter</span><br><span class="line">    private final String password;</span><br><span class="line">    /**</span><br><span class="line">     * Constructs an &#123;@code OAuth2PasswordAuthenticationToken&#125; using the provided parameters.</span><br><span class="line">     *</span><br><span class="line">     * @param username             the username</span><br><span class="line">     * @param password             the password</span><br><span class="line">     * @param clientPrincipal      the authenticated client principal</span><br><span class="line">     * @param additionalParameters the additional parameters</span><br><span class="line">     */</span><br><span class="line">    public OAuth2PasswordAuthenticationToken(String username, String password, Authentication clientPrincipal,</span><br><span class="line">                                                Map&lt;String, Object&gt; additionalParameters) &#123;</span><br><span class="line">        super(AuthorizationGrantType.PASSWORD, clientPrincipal, additionalParameters);</span><br><span class="line">        Assert.hasText(username, &quot;username cannot be empty&quot;);</span><br><span class="line">        Assert.hasText(password, &quot;password cannot be empty&quot;);</span><br><span class="line">        this.username = username;</span><br><span class="line">        this.password = password;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<p>OAuth2PasswordAuthenticationProvider</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br></pre></td><td class="code"><pre><span class="line">public class OAuth2PasswordAuthenticationProvider implements AuthenticationProvider &#123;</span><br><span class="line">    private static final String ERROR_URI = &quot;https://datatracker.ietf.org/doc/html/rfc6749#section-5.2&quot;;</span><br><span class="line">    private final AuthenticationManager authenticationManager;</span><br><span class="line">    private final OAuth2AuthorizationService authorizationService;</span><br><span class="line">    private final OAuth2TokenGenerator&lt;? extends OAuth2Token&gt; tokenGenerator;</span><br><span class="line">    /**</span><br><span class="line">     * Constructs an &#123;@code OAuth2PasswordAuthenticationProvider&#125; using the provided parameters.</span><br><span class="line">     *</span><br><span class="line">     * @param authorizationService the authorization service</span><br><span class="line">     * @param tokenGenerator       the token generator</span><br><span class="line">     */</span><br><span class="line">    public OAuth2PasswordAuthenticationProvider(AuthenticationManager authenticationManager,</span><br><span class="line">                                                OAuth2AuthorizationService authorizationService,</span><br><span class="line">                                                OAuth2TokenGenerator&lt;? extends OAuth2Token&gt; tokenGenerator) &#123;</span><br><span class="line">        Assert.notNull(authenticationManager, &quot;authenticationManager cannot be null&quot;);</span><br><span class="line">        Assert.notNull(authorizationService, &quot;authorizationService cannot be null&quot;);</span><br><span class="line">        Assert.notNull(tokenGenerator, &quot;tokenGenerator cannot be null&quot;);</span><br><span class="line">        this.authenticationManager = authenticationManager;</span><br><span class="line">        this.authorizationService = authorizationService;</span><br><span class="line">        this.tokenGenerator = tokenGenerator;</span><br><span class="line">    &#125;</span><br><span class="line">    @Override</span><br><span class="line">    public Authentication authenticate(Authentication authentication) throws AuthenticationException &#123;</span><br><span class="line">        OAuth2PasswordAuthenticationToken passwordAuthentication = (OAuth2PasswordAuthenticationToken) authentication;</span><br><span class="line"></span><br><span class="line">        OAuth2ClientAuthenticationToken clientPrincipal = getAuthenticatedClientElseThrowInvalidClient(passwordAuthentication);</span><br><span class="line">        RegisteredClient registeredClient = clientPrincipal.getRegisteredClient();</span><br><span class="line">        Assert.notNull(registeredClient, &quot;registeredClient cannot be null&quot;);</span><br><span class="line"></span><br><span class="line">        if (!registeredClient.getAuthorizationGrantTypes().contains(AuthorizationGrantType.PASSWORD)) &#123;</span><br><span class="line">            throw new OAuth2AuthenticationException(OAuth2ErrorCodes.UNAUTHORIZED_CLIENT);</span><br><span class="line">        &#125;</span><br><span class="line">        if (log.isTraceEnabled()) &#123;</span><br><span class="line">            log.trace(&quot;Retrieved registered client&quot;);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        // Attempts to authenticate the passwordAuthentication</span><br><span class="line">        Authentication authenticate = authenticate(passwordAuthentication);</span><br><span class="line"></span><br><span class="line">        DefaultOAuth2TokenContext.Builder tokenContextBuilder = getTokenContextBuilder(passwordAuthentication,</span><br><span class="line">                registeredClient, authenticate);</span><br><span class="line"></span><br><span class="line">        OAuth2Authorization.Builder authorizationBuilder = getAuthorizationBuilder(passwordAuthentication,</span><br><span class="line">                registeredClient);</span><br><span class="line"></span><br><span class="line">        OAuth2TokenContext tokenContext = tokenContextBuilder.tokenType(OAuth2TokenType.ACCESS_TOKEN).build();</span><br><span class="line"></span><br><span class="line">        // ----- Access token -----</span><br><span class="line">        OAuth2AccessToken accessToken = getAccessToken(authorizationBuilder, tokenContext);</span><br><span class="line"></span><br><span class="line">        // ----- Refresh token -----</span><br><span class="line">        OAuth2RefreshToken refreshToken = getRefreshToken(clientPrincipal, registeredClient, tokenContextBuilder, authorizationBuilder);</span><br><span class="line"></span><br><span class="line">        return new OAuth2AccessTokenAuthenticationToken(</span><br><span class="line">                registeredClient, clientPrincipal, accessToken, refreshToken, passwordAuthentication.getAdditionalParameters());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private Authentication authenticate(OAuth2PasswordAuthenticationToken passwordAuthentication) &#123;</span><br><span class="line">        UsernamePasswordAuthenticationToken token =</span><br><span class="line">                new UsernamePasswordAuthenticationToken(passwordAuthentication.getUsername(),</span><br><span class="line">                        passwordAuthentication.getPassword());</span><br><span class="line">        Authentication authenticate;</span><br><span class="line">        try &#123;</span><br><span class="line">            authenticate = authenticationManager.authenticate(token);</span><br><span class="line">        &#125; catch (Exception e) &#123;</span><br><span class="line">            throw oAuth2AuthenticationException(e);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        return authenticate;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private static DefaultOAuth2TokenContext.Builder getTokenContextBuilder(</span><br><span class="line">            OAuth2PasswordAuthenticationToken passwordAuthentication,</span><br><span class="line">            RegisteredClient registeredClient,</span><br><span class="line">            Authentication authenticate) &#123;</span><br><span class="line">        return DefaultOAuth2TokenContext.builder()</span><br><span class="line">                .registeredClient(registeredClient)</span><br><span class="line">                .principal(authenticate)</span><br><span class="line">                .providerContext(ProviderContextHolder.getProviderContext())</span><br><span class="line">                .authorizationGrantType(AuthorizationGrantType.PASSWORD)</span><br><span class="line">                .authorizationGrant(passwordAuthentication);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private static OAuth2Authorization.Builder getAuthorizationBuilder(</span><br><span class="line">            OAuth2PasswordAuthenticationToken passwordAuthentication,</span><br><span class="line">            RegisteredClient registeredClient) &#123;</span><br><span class="line">        return OAuth2Authorization.withRegisteredClient(registeredClient)</span><br><span class="line">                .principalName(passwordAuthentication.getName())</span><br><span class="line">                .authorizationGrantType(AuthorizationGrantType.PASSWORD);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private OAuth2AccessToken getAccessToken(OAuth2Authorization.Builder authorizationBuilder,</span><br><span class="line">                                             OAuth2TokenContext tokenContext) &#123;</span><br><span class="line">        OAuth2Token generatedAccessToken = this.tokenGenerator.generate(tokenContext);</span><br><span class="line">        if (generatedAccessToken == null) &#123;</span><br><span class="line">            OAuth2Error error = new OAuth2Error(OAuth2ErrorCodes.SERVER_ERROR,</span><br><span class="line">                    &quot;The token generator failed to generate the access token.&quot;, ERROR_URI);</span><br><span class="line">            throw new OAuth2AuthenticationException(error);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        if (log.isTraceEnabled()) &#123;</span><br><span class="line">            log.trace(&quot;Generated access token&quot;);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        OAuth2AccessToken accessToken = new OAuth2AccessToken(OAuth2AccessToken.TokenType.BEARER,</span><br><span class="line">                generatedAccessToken.getTokenValue(), generatedAccessToken.getIssuedAt(),</span><br><span class="line">                generatedAccessToken.getExpiresAt(), tokenContext.getAuthorizedScopes());</span><br><span class="line">        if (generatedAccessToken instanceof ClaimAccessor) &#123;</span><br><span class="line">            authorizationBuilder.token(accessToken, (metadata) -&gt;</span><br><span class="line">                    metadata.put(OAuth2Authorization.Token.CLAIMS_METADATA_NAME,</span><br><span class="line">                            ((ClaimAccessor) generatedAccessToken).getClaims()));</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            authorizationBuilder.accessToken(accessToken);</span><br><span class="line">        &#125;</span><br><span class="line">        return accessToken;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private OAuth2RefreshToken getRefreshToken(OAuth2ClientAuthenticationToken clientPrincipal,</span><br><span class="line">                                               RegisteredClient registeredClient,</span><br><span class="line">                                               DefaultOAuth2TokenContext.Builder tokenContextBuilder,</span><br><span class="line">                                               OAuth2Authorization.Builder authorizationBuilder) &#123;</span><br><span class="line">        OAuth2TokenContext tokenContext;</span><br><span class="line">        OAuth2RefreshToken refreshToken = null;</span><br><span class="line">        if (registeredClient.getAuthorizationGrantTypes().contains(AuthorizationGrantType.REFRESH_TOKEN) &amp;&amp;</span><br><span class="line">                // Do not issue refresh token to public client</span><br><span class="line">                !clientPrincipal.getClientAuthenticationMethod().equals(ClientAuthenticationMethod.NONE)) &#123;</span><br><span class="line"></span><br><span class="line">            tokenContext = tokenContextBuilder.tokenType(OAuth2TokenType.REFRESH_TOKEN).build();</span><br><span class="line">            OAuth2Token generatedRefreshToken = this.tokenGenerator.generate(tokenContext);</span><br><span class="line">            if (!(generatedRefreshToken instanceof OAuth2RefreshToken)) &#123;</span><br><span class="line">                OAuth2Error error = new OAuth2Error(OAuth2ErrorCodes.SERVER_ERROR,</span><br><span class="line">                        &quot;The token generator failed to generate the refresh token.&quot;,ERROR_URI);</span><br><span class="line">                throw new OAuth2AuthenticationException(error);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            if (log.isTraceEnabled()) &#123;</span><br><span class="line">                log.trace(&quot;Generated refresh token&quot;);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            refreshToken = (OAuth2RefreshToken) generatedRefreshToken;</span><br><span class="line">            authorizationBuilder.refreshToken(refreshToken);</span><br><span class="line"></span><br><span class="line">            this.authorizationService.save(authorizationBuilder.build());</span><br><span class="line"></span><br><span class="line">            if (log.isTraceEnabled()) &#123;</span><br><span class="line">                log.trace(&quot;Saved authorization&quot;);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        return refreshToken;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public boolean supports(Class&lt;?&gt; authentication) &#123;</span><br><span class="line">        return OAuth2PasswordAuthenticationToken.class.isAssignableFrom(authentication);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * OAuth2 认证失败处理器只能处理 OAuth2AuthenticationException，故转换</span><br><span class="line">     *</span><br><span class="line">     * @param authenticationException 身份验证异常</span><br><span class="line">     * @return &#123;@link OAuth2AuthenticationException&#125;</span><br><span class="line">     */</span><br><span class="line">    private OAuth2AuthenticationException oAuth2AuthenticationException(Exception authenticationException) &#123;</span><br><span class="line">        if (authenticationException instanceof UsernameNotFoundException) &#123;</span><br><span class="line">            return new LuckOAuth2AuthencticationException(ResponseStatusEnum.ACCOUNT_NOT_EXIST);</span><br><span class="line">        &#125;</span><br><span class="line">        if (authenticationException instanceof BadCredentialsException) &#123;</span><br><span class="line">            return new LuckOAuth2AuthencticationException(ResponseStatusEnum.USERNAME_OR_PASSWORD_INCORRECT);</span><br><span class="line">        &#125;</span><br><span class="line">        if (authenticationException instanceof LockedException) &#123;</span><br><span class="line">            return new LuckOAuth2AuthencticationException(ResponseStatusEnum.ACCOUNT_FROZEN);</span><br><span class="line">        &#125;</span><br><span class="line">        if (authenticationException instanceof AccountExpiredException) &#123;</span><br><span class="line">            return new LuckOAuth2AuthencticationException(ResponseStatusEnum.ACCOUNT_EXPIRED);</span><br><span class="line">        &#125;</span><br><span class="line">        if (authenticationException instanceof CredentialsExpiredException) &#123;</span><br><span class="line">            return new LuckOAuth2AuthencticationException(ResponseStatusEnum.PASSWORD_EXPIRED);</span><br><span class="line">        &#125;</span><br><span class="line">        if (authenticationException instanceof InternalAuthenticationServiceException) &#123;</span><br><span class="line">            if (authenticationException.getCause() instanceof DisabledException) &#123;</span><br><span class="line">                return new LuckOAuth2AuthencticationException(ResponseStatusEnum.ACCOUNT_DISABLE);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        return new LuckOAuth2AuthencticationException(ResponseStatusEnum.IDENTITY_VERIFICATION_FAILED);</span><br><span class="line">    &#125;</span><br><span class="line">    public OAuth2ClientAuthenticationToken getAuthenticatedClientElseThrowInvalidClient(Authentication authentication) &#123;</span><br><span class="line">        OAuth2ClientAuthenticationToken clientPrincipal = null;</span><br><span class="line">        if (OAuth2ClientAuthenticationToken.class.isAssignableFrom(authentication.getPrincipal().getClass())) &#123;</span><br><span class="line">            clientPrincipal = (OAuth2ClientAuthenticationToken) authentication.getPrincipal();</span><br><span class="line">        &#125;</span><br><span class="line">        if (clientPrincipal != null &amp;&amp; clientPrincipal.isAuthenticated()) &#123;</span><br><span class="line">            return clientPrincipal;</span><br><span class="line">        &#125;</span><br><span class="line">        throw new OAuth2AuthenticationException(OAuth2ErrorCodes.INVALID_CLIENT);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当然如果需要自定义claims可以添加一个自定义OAuth2TokenCustomizer</p>
+<p>这里以OAuth2TokenCustomizerImpl为例</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">@Component</span><br><span class="line">public class OAuth2TokenCustomizerImpl implements OAuth2TokenCustomizer&lt;JwtEncodingContext&gt; &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void customize(JwtEncodingContext context) &#123;</span><br><span class="line">        JwtClaimsSet.Builder builder = context.getClaims();</span><br><span class="line"></span><br><span class="line">        // 客户端模式不返回具体用户信息</span><br><span class="line">        if (SecurityConstants.CLIENT_CREDENTIALS.equals(context.getAuthorizationGrantType().getValue())) &#123;</span><br><span class="line">            return;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        User user = (User) context.getPrincipal().getPrincipal();</span><br><span class="line">        builder.claims((claims) -&gt; &#123;</span><br><span class="line">            claims.put(&quot;username&quot;, user.getUsername());</span><br><span class="line">            claims.put(&quot;authorities&quot;, user.getAuthorities().stream().map(GrantedAuthority::getAuthority).toArray());</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<p>自定义鉴权成功或者鉴权失败代码可以参照</p>
+<p>DefaultAuthenticationFailureHandler</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br></pre></td><td class="code"><pre><span class="line">public class DefaultAuthenticationFailureHandler implements AuthenticationFailureHandler &#123;</span><br><span class="line"></span><br><span class="line">    private static final String AUTHENTICATION_METHOD = &quot;authentication_method&quot;;</span><br><span class="line">    private static final String CREDENTIALS = &quot;credentials&quot;;</span><br><span class="line">    @Override</span><br><span class="line">    public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException &#123;</span><br><span class="line">        AjaxResult&lt;?&gt; error = createError(exception);</span><br><span class="line"></span><br><span class="line">            ServletServerHttpResponse servletServerHttpResponse = new ServletServerHttpResponse(response);</span><br><span class="line">            servletServerHttpResponse.setStatusCode(HttpStatus.UNAUTHORIZED);</span><br><span class="line">            HttpEndpointUtils.writeWithMessageConverters(error, servletServerHttpResponse);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        /**</span><br><span class="line">         * 创建 error</span><br><span class="line">         *</span><br><span class="line">         * @param exception /</span><br><span class="line">         * @return /</span><br><span class="line">         */</span><br><span class="line">        private AjaxResult&lt;?&gt; createError(AuthenticationException exception) &#123;</span><br><span class="line">            AjaxResult&lt;?&gt; error = null;</span><br><span class="line"></span><br><span class="line">            if (exception instanceof LuckOAuth2AuthencticationException) &#123;</span><br><span class="line">                error = AjaxResult.error(((LuckOAuth2AuthencticationException) exception).getCode(),</span><br><span class="line">                        exception.getMessage());</span><br><span class="line">            &#125; else if (exception instanceof OAuth2AuthenticationException) &#123;</span><br><span class="line">                OAuth2AuthenticationException oAuth2AuthenticationException= (OAuth2AuthenticationException) exception;</span><br><span class="line">                String errorCode = oAuth2AuthenticationException.getError().getErrorCode();</span><br><span class="line">                String description = oAuth2AuthenticationException.getError().getDescription();</span><br><span class="line">                if (OAuth2ErrorCodes.INVALID_CLIENT.equals(errorCode))&#123;</span><br><span class="line">                    if (StrUtil.isEmpty(description)) &#123;</span><br><span class="line">                        return AjaxResult.error(ResponseStatusEnum.INVALID_GRANT, &quot;无效的客户端&quot;);</span><br><span class="line">                    &#125; else if (description.contains(OAuth2ParameterNames.CLIENT_ID)) &#123;</span><br><span class="line">                        return AjaxResult.error(ResponseStatusEnum.CLIENT_NOT_EXIST);</span><br><span class="line">                    &#125; else if (description.contains(AUTHENTICATION_METHOD)) &#123;</span><br><span class="line">                        return AjaxResult.error(ResponseStatusEnum.AUTHORIZATION_DENIED);</span><br><span class="line">                    &#125; else if (description.contains(CREDENTIALS)) &#123;</span><br><span class="line">                        return AjaxResult.error(ResponseStatusEnum.CLIENT_PASSWORD_EMPTY);</span><br><span class="line">                    &#125; else if (description.contains(OAuth2ParameterNames.CLIENT_SECRET)) &#123;</span><br><span class="line">                        return AjaxResult.error(ResponseStatusEnum.CLIENT_PASSWORD_INCORRECT);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                switch (errorCode) &#123;</span><br><span class="line">                    case OAuth2ErrorCodes.UNSUPPORTED_GRANT_TYPE :</span><br><span class="line">                        return AjaxResult.error(ResponseStatusEnum.UNSUPPORTED_GRANT_TYPE);</span><br><span class="line">                    case OAuth2ErrorCodes.INVALID_REQUEST : &#123;</span><br><span class="line">                        if (StrUtil.isEmpty(description)) &#123;</span><br><span class="line">                            return AjaxResult.error(ResponseStatusEnum.INVALID_GRANT, &quot;无效的客户端&quot;);</span><br><span class="line">                        &#125; else if (description.contains(OAuth2ParameterNames.GRANT_TYPE)) &#123;</span><br><span class="line">                            return AjaxResult.error(ResponseStatusEnum.GRANT_TYPE_EMPTY);</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                    case OAuth2ErrorCodes.INVALID_GRANT : return AjaxResult.error(ResponseStatusEnum.INVALID_GRANT);</span><br><span class="line">                    case OAuth2ErrorCodes.INVALID_SCOPE : return AjaxResult.error(ResponseStatusEnum.INVALID_SCOPE);</span><br><span class="line">                    case OAuth2ErrorCodes.UNAUTHORIZED_CLIENT :</span><br><span class="line">                        return AjaxResult.error(ResponseStatusEnum.UNAUTHORIZED_CLIENT);</span><br><span class="line">                    default : error = AjaxResult.error(ResponseStatusEnum.USER_LOGIN_ABNORMAL.getCode(),</span><br><span class="line">                            oAuth2AuthenticationException.getError().getErrorCode());</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                error = AjaxResult.error(ResponseStatusEnum.USER_LOGIN_ABNORMAL, exception.getLocalizedMessage());</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            return error;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>DefaultAuthenticationSuccessHandler</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line">public class DefaultAuthenticationSuccessHandler implements AuthenticationSuccessHandler &#123;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 指定响应数据不使用 ResponseData 封装的参数名称</span><br><span class="line">     * Swagger 登录时可用</span><br><span class="line">     */</span><br><span class="line">    private static final String NO_RESPONSE_DATA_PARAM_NAME = &quot;no_response_data&quot;;</span><br><span class="line"></span><br><span class="line">    private final Converter&lt;OAuth2AccessTokenResponse, Map&lt;String, Object&gt;&gt; accessTokenResponseParametersConverter =</span><br><span class="line">            new DefaultOAuth2AccessTokenResponseMapConverter();</span><br><span class="line">    @Override</span><br><span class="line">    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException &#123;</span><br><span class="line">        OAuth2AccessTokenAuthenticationToken accessTokenAuthentication = (OAuth2AccessTokenAuthenticationToken) authentication;</span><br><span class="line">        OAuth2AccessToken accessToken = accessTokenAuthentication.getAccessToken();</span><br><span class="line">        OAuth2RefreshToken refreshToken = accessTokenAuthentication.getRefreshToken();</span><br><span class="line">        Map&lt;String, Object&gt; additionalParameters = accessTokenAuthentication.getAdditionalParameters();</span><br><span class="line">        OAuth2AccessTokenResponse.Builder builder = OAuth2AccessTokenResponse.withToken(accessToken.getTokenValue())</span><br><span class="line">                .tokenType(accessToken.getTokenType()).scopes(accessToken.getScopes());</span><br><span class="line">        if (accessToken.getIssuedAt() != null &amp;&amp; accessToken.getExpiresAt() != null) &#123;</span><br><span class="line">            builder.expiresIn(ChronoUnit.SECONDS.between(accessToken.getIssuedAt(), accessToken.getExpiresAt()));</span><br><span class="line">        &#125;</span><br><span class="line">        if (refreshToken != null) &#123;</span><br><span class="line">            builder.refreshToken(refreshToken.getTokenValue());</span><br><span class="line">        &#125;</span><br><span class="line">        if (!CollectionUtils.isEmpty(additionalParameters)) &#123;</span><br><span class="line">            builder.additionalParameters(additionalParameters);</span><br><span class="line">        &#125;</span><br><span class="line">        OAuth2AccessTokenResponse accessTokenResponse = builder.build();</span><br><span class="line">        Map&lt;String, Object&gt; tokenResponseParameters = this.accessTokenResponseParametersConverter.convert(accessTokenResponse);</span><br><span class="line">        ServletServerHttpResponse httpResponse = new ServletServerHttpResponse(response);</span><br><span class="line"></span><br><span class="line">        boolean noResponseData = Boolean.parseBoolean(request.getParameter(NO_RESPONSE_DATA_PARAM_NAME));</span><br><span class="line">        if (noResponseData) &#123;</span><br><span class="line">            HttpEndpointUtils.writeWithMessageConverters(tokenResponseParameters, httpResponse);</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            AjaxResult&lt;Map&lt;String, Object&gt;&gt; responseData = AjaxResult.ok(tokenResponseParameters);</span><br><span class="line">            HttpEndpointUtils.writeWithMessageConverters(responseData, httpResponse);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>当然如果你需要自定义获取用户信息重写UserDetailsService，和其他版本的一致就好</p>
+<h3 id="自定义配置信息"><a href="#自定义配置信息" class="headerlink" title="自定义配置信息"></a>自定义配置信息</h3><p>当代码逻辑写完之后需要增加配置让代码生效</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br></pre></td><td class="code"><pre><span class="line">  @Autowired</span><br><span class="line">    JdbcTemplate jdbcTemplate;</span><br><span class="line">    @Autowired</span><br><span class="line">    RedisService redisService;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 这是个Spring security 的过滤器链，默认会配置</span><br><span class="line">     * &lt;p&gt;</span><br><span class="line">     * OAuth2 Authorization endpoint</span><br><span class="line">     * &lt;p&gt;</span><br><span class="line">     * OAuth2 Token endpoint</span><br><span class="line">     * &lt;p&gt;</span><br><span class="line">     * OAuth2 Token Introspection endpoint</span><br><span class="line">     * &lt;p&gt;</span><br><span class="line">     * OAuth2 Token Revocation endpoint</span><br><span class="line">     * &lt;p&gt;</span><br><span class="line">     * OAuth2 Authorization Server Metadata endpoint</span><br><span class="line">     * &lt;p&gt;</span><br><span class="line">     * JWK Set endpoint</span><br><span class="line">     * &lt;p&gt;</span><br><span class="line">     * OpenID Connect 1.0 Provider Configuration endpoint</span><br><span class="line">     * &lt;p&gt;</span><br><span class="line">     * OpenID Connect 1.0 UserInfo endpoint</span><br><span class="line">     * 这些协议端点，只有配置了他才能够访问的到接口地址（类似mvc的controller）。</span><br><span class="line">     *</span><br><span class="line">     * @param http</span><br><span class="line">     * @return</span><br><span class="line">     * @throws Exception</span><br><span class="line">     */</span><br><span class="line">    @Bean</span><br><span class="line">    @Order(1)</span><br><span class="line">    public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http)</span><br><span class="line">            throws Exception &#123;</span><br><span class="line">        OAuth2AuthorizationServerConfigurer&lt;HttpSecurity&gt; authorizationServerConfigurer =</span><br><span class="line">                new OAuth2AuthorizationServerConfigurer&lt;&gt;();</span><br><span class="line">        http.apply(authorizationServerConfigurer);</span><br><span class="line">        authorizationServerConfigurer</span><br><span class="line">                .authorizationService(authorizationService())</span><br><span class="line">                .tokenEndpoint(tokenEndpoint-&gt;tokenEndpoint</span><br><span class="line">                                .accessTokenRequestConverter(new OAuth2PasswordAuthenticationConverter())</span><br><span class="line">                                .accessTokenResponseHandler(responseDataAuthenticationSuccessHandler())</span><br><span class="line">                                .errorResponseHandler(authenticationFailureHandler()));</span><br><span class="line">        DefaultSecurityFilterChain chain = http</span><br><span class="line">                .requestMatcher(authorizationServerConfigurer.getEndpointsMatcher())</span><br><span class="line">                .authorizeHttpRequests(authorize -&gt;</span><br><span class="line">                        authorize.anyRequest().authenticated()</span><br><span class="line">                )</span><br><span class="line">                .csrf(CsrfConfigurer::disable)</span><br><span class="line">                .build();</span><br><span class="line">        addingAdditionalAuthenticationProvider(http);</span><br><span class="line">        return chain;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 这个也是个Spring Security的过滤器链，用于Spring Security的身份认证。</span><br><span class="line">     * @param http</span><br><span class="line">     * @return</span><br><span class="line">     * @throws Exception</span><br><span class="line">     */</span><br><span class="line">    @Bean</span><br><span class="line">    @Order(2)</span><br><span class="line">    public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http)</span><br><span class="line">            throws Exception &#123;</span><br><span class="line">        http</span><br><span class="line">                .authorizeHttpRequests((authorize) -&gt; authorize</span><br><span class="line">                        .anyRequest().authenticated()</span><br><span class="line">                )</span><br><span class="line">                // Form login handles the redirect to the login page from the</span><br><span class="line">                // authorization server filter chain</span><br><span class="line">                .formLogin(Customizer.withDefaults());</span><br><span class="line"></span><br><span class="line">        return http.build();</span><br><span class="line">    &#125;</span><br><span class="line">    @Bean</span><br><span class="line">    public AuthenticationSuccessHandler responseDataAuthenticationSuccessHandler() &#123;</span><br><span class="line">        return new DefaultAuthenticationSuccessHandler();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Bean</span><br><span class="line">    public AuthenticationFailureHandler authenticationFailureHandler() &#123;</span><br><span class="line">        return new DefaultAuthenticationFailureHandler();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 配置用户信息，或者配置用户数据来源，主要用于用户的检索。</span><br><span class="line">     * @return</span><br><span class="line">     */</span><br><span class="line">    @Bean</span><br><span class="line">    public UserDetailsService userDetailsService() &#123;</span><br><span class="line">//        UserDetails userDetails = User.withDefaultPasswordEncoder()</span><br><span class="line">//                .username(&quot;user&quot;)</span><br><span class="line">//                .password(&quot;password&quot;)</span><br><span class="line">//                .roles(&quot;USER&quot;)</span><br><span class="line">//                .build();</span><br><span class="line">//       return new InMemoryUserDetailsManager();</span><br><span class="line"></span><br><span class="line">        return new OAuth2UserDetailsManager();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * oauth2 用于第三方认证，RegisteredClientRepository 主要用于管理第三方（每个第三方就是一个客户端）</span><br><span class="line">     * @return</span><br><span class="line">     */</span><br><span class="line">    @Bean</span><br><span class="line">    public RegisteredClientRepository registeredClientRepository() &#123;</span><br><span class="line">//        RegisteredClient registeredClient = RegisteredClient.withId(UUID.randomUUID().toString())</span><br><span class="line">//                .clientId(&quot;messaging-client&quot;)</span><br><span class="line">//                .clientSecret(&quot;&#123;noop&#125;secret&quot;)</span><br><span class="line">//                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)</span><br><span class="line">//                .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)</span><br><span class="line">//                .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)</span><br><span class="line">//                .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)</span><br><span class="line">//                .redirectUri(&quot;http://127.0.0.1:1067/login/oauth2/code/messaging-client-oidc&quot;)</span><br><span class="line">//                .redirectUri(&quot;http://127.0.0.1:1067/authorized&quot;)</span><br><span class="line">//                .scope(OidcScopes.OPENID)</span><br><span class="line">//                .scope(&quot;message.read&quot;)</span><br><span class="line">//                .scope(&quot;message.write&quot;)</span><br><span class="line">//                .clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build())</span><br><span class="line">//                .build();</span><br><span class="line">//</span><br><span class="line">//        return new InMemoryRegisteredClientRepository(registeredClient);</span><br><span class="line">        return new JdbcRegisteredClientRepository(jdbcTemplate);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Bean</span><br><span class="line">    public OAuth2AuthorizationService authorizationService()&#123;</span><br><span class="line">        return new OAuth2RedisAuthorizationService(redisService);</span><br><span class="line">    &#125;</span><br><span class="line">    /**</span><br><span class="line">     * 用于给access_token签名使用。</span><br><span class="line">     * @return</span><br><span class="line">     */</span><br><span class="line">    @Bean</span><br><span class="line">    public JWKSource&lt;SecurityContext&gt; jwkSource() &#123;</span><br><span class="line">        KeyPair keyPair = generateRsaKey();</span><br><span class="line">        RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();</span><br><span class="line">        RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();</span><br><span class="line">        RSAKey rsaKey = new RSAKey.Builder(publicKey)</span><br><span class="line">                .privateKey(privateKey)</span><br><span class="line">                .keyID(UUID.randomUUID().toString())</span><br><span class="line">                .build();</span><br><span class="line">        JWKSet jwkSet = new JWKSet(rsaKey);</span><br><span class="line">        return new ImmutableJWKSet&lt;&gt;(jwkSet);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 生成秘钥对，为jwkSource提供服务。</span><br><span class="line">     * @return</span><br><span class="line">     */</span><br><span class="line">    private static KeyPair generateRsaKey() &#123;</span><br><span class="line">        KeyPair keyPair;</span><br><span class="line">        try &#123;</span><br><span class="line">            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(&quot;RSA&quot;);</span><br><span class="line">            keyPairGenerator.initialize(2048);</span><br><span class="line">            keyPair = keyPairGenerator.generateKeyPair();</span><br><span class="line">        &#125; catch (Exception ex) &#123;</span><br><span class="line">            throw new IllegalStateException(ex);</span><br><span class="line">        &#125;</span><br><span class="line">        return keyPair;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 配置Authorization Server实例</span><br><span class="line">     * @return</span><br><span class="line">     */</span><br><span class="line">    @Bean</span><br><span class="line">    public ProviderSettings providerSettings() &#123;</span><br><span class="line">        return ProviderSettings.builder().build();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private static void addingAdditionalAuthenticationProvider(HttpSecurity http) &#123;</span><br><span class="line">        AuthenticationManager authenticationManager = http.getSharedObject(AuthenticationManager.class);</span><br><span class="line">        OAuth2AuthorizationService authorizationService = http.getSharedObject(OAuth2AuthorizationService.class);</span><br><span class="line">        OAuth2TokenGenerator&lt;?&gt; tokenGenerator = http.getSharedObject(OAuth2TokenGenerator.class);</span><br><span class="line"></span><br><span class="line">        OAuth2PasswordAuthenticationProvider passwordAuthenticationProvider =</span><br><span class="line">                new OAuth2PasswordAuthenticationProvider(authenticationManager, authorizationService, tokenGenerator);</span><br><span class="line">        http.authenticationProvider(passwordAuthenticationProvider);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>备注：</p>
+<p>registeredClientRepository 客户端信息</p>
+<p>authorizationService token新增和处理</p>
+<p>providerSettings  访问端点配置 默认为：</p>
+<p><img src="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679126686151-d9dce2ff-ee10-4965-9c54-2744170deb62.png"></p>
+<p>addingAdditionalAuthenticationProvider</p>
+<p><code>OAuth2TokenEndpointConfigurer</code> 并没有提供批量设置 <code>AuthenticationProvider</code> 的方法，即，如果你要同时配置 authorization_code、refresh_token、client_credentials、password 的 <code>AuthenticationProvider</code> 的话，你需要调用多次 <code>accessTokenResponseHandler() </code>但是<code>HttpSecurity</code>提供了一个 <code>authenticationProvider()</code> 可以动态添加 <code>AuthenticationProvider</code></p>
+<h2 id="总结："><a href="#总结：" class="headerlink" title="总结："></a>总结：</h2><p>新版本的spring-authorization-server不同于原来的oauth2的版本，去除了密码模式，让很多简单的自定义登陆变的很麻烦，但是其中可自定义的地方有很多</p>
+<p>Converter ：从访问令牌中获取参数，并格式化</p>
+<p>Provider ：主处理器用于生成token以及保存token</p>
+<p>AuthorizationService ：保存token信息，获取token信息</p>
+<p>ResponseHandler ：返回信息处理</p>
+<p>Token：格式化访问信息为Provider提供数据</p>
+<p>Customizer ：自定义claims信息数据可以从context.getPrincipal().getPrincipal()中获取</p>
+<p>Manager ：自定义获取用户信息逻辑</p>
+<p>当然如果你不希望这么麻烦想要更简单的实现登陆，可以自定义<font style="color:rgb(25, 30, 30);">consentPage页面然后在自定义的consentPage中增加脚本自动提交表单获取令牌</font></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/oauth2-SpringCloud-SpringSecurity/" rel="tag"><i class="fa fa-tag"></i> oauth2,SpringCloud,SpringSecurity</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2024/03/11/%E8%87%AA%E5%AE%9A%E4%B9%89%E7%94%A8%E6%88%B7%E4%BF%A1%E6%81%AF/" rel="prev" title="自定义用户信息">
+      <i class="fa fa-chevron-left"></i> 自定义用户信息
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2024/03/14/%E6%94%B9%E9%80%A0%E7%BD%91%E5%85%B3%E5%AE%9E%E7%8E%B0%E6%8E%88%E6%9D%83/" rel="next" title="改造网关实现授权">
+      改造网关实现授权 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AE%80%E4%BB%8B"><span class="nav-number">1.</span> <span class="nav-text">简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89%E5%AF%86%E7%A0%81%E6%A8%A1%E5%BC%8F%EF%BC%9A"><span class="nav-number">2.</span> <span class="nav-text">自定义密码模式：</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89%E6%8E%88%E6%9D%83%E6%89%A9%E5%B1%95"><span class="nav-number">2.1.</span> <span class="nav-text">自定义授权扩展</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89%E9%85%8D%E7%BD%AE%E4%BF%A1%E6%81%AF"><span class="nav-number">2.2.</span> <span class="nav-text">自定义配置信息</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93%EF%BC%9A"><span class="nav-number">3.</span> <span class="nav-text">总结：</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="139"
+      src="/images/custom/avatar.jpg">
+  <p class="site-author-name" itemprop="name">139</p>
+  <div class="site-description" itemprop="description">一个普通的JAVA开发的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+  <div class="beian"><a href="https://beian.miit.gov.cn/" rel="noopener" target="_blank">浙ICP备2023004484号-1 </a>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">139</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
