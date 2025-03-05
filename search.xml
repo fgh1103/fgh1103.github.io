@@ -1210,9 +1210,10 @@
       </tags>
   </entry>
   <entry>
-    <title></title>
-    <url>/2025/03/05/%E7%BB%9F%E4%B8%80%E8%BF%94%E5%9B%9E%E6%97%B6%E9%97%B4%E6%A0%BC%E5%BC%8F/</url>
+    <title>统一返回时间格式</title>
+    <url>/2024/10/06/%E7%BB%9F%E4%B8%80%E8%BF%94%E5%9B%9E%E6%97%B6%E9%97%B4%E6%A0%BC%E5%BC%8F/</url>
     <content><![CDATA[<p>在springboot中@RestController的返回会使用Jackson来将响应序列化为json格式，所以构建统一的响应中的日期格式可以定义统一的序列化参数来实现，springboot自带的时间格式定义怎么处理的</p>
+<span id="more"></span>
 <h3 id="1-使用-DateTimeFormat和-JsonFormat都是处理时间格式化问题的"><a href="#1-使用-DateTimeFormat和-JsonFormat都是处理时间格式化问题的" class="headerlink" title="1.使用@DateTimeFormat和@JsonFormat都是处理时间格式化问题的"></a>1.使用@DateTimeFormat和@JsonFormat都是处理时间格式化问题的</h3><table>
 <thead>
 <tr>
@@ -1260,6 +1261,15 @@
 
 
 ]]></content>
+      <categories>
+        <category>从零搭建一个脚手架</category>
+      </categories>
+      <tags>
+        <tag>微服务</tag>
+        <tag>脚手架</tag>
+        <tag>格式化</tag>
+        <tag>时间</tag>
+      </tags>
   </entry>
   <entry>
     <title>集成Nacos+SpringCloudGateway实现配置中心以及服务发现</title>
