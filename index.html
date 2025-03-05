@@ -124,17 +124,17 @@
   </li>
         <li class="menu-item menu-item-tags">
 
-    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">14</span></a>
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">20</span></a>
 
   </li>
         <li class="menu-item menu-item-categories">
 
-    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">5</span></a>
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">6</span></a>
 
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">12</span></a>
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">19</span></a>
 
   </li>
       <li class="menu-item menu-item-search">
@@ -191,6 +191,602 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/05/%E7%BB%9F%E4%B8%80%E8%BF%94%E5%9B%9E%E6%97%B6%E9%97%B4%E6%A0%BC%E5%BC%8F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/03/05/%E7%BB%9F%E4%B8%80%E8%BF%94%E5%9B%9E%E6%97%B6%E9%97%B4%E6%A0%BC%E5%BC%8F/" class="post-title-link" itemprop="url">未命名</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-03-05 17:51:31 / 修改时间：17:51:35" itemprop="dateCreated datePublished" datetime="2025-03-05T17:51:31+08:00">2025-03-05</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>在springboot中@RestController的返回会使用Jackson来将响应序列化为json格式，所以构建统一的响应中的日期格式可以定义统一的序列化参数来实现，springboot自带的时间格式定义怎么处理的</p>
+<h3 id="1-使用-DateTimeFormat和-JsonFormat都是处理时间格式化问题的"><a href="#1-使用-DateTimeFormat和-JsonFormat都是处理时间格式化问题的" class="headerlink" title="1.使用@DateTimeFormat和@JsonFormat都是处理时间格式化问题的"></a>1.使用@DateTimeFormat和@JsonFormat都是处理时间格式化问题的</h3><table>
+<thead>
+<tr>
+<th>区别</th>
+<th>@DateTimeFormat</th>
+<th>@JsonFormat</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>使用方法</td>
+<td><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">@DateTimeFormat(pattern &#x3D; “yyyy-MM-dd HH:mm:ss”)</font></td>
+<td><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">@JsonFormat(pattern &#x3D; “yyyy-MM-dd HH:mm:ss”, timezone &#x3D; “GMT+8”)</font></td>
+</tr>
+<tr>
+<td>使用场景</td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">URL传参时，格式化前端传向后端日期类型的时间格式</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">JSON传参，格式化前端传参和后端返回给前端的时间格式，传参可能不一定是json，但是一般接口向前端返回数据，基本上都是封装的统一返回格式，然后JSON返回。所以这个注解是一定要加的！</font></td>
+</tr>
+<tr>
+<td>使用地方</td>
+<td><font style="color:rgb(79, 79, 79);">实体类日期字段上、或者字段的set方法上、或者方法入参上</font></td>
+<td><font style="color:rgb(79, 79, 79);">实体类日期字段上、或者字段的set方法上、、或者方法入参上</font></td>
+</tr>
+<tr>
+<td>来源</td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">org.springframework.format.annotation</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">com.fasterxml.jackson.annotation</font></td>
+</tr>
+</tbody></table>
+<h4 id="注意："><a href="#注意：" class="headerlink" title="注意："></a>注意：</h4><ul>
+<li>一旦使用yyyy-MM-dd 格式，如果传时分秒就会报错，或者是使用 yyyy-MM-dd HH:mm:ss，如果传yyyy-MM-dd 也会报错。</li>
+<li>假如是springboot项目的话，使用这两个注解是不用导其他的依赖包的！</li>
+<li>框架当中默认他会认为 前端传的是UTC时间，然后SpringMVC在接到参数的时候，会进行转换为本地区时间，向前端返回参数的时候会转换为UTC时间！</li>
+<li>这两个注解可以选择在实体类的set方法当中使用，也可以在字段上使用，效果是一样的！</li>
+</ul>
+<h3 id="2-在全局配置文件中设置"><a href="#2-在全局配置文件中设置" class="headerlink" title="2.在全局配置文件中设置"></a>2.在全局配置文件中设置</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">spring:  </span><br><span class="line">  jackson:</span><br><span class="line">    date-format: yyyy-MM-dd HH:mm:ss </span><br><span class="line">    time-zone: GMT+8</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-通过JavaBean方式配置"><a href="#3-通过JavaBean方式配置" class="headerlink" title="3.通过JavaBean方式配置"></a>3.通过JavaBean方式配置</h3><p>定义DateForamtConfiguration</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">@Configuration</span><br><span class="line">public class DateForamtConfiguration &#123;</span><br><span class="line"></span><br><span class="line">        public static final String timeFormat = &quot;HH:mm:ss&quot;;</span><br><span class="line">        public static final String dateFormat = &quot;yyyy-MM-dd&quot;;</span><br><span class="line">        public static final String dateTimeFormat = &quot;yyyy-MM-dd HH:mm:ss&quot;;</span><br><span class="line"></span><br><span class="line">        /**</span><br><span class="line">         * 全局时间格式化</span><br><span class="line">         */</span><br><span class="line">        @Bean</span><br><span class="line">        public Jackson2ObjectMapperBuilderCustomizer customizer() &#123;</span><br><span class="line">            return builder -&gt; &#123;</span><br><span class="line">                builder.simpleDateFormat(dateTimeFormat);</span><br><span class="line">                //日期序列化</span><br><span class="line">                builder.serializers(new LocalTimeSerializer(DateTimeFormatter.ofPattern(timeFormat)));</span><br><span class="line">                builder.serializers(new LocalDateSerializer(DateTimeFormatter.ofPattern(dateFormat)));</span><br><span class="line">                builder.serializers(new LocalDateTimeSerializer(DateTimeFormatter.ofPattern(dateTimeFormat)));</span><br><span class="line">                //日期反序列化</span><br><span class="line">                builder.deserializers(new LocalTimeDeserializer(DateTimeFormatter.ofPattern(timeFormat)));</span><br><span class="line">                builder.deserializers(new LocalDateDeserializer(DateTimeFormatter.ofPattern(dateFormat)));</span><br><span class="line">                builder.deserializers(new LocalDateTimeDeserializer(DateTimeFormatter.ofPattern(dateTimeFormat)));</span><br><span class="line">            &#125;;</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2025/03/05/%E7%BB%9F%E4%B8%80%E8%BF%94%E5%9B%9E%E6%97%B6%E9%97%B4%E6%A0%BC%E5%BC%8F/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/10/03/%E5%AE%9E%E7%8E%B0%E7%94%A8%E6%88%B7%E9%85%8D%E7%BD%AE%E6%95%B0%E6%8D%AE%E6%BA%90%E5%BC%95%E7%94%A8%E5%88%87%E6%8D%A2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2024/10/03/%E5%AE%9E%E7%8E%B0%E7%94%A8%E6%88%B7%E9%85%8D%E7%BD%AE%E6%95%B0%E6%8D%AE%E6%BA%90%E5%BC%95%E7%94%A8%E5%88%87%E6%8D%A2/" class="post-title-link" itemprop="url">实现用户配置数据源引用切换</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-10-03 00:00:00" itemprop="dateCreated datePublished" datetime="2024-10-03T00:00:00+08:00">2024-10-03</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-05 18:03:12" itemprop="dateModified" datetime="2025-03-05T18:03:12+08:00">2025-03-05</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AA%E8%84%9A%E6%89%8B%E6%9E%B6/" itemprop="url" rel="index"><span itemprop="name">从零搭建一个脚手架</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="需求来源"><a href="#需求来源" class="headerlink" title="需求来源"></a>需求来源</h2><p>实现代码生成器的时候因为做了分库，所以在实现代码生成时就需要根据不同的配置去拉取不同的表结构，所以需要实现不同的库使用不同的数据源</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2024/10/03/%E5%AE%9E%E7%8E%B0%E7%94%A8%E6%88%B7%E9%85%8D%E7%BD%AE%E6%95%B0%E6%8D%AE%E6%BA%90%E5%BC%95%E7%94%A8%E5%88%87%E6%8D%A2/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/10/03/%E6%9D%83%E9%99%90%E6%A8%A1%E5%9E%8BRBAC%E6%A8%A1%E5%9E%8B/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2024/10/03/%E6%9D%83%E9%99%90%E6%A8%A1%E5%9E%8BRBAC%E6%A8%A1%E5%9E%8B/" class="post-title-link" itemprop="url">权限模型RBAC模型</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-10-03 00:00:00" itemprop="dateCreated datePublished" datetime="2024-10-03T00:00:00+08:00">2024-10-03</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-05 18:03:04" itemprop="dateModified" datetime="2025-03-05T18:03:04+08:00">2025-03-05</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AA%E8%84%9A%E6%89%8B%E6%9E%B6/" itemprop="url" rel="index"><span itemprop="name">从零搭建一个脚手架</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h3 id="什么是RBAC模型"><a href="#什么是RBAC模型" class="headerlink" title="什么是RBAC模型"></a>什么是RBAC模型</h3><p>权限是需要给对应的用户的，当用户太多的时候如果一个一个用户的设定权限就会显得很复杂，这时候我们可以引入角色，<font style="color:rgb(74, 74, 74);">每个角色可以拥有多个权限，每个用户可以分配多个角色，这样用户就拥有了多个角色的多个权限</font></p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2024/10/03/%E6%9D%83%E9%99%90%E6%A8%A1%E5%9E%8BRBAC%E6%A8%A1%E5%9E%8B/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/10/03/%E6%9E%84%E5%BB%BA%E7%BB%9F%E4%B8%80%E8%BF%94%E5%9B%9E%E4%BB%A5%E5%8F%8A%E5%85%A8%E5%B1%80%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2024/10/03/%E6%9E%84%E5%BB%BA%E7%BB%9F%E4%B8%80%E8%BF%94%E5%9B%9E%E4%BB%A5%E5%8F%8A%E5%85%A8%E5%B1%80%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86/" class="post-title-link" itemprop="url">构建统一返回以及全局异常处理</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-10-03 00:00:00" itemprop="dateCreated datePublished" datetime="2024-10-03T00:00:00+08:00">2024-10-03</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-05 18:02:56" itemprop="dateModified" datetime="2025-03-05T18:02:56+08:00">2025-03-05</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AA%E8%84%9A%E6%89%8B%E6%9E%B6/" itemprop="url" rel="index"><span itemprop="name">从零搭建一个脚手架</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="统一返回格式"><a href="#统一返回格式" class="headerlink" title="统一返回格式"></a>统一返回格式</h2><h3 id="为什么需要统一返回格式"><a href="#为什么需要统一返回格式" class="headerlink" title="为什么需要统一返回格式"></a>为什么需要统一返回格式</h3><p><font style="color:rgb(47, 48, 52);">接口的返回值类型众多，有的直接返回数据传输对象（DTO），甚至直接返回数据对象（DO），还有的返回Result对象。这样对外交互时对方处理起来特别的复杂，所以需要统一的返回格式。</font></p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2024/10/03/%E6%9E%84%E5%BB%BA%E7%BB%9F%E4%B8%80%E8%BF%94%E5%9B%9E%E4%BB%A5%E5%8F%8A%E5%85%A8%E5%B1%80%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/10/03/%E6%9E%84%E5%BB%BA%E9%80%9A%E7%94%A8%E7%9A%84Redis%E8%BE%85%E5%8A%A9%E7%B1%BB/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2024/10/03/%E6%9E%84%E5%BB%BA%E9%80%9A%E7%94%A8%E7%9A%84Redis%E8%BE%85%E5%8A%A9%E7%B1%BB/" class="post-title-link" itemprop="url">构建通用的Redis辅助类</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-10-03 00:00:00" itemprop="dateCreated datePublished" datetime="2024-10-03T00:00:00+08:00">2024-10-03</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-05 18:03:08" itemprop="dateModified" datetime="2025-03-05T18:03:08+08:00">2025-03-05</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AA%E8%84%9A%E6%89%8B%E6%9E%B6/" itemprop="url" rel="index"><span itemprop="name">从零搭建一个脚手架</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>Redis中常用的功能可以分为两款，第一是缓存用于提升读性能，可以根据不同的数据类型来实现月签到统计，排行榜，消息订阅等功能。第二是用于实现分布式锁，一个成熟的辅助类可以对这两项功能进行封装，并列出常用的方法</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2024/10/03/%E6%9E%84%E5%BB%BA%E9%80%9A%E7%94%A8%E7%9A%84Redis%E8%BE%85%E5%8A%A9%E7%B1%BB/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/10/03/%E9%9B%86%E6%88%90Nacos+SpringCloudGateway%E5%AE%9E%E7%8E%B0%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83%E4%BB%A5%E5%8F%8A%E6%9C%8D%E5%8A%A1%E5%8F%91%E7%8E%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2024/10/03/%E9%9B%86%E6%88%90Nacos+SpringCloudGateway%E5%AE%9E%E7%8E%B0%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83%E4%BB%A5%E5%8F%8A%E6%9C%8D%E5%8A%A1%E5%8F%91%E7%8E%B0/" class="post-title-link" itemprop="url">集成Nacos+SpringCloudGateway实现配置中心以及服务发现</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-10-03 00:00:00" itemprop="dateCreated datePublished" datetime="2024-10-03T00:00:00+08:00">2024-10-03</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-05 18:03:01" itemprop="dateModified" datetime="2025-03-05T18:03:01+08:00">2025-03-05</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AA%E8%84%9A%E6%89%8B%E6%9E%B6/" itemprop="url" rel="index"><span itemprop="name">从零搭建一个脚手架</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>前面已经实现了统一返回以及异常处理，也完成了通用的数据模块，我们已经可以借此来实现服务，但是在微服务中肯定不会只有一个服务，当我们有多个服务的时候，会出现多个痛点：</p>
+<ol>
+<li>当服务多的时候分布在不同的服务器上部署的时候，前端寻址将是困难重重，所以需要一个统一的入口，来帮助前端来访问这些服务</li>
+<li>多个服务分部在不同的主机上，当我们因为某种原因需要修改多个服务的配置文件时，工作量巨大。</li>
+</ol>
+<p>而Nacos+SpringCloudGateway可以帮我们解决这个问题</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2024/10/03/%E9%9B%86%E6%88%90Nacos+SpringCloudGateway%E5%AE%9E%E7%8E%B0%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83%E4%BB%A5%E5%8F%8A%E6%9C%8D%E5%8A%A1%E5%8F%91%E7%8E%B0/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/10/01/%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AA%E9%80%9A%E7%94%A8%E7%9A%84%E6%95%B0%E6%8D%AE%E8%AE%BF%E9%97%AE%E6%A8%A1%E5%9D%97/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2024/10/01/%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AA%E9%80%9A%E7%94%A8%E7%9A%84%E6%95%B0%E6%8D%AE%E8%AE%BF%E9%97%AE%E6%A8%A1%E5%9D%97/" class="post-title-link" itemprop="url">构建一个通用的数据访问模块</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-10-01 00:00:00" itemprop="dateCreated datePublished" datetime="2024-10-01T00:00:00+08:00">2024-10-01</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-05 18:02:51" itemprop="dateModified" datetime="2025-03-05T18:02:51+08:00">2025-03-05</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AA%E8%84%9A%E6%89%8B%E6%9E%B6/" itemprop="url" rel="index"><span itemprop="name">从零搭建一个脚手架</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>当构建一个通用的数据访问模块的时候，一般需要处理分页，乐观锁、以及插入或者修改时一些公共字段默认值填充，以及慢查询处理定制化（虽然mysql自带的有这方面功能但是通知的灵活性不如自定义更实用）</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2024/10/01/%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AA%E9%80%9A%E7%94%A8%E7%9A%84%E6%95%B0%E6%8D%AE%E8%AE%BF%E9%97%AE%E6%A8%A1%E5%9D%97/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://example.com/2024/04/11/%E5%88%86%E5%B8%83%E5%BC%8FID/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -222,7 +818,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-05 17:40:37" itemprop="dateModified" datetime="2025-03-05T17:40:37+08:00">2025-03-05</time>
+                <time title="修改时间：2025-03-05 17:46:18" itemprop="dateModified" datetime="2025-03-05T17:46:18+08:00">2025-03-05</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -245,18 +841,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>:::success<br>分布式系统中，我们经常需要对数据、消息等进行唯一标识，这个唯一标识就是分布式 ID，那么我们如何设计它呢？本文将详细讲述分布式 ID 及其生成方案。</p>
-<p>:::</p>
-<hr>
-<h1 id="为什么需要分布式-ID"><a href="#为什么需要分布式-ID" class="headerlink" title="为什么需要分布式 ID"></a>为什么需要分布式 ID</h1><p>目前大部分的系统都已是分布式系统，所以在这种场景的业务开发中，经常会需要唯一 ID 对数据进行标识，比如用户身份标识、消息标识等等。</p>
-<p>并且在数据量达到一定规模后，大部分的系统也需要进行分库分表，这种场景下单库的自增 ID 已达不到我们的预期。所以我们需要分布式 ID 来对各种场景的数据进行唯一标识。</p>
-<h1 id="分布式-ID-的特性"><a href="#分布式-ID-的特性" class="headerlink" title="分布式 ID 的特性"></a>分布式 ID 的特性</h1><p><strong>主要特性：</strong></p>
-<ul>
-<li>全局唯一：分布式 ID 最基本要求，必须全局唯一。</li>
-<li>高可用：高并发下要保证 ID 的生成效率，避免影响系统。</li>
-<li>易用性：使用简单，可快速接入。</li>
-</ul>
-<p><strong>除此之外根据不同场景还有：</strong></p>
+          <h2 id="分布式系统中，我们经常需要对数据、消息等进行唯一标识，这个唯一标识就是分布式-ID，那么我们如何设计它呢？本文将详细讲述分布式-ID-及其生成方案。"><a href="#分布式系统中，我们经常需要对数据、消息等进行唯一标识，这个唯一标识就是分布式-ID，那么我们如何设计它呢？本文将详细讲述分布式-ID-及其生成方案。" class="headerlink" title="分布式系统中，我们经常需要对数据、消息等进行唯一标识，这个唯一标识就是分布式 ID，那么我们如何设计它呢？本文将详细讲述分布式 ID 及其生成方案。"></a>分布式系统中，我们经常需要对数据、消息等进行唯一标识，这个唯一标识就是分布式 ID，那么我们如何设计它呢？本文将详细讲述分布式 ID 及其生成方案。</h2><h1 id="为什么需要分布式-ID"><a href="#为什么需要分布式-ID" class="headerlink" title="为什么需要分布式 ID"></a>为什么需要分布式 ID</h1><p>目前大部分的系统都已是分布式系统，所以在这种场景的业务开发中，经常会需要唯一 ID 对数据进行标识，比如用户身份标识、消息标识等等。</p>
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2024/04/11/%E5%88%86%E5%B8%83%E5%BC%8FID/#more" rel="contents">
@@ -314,7 +899,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-05 17:40:42" itemprop="dateModified" datetime="2025-03-05T17:40:42+08:00">2025-03-05</time>
+                <time title="修改时间：2025-03-05 17:46:21" itemprop="dateModified" datetime="2025-03-05T17:46:21+08:00">2025-03-05</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -339,12 +924,6 @@
       
           <h3 id="设计简介："><a href="#设计简介：" class="headerlink" title="设计简介："></a>设计简介：</h3><p>灰度平台配置的主键是以域名来做主键配置，以域名来关联规则，依托这些规则来判断哪些哪些请求需要走灰度</p>
 <p><img src="https://cdn.fbbizyy.com/yuque/0/2023/jpeg/25873401/1701237832373-b55015c3-0ea5-468c-bb8f-f849cbc5daba.jpeg" alt="画板"></p>
-<h3 id="为什么要做这个平台"><a href="#为什么要做这个平台" class="headerlink" title="为什么要做这个平台"></a>为什么要做这个平台</h3><p>系统的稳定性，多有2方面造成</p>
-<p>1.生产环境运行期间，异常造成的服务宕机，造成的系统不可用。</p>
-<p>2.在更新服务时因为准备不足或者遗漏造成的更新时服务不可用。</p>
-<p>在第一点上我们可以做好监控和告警，使用容器编排工具自动重启，服务集群来避免。</p>
-<p>但是第二点人员干涉较多，很容易出现纰漏，所以构建一个灰度的平台，在系统上线后逐步的将系统开放出去，尽早的发现纰漏减少因为更新系统造成的宕机损失</p>
-<h3 id="平台功能与使用场景"><a href="#平台功能与使用场景" class="headerlink" title="平台功能与使用场景"></a>平台功能<font style="color:rgb(47, 48, 52);">与使用场景</font></h3>
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2024/03/28/%E4%BD%8E%E4%BE%B5%E5%85%A5%E7%9A%84%E7%81%B0%E5%BA%A6%E5%B9%B3%E5%8F%B0%E7%9A%84%E6%9E%84%E5%BB%BA/#more" rel="contents">
@@ -402,7 +981,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-05 17:40:34" itemprop="dateModified" datetime="2025-03-05T17:40:34+08:00">2025-03-05</time>
+                <time title="修改时间：2025-03-05 17:46:10" itemprop="dateModified" datetime="2025-03-05T17:46:10+08:00">2025-03-05</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -426,585 +1005,9 @@
 
       
           <h1 id="参考资料："><a href="#参考资料：" class="headerlink" title="参考资料："></a>参考资料：</h1><h2 id="Nacos-融合-Spring-Cloud："><a href="#Nacos-融合-Spring-Cloud：" class="headerlink" title="Nacos 融合 Spring Cloud："></a><font style="color:rgb(36, 41, 46);">Nacos 融合 Spring Cloud：</font></h2><p><a target="_blank" rel="noopener" href="https://nacos.io/zh-cn/docs/v2/ecology/use-nacos-with-spring-cloud.html">https://nacos.io/zh-cn/docs/v2/ecology/use-nacos-with-spring-cloud.html</a></p>
-<h2 id="Java-SDK："><a href="#Java-SDK：" class="headerlink" title="Java SDK："></a><font style="color:rgb(36, 41, 46);">Java SDK：</font></h2><p><a target="_blank" rel="noopener" href="https://nacos.io/zh-cn/docs/v2/guide/user/sdk.html">https://nacos.io/zh-cn/docs/v2/guide/user/sdk.html</a></p>
-<h1 id="POM文件引用："><a href="#POM文件引用：" class="headerlink" title="POM文件引用："></a>POM文件引用：</h1><h2 id="父pom"><a href="#父pom" class="headerlink" title="父pom"></a>父pom</h2><p>springcloud，springboot，springcloudalibaba，nacos版本引用</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">&lt;properties&gt;</span><br><span class="line">      &lt;java.version&gt;11&lt;/java.version&gt;</span><br><span class="line">      &lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;</span><br><span class="line">      &lt;project.reporting.outputEncoding&gt;UTF-8&lt;/project.reporting.outputEncoding&gt;</span><br><span class="line">      &lt;spring-boot.version&gt;2.6.13&lt;/spring-boot.version&gt;</span><br><span class="line">      &lt;spring-cloud.version&gt;2021.0.5&lt;/spring-cloud.version&gt;</span><br><span class="line">      &lt;spring-cloud-alibaba.version&gt;2021.0.4.0&lt;/spring-cloud-alibaba.version&gt;</span><br><span class="line">      &lt;alibaba.nacos.version&gt;2.1.1&lt;/alibaba.nacos.version&gt;</span><br><span class="line">  &lt;/properties&gt;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line">&lt;dependencyManagement&gt;</span><br><span class="line">       &lt;dependencies&gt;</span><br><span class="line">           &lt;!--统一版本--&gt;</span><br><span class="line">           &lt;dependency&gt;</span><br><span class="line">               &lt;groupId&gt;com.luck.sugar&lt;/groupId&gt;</span><br><span class="line">               &lt;artifactId&gt;luck-bom&lt;/artifactId&gt;</span><br><span class="line">               &lt;version&gt;1.0.0&lt;/version&gt;</span><br><span class="line">               &lt;type&gt;pom&lt;/type&gt;</span><br><span class="line">               &lt;scope&gt;import&lt;/scope&gt;</span><br><span class="line">           &lt;/dependency&gt;</span><br><span class="line">           &lt;!-- SpringBoot 依赖配置 --&gt;</span><br><span class="line">           &lt;dependency&gt;</span><br><span class="line">               &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;</span><br><span class="line">               &lt;artifactId&gt;spring-boot-dependencies&lt;/artifactId&gt;</span><br><span class="line">               &lt;version&gt;$&#123;spring-boot.version&#125;&lt;/version&gt;</span><br><span class="line">               &lt;type&gt;pom&lt;/type&gt;</span><br><span class="line">               &lt;scope&gt;import&lt;/scope&gt;</span><br><span class="line">           &lt;/dependency&gt;</span><br><span class="line">           &lt;!-- SpringCloud 微服务 --&gt;</span><br><span class="line">           &lt;dependency&gt;</span><br><span class="line">               &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;</span><br><span class="line">               &lt;artifactId&gt;spring-cloud-dependencies&lt;/artifactId&gt;</span><br><span class="line">               &lt;version&gt;$&#123;spring-cloud.version&#125;&lt;/version&gt;</span><br><span class="line">               &lt;type&gt;pom&lt;/type&gt;</span><br><span class="line">               &lt;scope&gt;import&lt;/scope&gt;</span><br><span class="line">           &lt;/dependency&gt;</span><br><span class="line">           &lt;!-- Alibaba Nacos 配置 --&gt;</span><br><span class="line">           &lt;dependency&gt;</span><br><span class="line">               &lt;groupId&gt;com.alibaba.nacos&lt;/groupId&gt;</span><br><span class="line">               &lt;artifactId&gt;nacos-client&lt;/artifactId&gt;</span><br><span class="line">               &lt;version&gt;$&#123;alibaba.nacos.version&#125;&lt;/version&gt;</span><br><span class="line">           &lt;/dependency&gt;</span><br><span class="line">           &lt;!-- Mybatis 依赖配置 --&gt;</span><br><span class="line"></span><br><span class="line">           &lt;!-- SpringCloud Alibaba 微服务 --&gt;</span><br><span class="line">           &lt;dependency&gt;</span><br><span class="line">               &lt;groupId&gt;com.alibaba.cloud&lt;/groupId&gt;</span><br><span class="line">               &lt;artifactId&gt;spring-cloud-alibaba-dependencies&lt;/artifactId&gt;</span><br><span class="line">               &lt;version&gt;$&#123;spring-cloud-alibaba.version&#125;&lt;/version&gt;</span><br><span class="line">               &lt;type&gt;pom&lt;/type&gt;</span><br><span class="line">               &lt;scope&gt;import&lt;/scope&gt;</span><br><span class="line">           &lt;/dependency&gt;</span><br><span class="line">       &lt;/dependencies&gt;</span><br><span class="line">   &lt;/dependencyManagement&gt;</span><br></pre></td></tr></table></figure>
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2024/03/27/springcloud%E9%A1%B9%E7%9B%AE%E4%BD%BF%E7%94%A8nacos/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2024/03/26/springboot%E9%A1%B9%E7%9B%AE%E4%B8%AD%E5%BC%95%E7%94%A8SpringCloudGateway/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/custom/avatar.jpg">
-      <meta itemprop="name" content="139">
-      <meta itemprop="description" content="一个普通的JAVA开发的博客">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="进学阁">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2024/03/26/springboot%E9%A1%B9%E7%9B%AE%E4%B8%AD%E5%BC%95%E7%94%A8SpringCloudGateway/" class="post-title-link" itemprop="url">springboot项目中引用SpringCloudGateway</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2024-03-26 00:00:00" itemprop="dateCreated datePublished" datetime="2024-03-26T00:00:00+08:00">2024-03-26</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-05 17:40:31" itemprop="dateModified" datetime="2025-03-05T17:40:31+08:00">2025-03-05</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" itemprop="url" rel="index"><span itemprop="name">微服务</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="什么是网关"><a href="#什么是网关" class="headerlink" title="什么是网关"></a>什么是网关</h1><p>首先我们打开官网可以看到如下的描述：</p>
-<p><img src="https://cdn.fbbizyy.com/yuque/0/2023/png/25873401/1672730319068-d939400c-0dc9-466e-ae30-1cff4d5c6783.png"></p>
-<p>SpringCloudGateway旨在提供一种简单而有效的方式来路由到API，并为它们提供跨领域的关注点，例如：安全性、监控&#x2F;度量和弹性。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2024/03/26/springboot%E9%A1%B9%E7%9B%AE%E4%B8%AD%E5%BC%95%E7%94%A8SpringCloudGateway/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2024/03/25/SpringCloudGateway%E8%AF%A6%E8%A7%A3/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/custom/avatar.jpg">
-      <meta itemprop="name" content="139">
-      <meta itemprop="description" content="一个普通的JAVA开发的博客">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="进学阁">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2024/03/25/SpringCloudGateway%E8%AF%A6%E8%A7%A3/" class="post-title-link" itemprop="url">SpringCloudGateway详解</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2024-03-25 16:52:22" itemprop="dateCreated datePublished" datetime="2024-03-25T16:52:22+08:00">2024-03-25</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-05 17:33:17" itemprop="dateModified" datetime="2025-03-05T17:33:17+08:00">2025-03-05</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" itemprop="url" rel="index"><span itemprop="name">微服务</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="Spring-Cloud-Gateway-的核心功能："><a href="#Spring-Cloud-Gateway-的核心功能：" class="headerlink" title="Spring Cloud Gateway 的核心功能："></a><font style="color:rgb(25, 27, 31);">Spring Cloud Gateway 的核心功能：</font></h2><p><font style="color:rgb(25, 27, 31);">断言（Predicate）：参照 Java8 的新特性Predicate，允许开发人员匹配 HTTP 请求中的任何内容，比如请求头或请求参数，最后根据匹配结果返回一个布尔值。 路由（route）：由ID、目标URI、断言集合和过滤器集合组成。如果聚合断言结果为真，则转发到该路由。 过滤器（filter）：可以在返回请求之前或之后修改请求和响应的内容。</font></p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2024/03/25/SpringCloudGateway%E8%AF%A6%E8%A7%A3/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2024/03/15/%E8%B5%84%E6%BA%90%E6%9C%8D%E5%8A%A1%E5%99%A8/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/custom/avatar.jpg">
-      <meta itemprop="name" content="139">
-      <meta itemprop="description" content="一个普通的JAVA开发的博客">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="进学阁">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2024/03/15/%E8%B5%84%E6%BA%90%E6%9C%8D%E5%8A%A1%E5%99%A8/" class="post-title-link" itemprop="url">资源服务器鉴权处理</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2024-03-15 19:53:16" itemprop="dateCreated datePublished" datetime="2024-03-15T19:53:16+08:00">2024-03-15</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-05 17:14:15" itemprop="dateModified" datetime="2025-03-05T17:14:15+08:00">2025-03-05</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%8E%88%E6%9D%83/" itemprop="url" rel="index"><span itemprop="name">授权</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="简介："><a href="#简介：" class="headerlink" title="简介："></a>简介：</h2><p>在oauth2中授权服务器颁发过令牌后，用户就可以对资源进行访问，这时会有一个问题就是需要验证令牌，而前边文章中令牌使用的jwt格式，所以需要一个统一的资源管理器来验证令牌解析令牌</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2024/03/15/%E8%B5%84%E6%BA%90%E6%9C%8D%E5%8A%A1%E5%99%A8/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2024/03/14/%E6%94%B9%E9%80%A0%E7%BD%91%E5%85%B3%E5%AE%9E%E7%8E%B0%E6%8E%88%E6%9D%83/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/custom/avatar.jpg">
-      <meta itemprop="name" content="139">
-      <meta itemprop="description" content="一个普通的JAVA开发的博客">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="进学阁">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2024/03/14/%E6%94%B9%E9%80%A0%E7%BD%91%E5%85%B3%E5%AE%9E%E7%8E%B0%E6%8E%88%E6%9D%83/" class="post-title-link" itemprop="url">改造网关实现授权</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2024-03-14 21:21:13" itemprop="dateCreated datePublished" datetime="2024-03-14T21:21:13+08:00">2024-03-14</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-05 17:14:06" itemprop="dateModified" datetime="2025-03-05T17:14:06+08:00">2025-03-05</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%8E%88%E6%9D%83/" itemprop="url" rel="index"><span itemprop="name">授权</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="前言："><a href="#前言：" class="headerlink" title="前言："></a>前言：</h2><p>先看下认证授权的过程，认证客户端的认证是最先被认证的，只有先认证客户端可会进行token的认证，而我们不应该把客户端的信息暴漏在外面所以客户端的信息只能通过网关转发的时候注入到请求中</p>
-<p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/27343190/1667726854430-5c1f32f8-d71b-4c75-815c-c75de9cac331.png"></p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2024/03/14/%E6%94%B9%E9%80%A0%E7%BD%91%E5%85%B3%E5%AE%9E%E7%8E%B0%E6%8E%88%E6%9D%83/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2024/03/12/%E8%87%AA%E5%AE%9A%E4%B9%89%E5%AF%86%E7%A0%81%E6%A8%A1%E5%BC%8F/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/custom/avatar.jpg">
-      <meta itemprop="name" content="139">
-      <meta itemprop="description" content="一个普通的JAVA开发的博客">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="进学阁">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2024/03/12/%E8%87%AA%E5%AE%9A%E4%B9%89%E5%AF%86%E7%A0%81%E6%A8%A1%E5%BC%8F/" class="post-title-link" itemprop="url">自定义密码模式</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2024-03-12 19:21:00" itemprop="dateCreated datePublished" datetime="2024-03-12T19:21:00+08:00">2024-03-12</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-05 17:14:18" itemprop="dateModified" datetime="2025-03-05T17:14:18+08:00">2025-03-05</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%8E%88%E6%9D%83/" itemprop="url" rel="index"><span itemprop="name">授权</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p><img src="https://cdn.fbbizyy.com/yuque/0/2023/png/25873401/1679106524585-028d887a-7d9d-4e18-af56-f2bcdc192049.png"></p>
-<p>在官方的说明中我们可以看到OAuth 2.1 废弃了 OAuth 2.0 中的密码模式，只提供了三种授权类型：授权码、刷新令牌、客户端凭证。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2024/03/12/%E8%87%AA%E5%AE%9A%E4%B9%89%E5%AF%86%E7%A0%81%E6%A8%A1%E5%BC%8F/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2024/03/11/%E8%87%AA%E5%AE%9A%E4%B9%89%E7%94%A8%E6%88%B7%E4%BF%A1%E6%81%AF/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/custom/avatar.jpg">
-      <meta itemprop="name" content="139">
-      <meta itemprop="description" content="一个普通的JAVA开发的博客">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="进学阁">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2024/03/11/%E8%87%AA%E5%AE%9A%E4%B9%89%E7%94%A8%E6%88%B7%E4%BF%A1%E6%81%AF/" class="post-title-link" itemprop="url">自定义用户信息</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2024-03-11 23:17:16" itemprop="dateCreated datePublished" datetime="2024-03-11T23:17:16+08:00">2024-03-11</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-05 17:14:11" itemprop="dateModified" datetime="2025-03-05T17:14:11+08:00">2025-03-05</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%8E%88%E6%9D%83/" itemprop="url" rel="index"><span itemprop="name">授权</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="回顾"><a href="#回顾" class="headerlink" title="回顾"></a>回顾</h2><p>在集成Oauth2.1认证中心，采用默认的数据结构实现了认证，但是大部分时候默认的用户结构并不能满足生产的需要，所以接下来以RBAC权限设计来实现用户</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2024/03/11/%E8%87%AA%E5%AE%9A%E4%B9%89%E7%94%A8%E6%88%B7%E4%BF%A1%E6%81%AF/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2024/03/11/%E9%9B%86%E6%88%90Oauth2.1%E8%AE%A4%E8%AF%81%E4%B8%AD%E5%BF%83/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/custom/avatar.jpg">
-      <meta itemprop="name" content="139">
-      <meta itemprop="description" content="一个普通的JAVA开发的博客">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="进学阁">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2024/03/11/%E9%9B%86%E6%88%90Oauth2.1%E8%AE%A4%E8%AF%81%E4%B8%AD%E5%BF%83/" class="post-title-link" itemprop="url">集成Oauth2.1认证中心</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2024-03-11 20:10:23" itemprop="dateCreated datePublished" datetime="2024-03-11T20:10:23+08:00">2024-03-11</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-05 17:14:21" itemprop="dateModified" datetime="2025-03-05T17:14:21+08:00">2025-03-05</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%8E%88%E6%9D%83/" itemprop="url" rel="index"><span itemprop="name">授权</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h2><p>新版本中的springcloud已经将springcloudoauth2包取消掉，oauth2新增了一个spring-authorization-server的项目，在spring-authorization-server下现在已经有3个可用版本，其中0.3.0对应的是jdk11版本， 0.4.0对应的是jdk8版本，1.0版本对应的是jdk17。以下的实例是以jdk11为例</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2024/03/11/%E9%9B%86%E6%88%90Oauth2.1%E8%AE%A4%E8%AF%81%E4%B8%AD%E5%BF%83/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -1095,20 +1098,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">12</span>
+          <span class="site-state-item-count">19</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-count">6</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-count">20</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
