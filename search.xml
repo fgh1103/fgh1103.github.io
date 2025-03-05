@@ -103,7 +103,9 @@
         <category>授权</category>
       </categories>
       <tags>
-        <tag>oauth2 SpringCloud SpringSecurity</tag>
+        <tag>oauth2</tag>
+        <tag>SpringCloud</tag>
+        <tag>SpringSecurity</tag>
       </tags>
   </entry>
   <entry>
@@ -140,7 +142,9 @@
         <category>授权</category>
       </categories>
       <tags>
-        <tag>oauth2 SpringCloud SpringSecurity</tag>
+        <tag>oauth2</tag>
+        <tag>SpringCloud</tag>
+        <tag>SpringSecurity</tag>
       </tags>
   </entry>
   <entry>
@@ -221,7 +225,9 @@
         <category>授权</category>
       </categories>
       <tags>
-        <tag>oauth2,SpringCloud,SpringSecurity</tag>
+        <tag>oauth2</tag>
+        <tag>SpringCloud</tag>
+        <tag>SpringSecurity</tag>
       </tags>
   </entry>
   <entry>
@@ -268,7 +274,9 @@
         <category>授权</category>
       </categories>
       <tags>
-        <tag>oauth2 SpringCloud SpringSecurity</tag>
+        <tag>oauth2</tag>
+        <tag>SpringCloud</tag>
+        <tag>SpringSecurity</tag>
       </tags>
   </entry>
   <entry>
@@ -355,7 +363,9 @@
         <category>授权</category>
       </categories>
       <tags>
-        <tag>oauth2 SpringCloud SpringSecurity</tag>
+        <tag>oauth2</tag>
+        <tag>SpringCloud</tag>
+        <tag>SpringSecurity</tag>
       </tags>
   </entry>
 </search>
