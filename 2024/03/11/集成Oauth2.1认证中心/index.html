@@ -20,24 +20,24 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="概念新版本中的springcloud已经将springcloudoauth2包取消掉，oauth2新增了一个spring-authorization-server的项目，在spring-authorization-server下现在已经有3个可用版本，其中0.3.0对应的是jdk11版本， 0.4.0对应的是jdk8版本，1.0版本对应的是jdk17。以下的实例是以jdk11为例 建立授权服务创建">
+  <meta name="description" content="概念新版本中的springcloud已经将springcloudoauth2包取消掉，oauth2新增了一个spring-authorization-server的项目，在spring-authorization-server下现在已经有3个可用版本，其中0.3.0对应的是jdk11版本， 0.4.0对应的是jdk8版本，1.0版本对应的是jdk17。以下的实例是以jdk11为例">
 <meta property="og:type" content="article">
 <meta property="og:title" content="集成Oauth2.1认证中心">
 <meta property="og:url" content="http://example.com/2024/03/11/%E9%9B%86%E6%88%90Oauth2.1%E8%AE%A4%E8%AF%81%E4%B8%AD%E5%BF%83/index.html">
 <meta property="og:site_name" content="进学阁">
-<meta property="og:description" content="概念新版本中的springcloud已经将springcloudoauth2包取消掉，oauth2新增了一个spring-authorization-server的项目，在spring-authorization-server下现在已经有3个可用版本，其中0.3.0对应的是jdk11版本， 0.4.0对应的是jdk8版本，1.0版本对应的是jdk17。以下的实例是以jdk11为例 建立授权服务创建">
+<meta property="og:description" content="概念新版本中的springcloud已经将springcloudoauth2包取消掉，oauth2新增了一个spring-authorization-server的项目，在spring-authorization-server下现在已经有3个可用版本，其中0.3.0对应的是jdk11版本， 0.4.0对应的是jdk8版本，1.0版本对应的是jdk17。以下的实例是以jdk11为例">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2023/png/25873401/1678243822906-ab077efe-c963-4e24-a89d-e5fc2beb53e8.png">
-<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2023/png/25873401/1678243858497-5b68bed5-2d79-48fb-9209-c2e3639c258b.png">
-<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2023/png/25873401/1678244026029-0c3c4817-9483-481e-9899-69e8fb636d3b.png">
-<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2023/png/25873401/1678244264220-25530875-31db-4c3d-bd62-a4b910934a98.png">
-<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2023/png/25873401/1678244286055-479c09a7-92be-4354-9e80-831a3295a893.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2023/png/25873401/1678243822906-ab077efe-c963-4e24-a89d-e5fc2beb53e8.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2023/png/25873401/1678243858497-5b68bed5-2d79-48fb-9209-c2e3639c258b.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2023/png/25873401/1678244026029-0c3c4817-9483-481e-9899-69e8fb636d3b.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2023/png/25873401/1678244264220-25530875-31db-4c3d-bd62-a4b910934a98.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2023/png/25873401/1678244286055-479c09a7-92be-4354-9e80-831a3295a893.png">
 <meta property="article:published_time" content="2024-03-11T12:10:23.000Z">
-<meta property="article:modified_time" content="2025-03-05T08:41:46.267Z">
+<meta property="article:modified_time" content="2025-03-05T09:01:48.351Z">
 <meta property="article:author" content="139">
-<meta property="article:tag" content="oauth2,SpringCloud,SpringSecurity">
+<meta property="article:tag" content="oauth2 SpringCloud SpringSecurity">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://cdn.nlark.com/yuque/0/2023/png/25873401/1678243822906-ab077efe-c963-4e24-a89d-e5fc2beb53e8.png">
+<meta name="twitter:image" content="https://cdn.fbbizyy.com/yuque/0/2023/png/25873401/1678243822906-ab077efe-c963-4e24-a89d-e5fc2beb53e8.png">
 
 <link rel="canonical" href="http://example.com/2024/03/11/%E9%9B%86%E6%88%90Oauth2.1%E8%AE%A4%E8%AF%81%E4%B8%AD%E5%BF%83/">
 
@@ -133,7 +133,7 @@
   </li>
         <li class="menu-item menu-item-tags">
 
-    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">5</span></a>
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">6</span></a>
 
   </li>
         <li class="menu-item menu-item-categories">
@@ -231,7 +231,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-05 16:41:46" itemprop="dateModified" datetime="2025-03-05T16:41:46+08:00">2025-03-05</time>
+                <time title="修改时间：2025-03-05 17:01:48" itemprop="dateModified" datetime="2025-03-05T17:01:48+08:00">2025-03-05</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -262,6 +262,7 @@
 
       
         <h2 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h2><p>新版本中的springcloud已经将springcloudoauth2包取消掉，oauth2新增了一个spring-authorization-server的项目，在spring-authorization-server下现在已经有3个可用版本，其中0.3.0对应的是jdk11版本， 0.4.0对应的是jdk8版本，1.0版本对应的是jdk17。以下的实例是以jdk11为例</p>
+<span id="more"></span>
 <h2 id="建立授权服务"><a href="#建立授权服务" class="headerlink" title="建立授权服务"></a>建立授权服务</h2><p>创建服务的过程这里不做赘述，项目需要的pom文件如下</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">&lt;!--jdbc--&gt;</span><br><span class="line">      &lt;dependency&gt;</span><br><span class="line">          &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;</span><br><span class="line">          &lt;artifactId&gt;spring-boot-starter-jdbc&lt;/artifactId&gt;</span><br><span class="line">      &lt;/dependency&gt;</span><br><span class="line">      &lt;dependency&gt;</span><br><span class="line">          &lt;groupId&gt;mysql&lt;/groupId&gt;</span><br><span class="line">          &lt;artifactId&gt;mysql-connector-java&lt;/artifactId&gt;</span><br><span class="line">      &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"> &lt;!--auth --&gt;</span><br><span class="line">      &lt;dependency&gt;</span><br><span class="line">          &lt;groupId&gt;org.springframework.security&lt;/groupId&gt;</span><br><span class="line">          &lt;artifactId&gt;spring-security-oauth2-authorization-server&lt;/artifactId&gt;</span><br><span class="line">      &lt;/dependency&gt;</span><br></pre></td></tr></table></figure>
 
@@ -287,15 +288,15 @@
 
 <p>以registeredClientRepository创建客户端</p>
 <h2 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h2><p>打开：<a target="_blank" rel="noopener" href="http://127.0.0.1:1067/oauth2/authorize?response_type=code&client_id=messaging-client&scope=message.read&redirect_uri=http://127.0.0.1:1067/authorized">http://127.0.0.1:1067/oauth2/authorize?response_type&#x3D;code&amp;client_id&#x3D;messaging-client&amp;scope&#x3D;message.read&amp;redirect_uri&#x3D;http://127.0.0.1:1067/authorized</a></p>
-<p><img src="https://cdn.nlark.com/yuque/0/2023/png/25873401/1678243822906-ab077efe-c963-4e24-a89d-e5fc2beb53e8.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2023/png/25873401/1678243822906-ab077efe-c963-4e24-a89d-e5fc2beb53e8.png"></p>
 <p>输入前面的添加的账号密码</p>
-<p><img src="https://cdn.nlark.com/yuque/0/2023/png/25873401/1678243858497-5b68bed5-2d79-48fb-9209-c2e3639c258b.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2023/png/25873401/1678243858497-5b68bed5-2d79-48fb-9209-c2e3639c258b.png"></p>
 <p>报错了，不过没关系。因为在oath2中第一步是拿到code 拿到code之后才能换取token</p>
 <p>我们只要拿到地址栏后面的code信息就好。复制出code信息，打开postman进行post请求</p>
-<p><img src="https://cdn.nlark.com/yuque/0/2023/png/25873401/1678244026029-0c3c4817-9483-481e-9899-69e8fb636d3b.png"></p>
-<p><img src="https://cdn.nlark.com/yuque/0/2023/png/25873401/1678244264220-25530875-31db-4c3d-bd62-a4b910934a98.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2023/png/25873401/1678244026029-0c3c4817-9483-481e-9899-69e8fb636d3b.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2023/png/25873401/1678244264220-25530875-31db-4c3d-bd62-a4b910934a98.png"></p>
 <p>点击访问</p>
-<p><img src="https://cdn.nlark.com/yuque/0/2023/png/25873401/1678244286055-479c09a7-92be-4354-9e80-831a3295a893.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2023/png/25873401/1678244286055-479c09a7-92be-4354-9e80-831a3295a893.png"></p>
 
     </div>
 
@@ -306,7 +307,7 @@
       <footer class="post-footer">
           
           <div class="post-tags">
-              <a href="/tags/oauth2-SpringCloud-SpringSecurity/" rel="tag"><i class="fa fa-tag"></i> oauth2,SpringCloud,SpringSecurity</a>
+              <a href="/tags/oauth2-SpringCloud-SpringSecurity/" rel="tag"><i class="fa fa-tag"></i> oauth2 SpringCloud SpringSecurity</a>
           </div>
 
         
@@ -409,7 +410,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-count">6</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>

@@ -20,26 +20,26 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="前言：先看下认证授权的过程，认证客户端的认证是最先被认证的，只有先认证客户端可会进行token的认证，而我们不应该把客户端的信息暴漏在外面所以客户端的信息只能通过网关转发的时候注入到请求中  直接请求认证服务器的流程请求&#x2F;oauth2&#x2F;token 输入表单信息   Authorization设置为Basic Auth  获得结果">
+  <meta name="description" content="前言：先看下认证授权的过程，认证客户端的认证是最先被认证的，只有先认证客户端可会进行token的认证，而我们不应该把客户端的信息暴漏在外面所以客户端的信息只能通过网关转发的时候注入到请求中">
 <meta property="og:type" content="article">
 <meta property="og:title" content="改造网关实现授权">
 <meta property="og:url" content="http://example.com/2024/03/14/%E6%94%B9%E9%80%A0%E7%BD%91%E5%85%B3%E5%AE%9E%E7%8E%B0%E6%8E%88%E6%9D%83/index.html">
 <meta property="og:site_name" content="进学阁">
-<meta property="og:description" content="前言：先看下认证授权的过程，认证客户端的认证是最先被认证的，只有先认证客户端可会进行token的认证，而我们不应该把客户端的信息暴漏在外面所以客户端的信息只能通过网关转发的时候注入到请求中  直接请求认证服务器的流程请求&#x2F;oauth2&#x2F;token 输入表单信息   Authorization设置为Basic Auth  获得结果">
+<meta property="og:description" content="前言：先看下认证授权的过程，认证客户端的认证是最先被认证的，只有先认证客户端可会进行token的认证，而我们不应该把客户端的信息暴漏在外面所以客户端的信息只能通过网关转发的时候注入到请求中">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2022/png/27343190/1667726854430-5c1f32f8-d71b-4c75-815c-c75de9cac331.png">
-<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679132164269-3335ac9d-d4a6-4464-81aa-b9753aae6360.png">
-<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679132230680-00619d4b-b0be-436a-8431-cf863ddfb67c.png">
-<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679132311409-b4aac947-0f53-4d41-a529-549fadb993b5.png">
-<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679133263303-ffd2f328-09fa-4bd4-9a53-9c5ded039cf4.png">
-<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679133272368-1c2b04a7-f9b0-49ac-90e4-dce9298e5f8d.png">
-<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679133290397-da9266f6-dd79-4b06-ac87-736203474128.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/27343190/1667726854430-5c1f32f8-d71b-4c75-815c-c75de9cac331.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2023/png/25873401/1679132164269-3335ac9d-d4a6-4464-81aa-b9753aae6360.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2023/png/25873401/1679132230680-00619d4b-b0be-436a-8431-cf863ddfb67c.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2023/png/25873401/1679132311409-b4aac947-0f53-4d41-a529-549fadb993b5.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2023/png/25873401/1679133263303-ffd2f328-09fa-4bd4-9a53-9c5ded039cf4.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2023/png/25873401/1679133272368-1c2b04a7-f9b0-49ac-90e4-dce9298e5f8d.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2023/png/25873401/1679133290397-da9266f6-dd79-4b06-ac87-736203474128.png">
 <meta property="article:published_time" content="2024-03-14T13:21:13.000Z">
-<meta property="article:modified_time" content="2025-03-05T08:43:59.748Z">
+<meta property="article:modified_time" content="2025-03-05T09:01:39.055Z">
 <meta property="article:author" content="139">
-<meta property="article:tag" content="oauth2,SpringCloud,SpringSecurity">
+<meta property="article:tag" content="oauth2 SpringCloud SpringSecurity">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://cdn.nlark.com/yuque/0/2022/png/27343190/1667726854430-5c1f32f8-d71b-4c75-815c-c75de9cac331.png">
+<meta name="twitter:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/27343190/1667726854430-5c1f32f8-d71b-4c75-815c-c75de9cac331.png">
 
 <link rel="canonical" href="http://example.com/2024/03/14/%E6%94%B9%E9%80%A0%E7%BD%91%E5%85%B3%E5%AE%9E%E7%8E%B0%E6%8E%88%E6%9D%83/">
 
@@ -135,7 +135,7 @@
   </li>
         <li class="menu-item menu-item-tags">
 
-    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">5</span></a>
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">6</span></a>
 
   </li>
         <li class="menu-item menu-item-categories">
@@ -233,7 +233,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-05 16:43:59" itemprop="dateModified" datetime="2025-03-05T16:43:59+08:00">2025-03-05</time>
+                <time title="修改时间：2025-03-05 17:01:39" itemprop="dateModified" datetime="2025-03-05T17:01:39+08:00">2025-03-05</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -264,13 +264,15 @@
 
       
         <h2 id="前言："><a href="#前言：" class="headerlink" title="前言："></a>前言：</h2><p>先看下认证授权的过程，认证客户端的认证是最先被认证的，只有先认证客户端可会进行token的认证，而我们不应该把客户端的信息暴漏在外面所以客户端的信息只能通过网关转发的时候注入到请求中</p>
-<p><img src="https://cdn.nlark.com/yuque/0/2022/png/27343190/1667726854430-5c1f32f8-d71b-4c75-815c-c75de9cac331.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/27343190/1667726854430-5c1f32f8-d71b-4c75-815c-c75de9cac331.png"></p>
+<span id="more"></span>
+
 <h2 id="直接请求认证服务器的流程"><a href="#直接请求认证服务器的流程" class="headerlink" title="直接请求认证服务器的流程"></a>直接请求认证服务器的流程</h2><p>请求<font style="color:rgb(33, 33, 33);">&#x2F;oauth2&#x2F;token 输入表单信息</font></p>
-<p><img src="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679132164269-3335ac9d-d4a6-4464-81aa-b9753aae6360.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2023/png/25873401/1679132164269-3335ac9d-d4a6-4464-81aa-b9753aae6360.png"></p>
 <p><font style="color:rgb(107, 107, 107);"> </font>Authorization设置为Basic Auth</p>
-<p><img src="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679132230680-00619d4b-b0be-436a-8431-cf863ddfb67c.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2023/png/25873401/1679132230680-00619d4b-b0be-436a-8431-cf863ddfb67c.png"></p>
 <p>获得结果</p>
-<p><img src="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679132311409-b4aac947-0f53-4d41-a529-549fadb993b5.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2023/png/25873401/1679132311409-b4aac947-0f53-4d41-a529-549fadb993b5.png"></p>
 <p>使用网关转发请求和注入服务的时候，当客户端不能直接提供客户端信息的时候，需要在网关转发时注入</p>
 <h2 id="改造网关"><a href="#改造网关" class="headerlink" title="改造网关"></a>改造网关</h2><h3 id="增加局部过滤器"><a href="#增加局部过滤器" class="headerlink" title="增加局部过滤器"></a>增加局部过滤器</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br></pre></td><td class="code"><pre><span class="line">@Component</span><br><span class="line">public class LoginFilter extends AbstractGatewayFilterFactory&lt;LoginFilter.Config&gt; &#123;</span><br><span class="line">    @Autowired</span><br><span class="line">    private  ObjectMapper objectMapper;</span><br><span class="line"></span><br><span class="line">    @Autowired</span><br><span class="line">    private ClientProperties clientProperties;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    public LoginFilter() &#123;</span><br><span class="line">        super(Config.class);</span><br><span class="line">    &#125;</span><br><span class="line">    /**</span><br><span class="line">     * Token URL 标识</span><br><span class="line">     */</span><br><span class="line">    private static final String TOKEN_URL_IDENTIFY = &quot;oauth2/token&quot;;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public GatewayFilter apply(Config config) &#123;</span><br><span class="line">        return (exchange, chain) -&gt; &#123;</span><br><span class="line">            try &#123;</span><br><span class="line">                ServerHttpRequest request = exchange.getRequest();</span><br><span class="line">                //判断是否是请求token</span><br><span class="line">                String path = request.getURI().getPath();</span><br><span class="line">                if (!StrUtil.containsIgnoreCase(path, TOKEN_URL_IDENTIFY)) &#123;</span><br><span class="line">                    return chain.filter(exchange);</span><br><span class="line">                &#125;</span><br><span class="line">                //TODO:后续可以增加验证码验证</span><br><span class="line">                //注入客户端信息</span><br><span class="line">                ServerHttpRequest.Builder mutate = request.mutate();</span><br><span class="line">                String clientStr =String.format(&quot;%s:%s&quot;,clientProperties.getClientId(),clientProperties.getClientSecret());</span><br><span class="line">                String base = Base64.encode(clientStr);</span><br><span class="line">                addHeader(mutate,&quot;Authorization&quot;,String.format(&quot;Basic %s&quot;,base));</span><br><span class="line">            &#125;catch (UnauthorizedException ex)&#123;</span><br><span class="line">                getErrResponse(exchange, AjaxResult.error(ResponseStatusEnum.UNAUTHORIZED,ex.getMessage()));</span><br><span class="line">            &#125;catch (Exception e) &#123;</span><br><span class="line">                return getErrResponse(exchange, AjaxResult.error(ResponseStatusEnum.SYS_ERROR, e.getMessage()));</span><br><span class="line">            &#125;</span><br><span class="line">            return chain.filter(exchange);</span><br><span class="line">        &#125;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    public static class Config &#123;</span><br><span class="line">        // 在这里可以定义配置属性</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private void addHeader(ServerHttpRequest.Builder mutate, String name, Object value)</span><br><span class="line">    &#123;</span><br><span class="line">        if (value == null)</span><br><span class="line">        &#123;</span><br><span class="line">            return;</span><br><span class="line">        &#125;</span><br><span class="line">        String valueStr = value.toString();</span><br><span class="line">        String valueEncode = valueStr;</span><br><span class="line">        mutate.header(name, valueEncode);</span><br><span class="line">    &#125;</span><br><span class="line">    private Mono&lt;Void&gt; getErrResponse(ServerWebExchange exchange, Object errInfo) &#123;</span><br><span class="line">        ServerHttpResponse response = exchange.getResponse();</span><br><span class="line">        response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);</span><br><span class="line">        response.getHeaders().setContentType(MediaType.APPLICATION_JSON);</span><br><span class="line">        return response.writeWith(Mono.create(monoSink -&gt; &#123;</span><br><span class="line">            try &#123;</span><br><span class="line">                byte[] bytes = objectMapper.writeValueAsBytes(errInfo);</span><br><span class="line">                DataBuffer dataBuffer = response.bufferFactory().wrap(bytes);</span><br><span class="line">                monoSink.success(dataBuffer);</span><br><span class="line">            &#125; catch (JsonProcessingException jsonProcessingException) &#123;</span><br><span class="line">                log.error(jsonProcessingException.getMessage());</span><br><span class="line">                monoSink.error(jsonProcessingException);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
@@ -283,9 +285,9 @@
 
 
 <p>测试：</p>
-<p><img src="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679133263303-ffd2f328-09fa-4bd4-9a53-9c5ded039cf4.png"></p>
-<p><img src="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679133272368-1c2b04a7-f9b0-49ac-90e4-dce9298e5f8d.png"></p>
-<p><img src="https://cdn.nlark.com/yuque/0/2023/png/25873401/1679133290397-da9266f6-dd79-4b06-ac87-736203474128.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2023/png/25873401/1679133263303-ffd2f328-09fa-4bd4-9a53-9c5ded039cf4.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2023/png/25873401/1679133272368-1c2b04a7-f9b0-49ac-90e4-dce9298e5f8d.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2023/png/25873401/1679133290397-da9266f6-dd79-4b06-ac87-736203474128.png"></p>
 <h2 id="总结："><a href="#总结：" class="headerlink" title="总结："></a>总结：</h2><p>Authorization设置为Basic Auth 的实际操作为在Header中新增一个key为Authorization value为 Basic +base64({clientId}:{clientSecret}) 。这里Basic后面是有一个空格的需要注意。</p>
 
     </div>
@@ -297,7 +299,7 @@
       <footer class="post-footer">
           
           <div class="post-tags">
-              <a href="/tags/oauth2-SpringCloud-SpringSecurity/" rel="tag"><i class="fa fa-tag"></i> oauth2,SpringCloud,SpringSecurity</a>
+              <a href="/tags/oauth2-SpringCloud-SpringSecurity/" rel="tag"><i class="fa fa-tag"></i> oauth2 SpringCloud SpringSecurity</a>
           </div>
 
         
@@ -400,7 +402,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-count">6</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
