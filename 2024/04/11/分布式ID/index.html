@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content=":::success分布式系统中，我们经常需要对数据、消息等进行唯一标识，这个唯一标识就是分布式 ID，那么我们如何设计它呢？本文将详细讲述分布式 ID 及其生成方案。 :::  为什么需要分布式 ID目前大部分的系统都已是分布式系统，所以在这种场景的业务开发中，经常会需要唯一 ID 对数据进行标识，比如用户身份标识、消息标识等等。 并且在数据量达到一定规模后，大部分的系统也需要进行分库分表，这种">
+<meta property="og:type" content="article">
+<meta property="og:title" content="分布式ID总结">
+<meta property="og:url" content="http://example.com/2024/04/11/%E5%88%86%E5%B8%83%E5%BC%8FID/index.html">
+<meta property="og:site_name" content="进学阁">
+<meta property="og:description" content=":::success分布式系统中，我们经常需要对数据、消息等进行唯一标识，这个唯一标识就是分布式 ID，那么我们如何设计它呢？本文将详细讲述分布式 ID 及其生成方案。 :::  为什么需要分布式 ID目前大部分的系统都已是分布式系统，所以在这种场景的业务开发中，经常会需要唯一 ID 对数据进行标识，比如用户身份标识、消息标识等等。 并且在数据量达到一定规模后，大部分的系统也需要进行分库分表，这种">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/jpeg/3003575/1718614981558-bee358fe-b5f6-4890-b69e-9eb60310084d.jpeg">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/jpeg/3003575/1718695293290-53f569fe-4b3d-4e3b-8161-804a80c69b7a.jpeg">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/jpeg/3003575/1718614818789-89d8afe6-37ff-4335-a746-1aea25018e23.jpeg">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/3003575/1718698426441-afdf835d-f486-4d25-b783-42521191ff2b.png?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_21,text_ZnV4aW5n,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/3003575/1718698969771-dbe0fd2a-5501-44d0-8db1-2c250de2b7d9.png?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_22,text_ZnV4aW5n,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/3003575/1718699670231-b390838f-2dd5-4e13-a52d-f446cb8fd6dc.webp?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_16,text_ZnV4aW5n,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/3003575/1718700335302-7c7d4146-8057-464e-af50-6e39a5c6d527.png?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_25,text_ZnV4aW5n,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10">
+<meta property="og:image" content="https://github.com/didi/tinyid/raw/master/doc/tinyid_final.png?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_29,text_ZnV4aW5n,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10">
+<meta property="article:published_time" content="2024-04-10T16:00:00.000Z">
+<meta property="article:modified_time" content="2025-03-05T09:40:37.075Z">
+<meta property="article:author" content="139">
+<meta property="article:tag" content="微服务">
+<meta property="article:tag" content="分布式">
+<meta property="article:tag" content="ID">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.fbbizyy.com/yuque/0/2024/jpeg/3003575/1718614981558-bee358fe-b5f6-4890-b69e-9eb60310084d.jpeg">
+
+<link rel="canonical" href="http://example.com/2024/04/11/%E5%88%86%E5%B8%83%E5%BC%8FID/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>分布式ID总结 | 进学阁</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">进学阁</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">业精于勤荒于嬉，行成于思毁于随</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">14</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">5</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">12</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/04/11/%E5%88%86%E5%B8%83%E5%BC%8FID/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          分布式ID总结
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-04-11 00:00:00" itemprop="dateCreated datePublished" datetime="2024-04-11T00:00:00+08:00">2024-04-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-05 17:40:37" itemprop="dateModified" datetime="2025-03-05T17:40:37+08:00">2025-03-05</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">分布式</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>:::success<br>分布式系统中，我们经常需要对数据、消息等进行唯一标识，这个唯一标识就是分布式 ID，那么我们如何设计它呢？本文将详细讲述分布式 ID 及其生成方案。</p>
+<p>:::</p>
+<hr>
+<h1 id="为什么需要分布式-ID"><a href="#为什么需要分布式-ID" class="headerlink" title="为什么需要分布式 ID"></a>为什么需要分布式 ID</h1><p>目前大部分的系统都已是分布式系统，所以在这种场景的业务开发中，经常会需要唯一 ID 对数据进行标识，比如用户身份标识、消息标识等等。</p>
+<p>并且在数据量达到一定规模后，大部分的系统也需要进行分库分表，这种场景下单库的自增 ID 已达不到我们的预期。所以我们需要分布式 ID 来对各种场景的数据进行唯一标识。</p>
+<h1 id="分布式-ID-的特性"><a href="#分布式-ID-的特性" class="headerlink" title="分布式 ID 的特性"></a>分布式 ID 的特性</h1><p><strong>主要特性：</strong></p>
+<ul>
+<li>全局唯一：分布式 ID 最基本要求，必须全局唯一。</li>
+<li>高可用：高并发下要保证 ID 的生成效率，避免影响系统。</li>
+<li>易用性：使用简单，可快速接入。</li>
+</ul>
+<p><strong>除此之外根据不同场景还有：</strong></p>
+<ul>
+<li>有序性：数据库场景下的主键 ID，有序性可便于数据写入和排序。</li>
+<li>安全性：无规则 ID，一般用于避免业务信息泄露场景，如订单量。</li>
+</ul>
+<h1 id="分布式-ID-常见生成方案"><a href="#分布式-ID-常见生成方案" class="headerlink" title="分布式 ID 常见生成方案"></a>分布式 ID 常见生成方案</h1><p><img src="https://cdn.fbbizyy.com/yuque/0/2024/jpeg/3003575/1718614981558-bee358fe-b5f6-4890-b69e-9eb60310084d.jpeg" alt="画板"></p>
+<h2 id="UUID"><a href="#UUID" class="headerlink" title="UUID"></a>UUID</h2><p><strong>UUID</strong>（Universally Unique Identifier），即通用唯一识别码。UUID 的目的是让分布式系统中的所有元素都能有唯一的识别信息。</p>
+<p>UUID 是由128位二进制数组成，通常表示为32个十六进制字符，形如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">550e8400-e29b-41d4-a716-446655440000</span><br></pre></td></tr></table></figure>
+
+
+
+<p>这个字符串由五个部分组成，以连字符<code>-</code>分隔开，具体如下：</p>
+<table>
+<thead>
+<tr>
+<th align="center">部分</th>
+<th align="center">大小</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">时间戳</td>
+<td align="center">32 bits</td>
+<td>UUID的前32位表示当前的时间戳。</td>
+</tr>
+<tr>
+<td align="center">时钟序列和随机数</td>
+<td align="center">16 bits</td>
+<td>用于保证在同一时刻生成的UUID的唯一性。</td>
+</tr>
+<tr>
+<td align="center">变体标识</td>
+<td align="center">4 bits</td>
+<td>标识 UUID 的变体，通常为固定值，表示是由 RFC 4122 定义。</td>
+</tr>
+<tr>
+<td align="center">版本号</td>
+<td align="center">4 bits</td>
+<td>标识UUID的版本，常见版本有1、3、4和5</td>
+</tr>
+<tr>
+<td align="center">节点</td>
+<td align="center">48 bits</td>
+<td>在版本 1 中，这部分包含生成 UUID 的计算机的唯一标识。</td>
+</tr>
+</tbody></table>
+<p><strong>主要的 UUID 版本及其生成规则：</strong></p>
+<table>
+<thead>
+<tr>
+<th align="center">版本</th>
+<th align="center">场景</th>
+<th>生成规则</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">版本 1</td>
+<td align="center">基于时间和节点</td>
+<td>由当前的时间戳和节点信息生成。包括时间戳、时钟序列、节点标识。</td>
+</tr>
+<tr>
+<td align="center">版本 2</td>
+<td align="center">基于DCE安全标识符</td>
+<td>类似版本 1，但在时间戳部分包含 POSIX UID&#x2F;GID 信息。</td>
+</tr>
+<tr>
+<td align="center">版本 3</td>
+<td align="center">基于名字和散列值（MD5 版）</td>
+<td>由命名空间和名字的MD5散列生成。</td>
+</tr>
+<tr>
+<td align="center">版本 4</td>
+<td align="center">完全随机生成</td>
+<td>通过随机或伪随机生成128位数字。</td>
+</tr>
+<tr>
+<td align="center">版本 5</td>
+<td align="center">基于名字和散列值（SHA-1 版）</td>
+<td>通过随机或伪随机生成128位数字。</td>
+</tr>
+</tbody></table>
+<p><strong>Java中 UUID 对版本 4 进行了实现：</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span> <span class="params">(String[] args)</span> &#123;</span><br><span class="line">    <span class="comment">// 默认版本 4</span></span><br><span class="line">    System.out.println(UUID.randomUUID());</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 版本 3，由命名空间和名字的MD5散列生成，相同命名空间结果相同</span></span><br><span class="line">    <span class="comment">// 如下，&quot;fuxing&quot;返回的UUID一直为8b9b6bc3-90c8-37ef-bbef-0ed0c552718f</span></span><br><span class="line">    System.out.println(UUID.nameUUIDFromBytes(<span class="string">&quot;fuxing&quot;</span>.getBytes()));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>优点：</strong>本地生成，没有网络消耗，性能非常高。</p>
+<p><strong>缺点：</strong></p>
+<ul>
+<li>占用空间大，32 个字符串，128 位。</li>
+<li>不安全：版本 1 可能会造成 mac 地址泄露。</li>
+<li>无序，非自增。</li>
+<li>机器时间不对，可能造成 UUID 重复。</li>
+</ul>
+<h2 id="数据库自增-ID"><a href="#数据库自增-ID" class="headerlink" title="数据库自增 ID"></a>数据库自增 ID</h2><p>实现简单，解释通过数据库表中的主键 ID 自增来生成唯一标识。如下，维护一个 MySQL 表来生成 ID。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE `unique_id` (</span><br><span class="line">  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,</span><br><span class="line">  `value` char(10) NOT NULL DEFAULT &#x27;&#x27;,</span><br><span class="line">  PRIMARY KEY (`id`),</span><br><span class="line">) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<p>当需要生成分布式 ID 时，向表中插入数据并返回主键 ID，这里 value 无含义，只是为了占位，方便插入数据。</p>
+<p><strong>优点：</strong>实现简单，基本满足业务需求，且天然有序。</p>
+<p><strong>缺点：</strong></p>
+<ul>
+<li>数据库自身的单点故障和数据一致性问题。</li>
+<li>不安全，比如可根据自增来判断订单量。</li>
+<li>高并发场景可能会受限于数据库瓶颈。</li>
+</ul>
+<p>那么有没有办法解决数据库自增 ID 的缺点呢？</p>
+<p>通过水平拆分的方案，将表设置到不同的数据库中，设置不同的起始值和步长，这样可以有效的生成集群中的唯一 ID，也大大降低 ID 生成数据库操作的负载，示例如下。</p>
+<p><code>&lt;font style=&quot;color:rgb(62, 62, 62);&quot;&gt;unique_id_1&lt;/font&gt;</code><font style="color:rgb(62, 62, 62);">配置：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">set @@auto_increment_offset = 1;     -- 起始值</span><br><span class="line">set @@auto_increment_increment = 2;  -- 步长</span><br></pre></td></tr></table></figure>
+
+<p><code>&lt;font style=&quot;color:rgb(62, 62, 62);&quot;&gt;unique_id_2&lt;/font&gt;</code><font style="color:rgb(62, 62, 62);">配置：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">set @@auto_increment_offset = 2;     -- 起始值</span><br><span class="line">set @@auto_increment_increment = 2;  -- 步长</span><br></pre></td></tr></table></figure>
+
+
+
+<p>这个还是需要根据自己的业务需求来，水平扩展的集群数量要符合自己的数据量，因为当设置的集群数量不足以满足高并发时，再次进行扩容集群会很麻烦。多台机器的起始值和步长都需要重新配置。</p>
+<h2 id="数据库号段模式"><a href="#数据库号段模式" class="headerlink" title="数据库号段模式"></a>数据库号段模式</h2><p>号段模式是当下分布式 ID 生成器的主流实现方式之一，比如美团 Leaf-segment、滴滴 Tinyid、微信序列号等都使用的该方案，下面的大厂中间件中会展开说明。</p>
+<p>号段模式也是基于数据库的自增 ID，数据库自增 ID 是一次性获取一个分布式 ID，**<font style="color:#5C8D07;">号段模式可以理解成从数据库批量获取 ID，然后将 ID 缓存在本地</font>**，以此来提高业务获取 ID 的效率。</p>
+<p>例如，每次从数据库获取 ID 时，获取一个号段，如(1,1000]，这个范围表示 1000 个 ID，业务应用在请求获取 ID 时，只需要在本地从 1 开始自增并返回，而不用每次去请求数据库，一直到本地自增到 1000 时，才去数据库重新获取新的号段，后续流程循环往复。</p>
+<p>表结构可进行如下设计：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE `id_generator` (</span><br><span class="line">  `id` int(10) NOT NULL,</span><br><span class="line">  `max_id` bigint(20) NOT NULL COMMENT &#x27;当前最大id&#x27;,</span><br><span class="line">  `step` int(10) NOT NULL COMMENT &#x27;号段的步长&#x27;,</span><br><span class="line">  `version` int(20) NOT NULL COMMENT &#x27;版本号&#x27;,</span><br><span class="line">  `biz_type` int(20) NOT NULL COMMENT &#x27;业务场景&#x27;,</span><br><span class="line">   PRIMARY KEY (`id`)</span><br><span class="line">) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>其中<code>max_id</code>和<code>step</code>用于获取批量的 ID，<code>version</code>是一个乐观锁，保证并发时数据的正确性。</p>
+<p>比如，我们新增一条表数据如下。</p>
+<table>
+<thead>
+<tr>
+<th align="center">id</th>
+<th align="center">max_id</th>
+<th align="center">step</th>
+<th align="center">version</th>
+<th align="center">biz_type</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">1</td>
+<td align="center">100</td>
+<td align="center">1000</td>
+<td align="center">0</td>
+<td align="center">001</td>
+</tr>
+</tbody></table>
+<p>然后我们可以使用该号段批量生成的 ID，当<code>max_id = 1000</code>，则执行 update 操作生成新的号段。新的号段的 SQL。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">UPDATE </span><br><span class="line">id_generator </span><br><span class="line">SET </span><br><span class="line">max_id = #&#123;max_id+ step&#125;, </span><br><span class="line">version = version + 1 </span><br><span class="line">WHERE </span><br><span class="line">version = #&#123;version&#125; AND biz_type = 001;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>优点：</strong>ID 有序递增、存储消耗空间小。</p>
+<p><strong>缺点：</strong></p>
+<ul>
+<li>数据库自身的单点故障和数据一致性问题。</li>
+<li>不安全，比如可根据自增来判断订单量。</li>
+<li>高并发场景可能会受限于数据库瓶颈。</li>
+</ul>
+<p>缺点同样可以通过集群的方式进行优化，也可以如Tinyid 采用双缓存进行优化，下面的大厂中间件中会展开说明。</p>
+<h2 id="基于Redis"><a href="#基于Redis" class="headerlink" title="基于Redis"></a>基于Redis</h2><p>当使用数据库来生成 ID 性能不够的时候，可以尝试使用 Redis 来生成 ID。原理则是利用 Redis 的原子操作 INCR 和 INCRBY 来实现。</p>
+<p><strong>命令示例：</strong></p>
+<table>
+<thead>
+<tr>
+<th align="center"><strong>命令</strong></th>
+<th><strong>说明</strong></th>
+<th><strong>示例</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center"><strong>INCR</strong></td>
+<td>让一个整形的key自增1</td>
+<td>:::tips redis&gt; <font style="color:#E8323C;">SET</font> mykey “10”<br/>“OK”<br/>redis&gt; <font style="color:#E8323C;">INCR</font> mykey<br/>(integer) 11<br/>:::</td>
+</tr>
+<tr>
+<td align="center"><strong>INCRBY</strong></td>
+<td>让一个整形的key自增并指定步长</td>
+<td>:::tips redis&gt; <font style="color:#E8323C;">SET</font> mykey “10”<br/>“OK”<br/>redis&gt; <font style="color:#E8323C;">INCRBY</font> mykey 5<br/>(integer) 15<br/>:::</td>
+</tr>
+</tbody></table>
+<p><strong>优点：</strong>不依赖于数据库，使用灵活，支持高并发。</p>
+<p><strong>缺点：</strong></p>
+<ul>
+<li>系统须引入 Redis 数据库。</li>
+<li>不安全，比如可根据自增来判断订单量。</li>
+<li><font style="color:rgb(25, 27, 31);">Redis 出现单点故障问题，可能会丢数据导致 ID 重复</font>。</li>
+</ul>
+<h2 id="雪花算法"><a href="#雪花算法" class="headerlink" title="雪花算法"></a>雪花算法</h2><p>雪花算法（Snowflake）是 twitter 公司内部分布式项目采用的 ID 生成算法。结果是一个 long 型的 ID。Snowflake 算法将 64bit 划分为多段，分开来标识机器、时间等信息，具体组成结构如下图所示：</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/jpeg/3003575/1718695293290-53f569fe-4b3d-4e3b-8161-804a80c69b7a.jpeg" alt="画板"></p>
+<p><strong>结构说明：</strong></p>
+<table>
+<thead>
+<tr>
+<th align="center">结构</th>
+<th align="center">大小</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">符号位</td>
+<td align="center">1 bit</td>
+<td>0 表示正数，1 表示负数。</td>
+</tr>
+<tr>
+<td align="center">时间戳</td>
+<td align="center">41 bits</td>
+<td>存储的是<code>当前时间戳 - 开始时间戳</code>，最长 69 年。</td>
+</tr>
+<tr>
+<td align="center">机器位</td>
+<td align="center">10 bits</td>
+<td>前 5位 datacenterId，后 5 位 workerId ，最多表示 1024 台。</td>
+</tr>
+<tr>
+<td align="center">序列号</td>
+<td align="center">12 bits</td>
+<td>毫秒内的流水号，意味着每个节点在每毫秒可以产生 4096 个 ID。</td>
+</tr>
+</tbody></table>
+<p><strong>优点：</strong></p>
+<p>稳定性高，不依赖于数据库等第三方系统。</p>
+<p>使用灵活方便，可以根据业务需求的特性来调整算法中的 bit 位。</p>
+<p>单机上 ID 单调自增，毫秒数在高位，自增序列在低位，整体上按照时间自增排序。</p>
+<p><strong>缺点：</strong></p>
+<ul>
+<li>强依赖机器时钟，如果机器上时钟回拨，可能导致发号重复或者服务处于不可用状态。</li>
+<li>ID 可能不是全局递增，虽然 ID 在单机上是递增的。</li>
+<li><font style="color:rgb(25, 27, 31);">Redis 出现单点故障问题，可能会丢数据导致 ID 重复</font>。</li>
+</ul>
+<p>当我们选择了雪花算法可以参考<font style="color:rgb(47, 48, 52);">shardingsphere的雪花算法，以此为例来写一个starter</font></p>
+<p><font style="color:rgb(47, 48, 52);">定义接口</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">public class DefaultIdGenerator implements IdGenerator &#123;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public long nextId() &#123;</span><br><span class="line">        Comparable&lt;?&gt; key=  IDUtils.generateKey();</span><br><span class="line">        return (Long) key;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>定义雪花算法实现</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br></pre></td><td class="code"><pre><span class="line">package com.fbb.pomelo.id.utils;</span><br><span class="line"></span><br><span class="line">import com.google.common.base.Preconditions;</span><br><span class="line">import lombok.Getter;</span><br><span class="line">import lombok.Setter;</span><br><span class="line">import lombok.SneakyThrows;</span><br><span class="line">import lombok.experimental.UtilityClass;</span><br><span class="line">import lombok.extern.slf4j.Slf4j;</span><br><span class="line"></span><br><span class="line">import java.net.NetworkInterface;</span><br><span class="line">import java.util.*;</span><br><span class="line">import java.util.concurrent.ThreadLocalRandom;</span><br><span class="line"></span><br><span class="line">@Slf4j</span><br><span class="line">@UtilityClass</span><br><span class="line">public final class IDUtils &#123;</span><br><span class="line">    public static final long EPOCH;</span><br><span class="line"></span><br><span class="line">    private static final long SEQUENCE_BITS = 12L;</span><br><span class="line"></span><br><span class="line">    private static final long WORKER_ID_BITS = 10L;</span><br><span class="line"></span><br><span class="line">    private static final long SEQUENCE_MASK = (1 &lt;&lt; SEQUENCE_BITS) - 1;</span><br><span class="line"></span><br><span class="line">    private static final long WORKER_ID_LEFT_SHIFT_BITS = SEQUENCE_BITS;</span><br><span class="line"></span><br><span class="line">    private static final long TIMESTAMP_LEFT_SHIFT_BITS = WORKER_ID_LEFT_SHIFT_BITS + WORKER_ID_BITS;</span><br><span class="line"></span><br><span class="line">    private static final long WORKER_ID_MAX_VALUE = 1L &lt;&lt; WORKER_ID_BITS;</span><br><span class="line"></span><br><span class="line">    private static final long WORKER_ID = 0;</span><br><span class="line"></span><br><span class="line">    private static final int DEFAULT_VIBRATION_VALUE = 1;</span><br><span class="line"></span><br><span class="line">    private static final int MAX_TOLERATE_TIME_DIFFERENCE_MILLISECONDS = 10;</span><br><span class="line"></span><br><span class="line">    @Setter</span><br><span class="line">    private static TimeService timeService = new TimeService();</span><br><span class="line"></span><br><span class="line">    @Getter</span><br><span class="line">    @Setter</span><br><span class="line">    private Properties properties = new Properties();</span><br><span class="line"></span><br><span class="line">    private int sequenceOffset = -1;</span><br><span class="line"></span><br><span class="line">    private long sequence;</span><br><span class="line"></span><br><span class="line">    private long lastMilliseconds;</span><br><span class="line"></span><br><span class="line">    static &#123;</span><br><span class="line">        Calendar calendar = Calendar.getInstance();</span><br><span class="line">        calendar.set(2016, Calendar.NOVEMBER, 1);</span><br><span class="line">        calendar.set(Calendar.HOUR_OF_DAY, 0);</span><br><span class="line">        calendar.set(Calendar.MINUTE, 0);</span><br><span class="line">        calendar.set(Calendar.SECOND, 0);</span><br><span class="line">        calendar.set(Calendar.MILLISECOND, 0);</span><br><span class="line">        EPOCH = calendar.getTimeInMillis();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public synchronized Comparable&lt;?&gt; generateKey() &#123;</span><br><span class="line">        long currentMilliseconds = timeService.getCurrentMillis();</span><br><span class="line">        if (waitTolerateTimeDifferenceIfNeed(currentMilliseconds)) &#123;</span><br><span class="line">            currentMilliseconds = timeService.getCurrentMillis();</span><br><span class="line">        &#125;</span><br><span class="line">        if (lastMilliseconds == currentMilliseconds) &#123;</span><br><span class="line">            if (0L == (sequence = (sequence + 1) &amp; SEQUENCE_MASK)) &#123;</span><br><span class="line">                currentMilliseconds = waitUntilNextTime(currentMilliseconds);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            vibrateSequenceOffset();</span><br><span class="line">            sequence = sequenceOffset;</span><br><span class="line">        &#125;</span><br><span class="line">        lastMilliseconds = currentMilliseconds;</span><br><span class="line">        return ((currentMilliseconds - EPOCH) &lt;&lt; TIMESTAMP_LEFT_SHIFT_BITS) | (getWorkerId() &lt;&lt; WORKER_ID_LEFT_SHIFT_BITS) | sequence;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @SneakyThrows</span><br><span class="line">    private boolean waitTolerateTimeDifferenceIfNeed(final long currentMilliseconds) &#123;</span><br><span class="line">        if (lastMilliseconds &lt;= currentMilliseconds) &#123;</span><br><span class="line">            return false;</span><br><span class="line">        &#125;</span><br><span class="line">        long timeDifferenceMilliseconds = lastMilliseconds - currentMilliseconds;</span><br><span class="line">        Preconditions.checkState(timeDifferenceMilliseconds &lt; getMaxTolerateTimeDifferenceMilliseconds(),</span><br><span class="line">                &quot;Clock is moving backwards, last time is %d milliseconds, current time is %d milliseconds&quot;, lastMilliseconds, currentMilliseconds);</span><br><span class="line">        Thread.sleep(timeDifferenceMilliseconds);</span><br><span class="line">        return true;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private long getWorkerId() &#123;</span><br><span class="line">        long result = Long.valueOf(properties.getProperty(&quot;worker.id&quot;, String.valueOf(WORKER_ID)));</span><br><span class="line">        if (result &lt;= 0L)&#123;</span><br><span class="line">            result = generateWorkerId();</span><br><span class="line">        &#125;</span><br><span class="line">        Preconditions.checkArgument(result &gt;= 0L &amp;&amp; result &lt; WORKER_ID_MAX_VALUE);</span><br><span class="line">        return result;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private int getMaxVibrationOffset() &#123;</span><br><span class="line">        int result = Integer.parseInt(properties.getProperty(&quot;max.vibration.offset&quot;, String.valueOf(DEFAULT_VIBRATION_VALUE)));</span><br><span class="line">        Preconditions.checkArgument(result &gt;= 0 &amp;&amp; result &lt;= SEQUENCE_MASK, &quot;Illegal max vibration offset&quot;);</span><br><span class="line">        return result;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private int getMaxTolerateTimeDifferenceMilliseconds() &#123;</span><br><span class="line">        return Integer.valueOf(properties.getProperty(&quot;max.tolerate.time.difference.milliseconds&quot;, String.valueOf(MAX_TOLERATE_TIME_DIFFERENCE_MILLISECONDS)));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private long waitUntilNextTime(final long lastTime) &#123;</span><br><span class="line">        long result = timeService.getCurrentMillis();</span><br><span class="line">        while (result &lt;= lastTime) &#123;</span><br><span class="line">            result = timeService.getCurrentMillis();</span><br><span class="line">        &#125;</span><br><span class="line">        return result;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private void vibrateSequenceOffset() &#123;</span><br><span class="line">        sequenceOffset = sequenceOffset &gt;= getMaxVibrationOffset() ? 0 : sequenceOffset + 1;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private long generateWorkerId() &#123;</span><br><span class="line">        try &#123;</span><br><span class="line">            return generateWorkerIdBaseOnMac();</span><br><span class="line">        &#125; catch (Exception e) &#123;</span><br><span class="line">            return generateRandomWorkerId();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    /**</span><br><span class="line">     * randomly generate one as workerId</span><br><span class="line">     * @return workerId</span><br><span class="line">     */</span><br><span class="line">    private long generateRandomWorkerId() &#123;</span><br><span class="line">        return new Random().nextInt((int)WORKER_ID_MAX_VALUE + 1);</span><br><span class="line">    &#125;</span><br><span class="line">    /**</span><br><span class="line">     * use lowest 10 bit of available MAC as workerId</span><br><span class="line">     * @return workerId</span><br><span class="line">     * @throws Exception when there is no available mac found</span><br><span class="line">     */</span><br><span class="line">    private long generateWorkerIdBaseOnMac() throws Exception &#123;</span><br><span class="line">        Enumeration&lt;NetworkInterface&gt; all = NetworkInterface.getNetworkInterfaces();</span><br><span class="line">        while (all.hasMoreElements()) &#123;</span><br><span class="line">            NetworkInterface networkInterface = all.nextElement();</span><br><span class="line">            boolean loopBack = networkInterface.isLoopback();</span><br><span class="line">            boolean isVirtual = networkInterface.isVirtual();</span><br><span class="line">            if (loopBack || isVirtual) &#123;</span><br><span class="line">                continue;</span><br><span class="line">            &#125;</span><br><span class="line">            byte[] mac = networkInterface.getHardwareAddress();</span><br><span class="line">            return ((mac[4] &amp; 0B11) &lt;&lt; 8) | (mac[5] &amp; 0xFF);</span><br><span class="line">        &#125;</span><br><span class="line">        throw new RuntimeException(&quot;no available mac found&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">    /**</span><br><span class="line">     * 获取随机ID</span><br><span class="line">     * @return 随机ID用以替代传统的UUID</span><br><span class="line">     */</span><br><span class="line">    public String get32UUID() &#123;</span><br><span class="line">        ThreadLocalRandom random = ThreadLocalRandom.current();</span><br><span class="line">        return (new UUID(random.nextLong(), random.nextLong())).toString().replace(&quot;-&quot;, &quot;&quot;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">public class TimeService &#123;</span><br><span class="line">    public long getCurrentMillis() &#123;</span><br><span class="line">        return System.currentTimeMillis();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>配置文件</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">@SpringBootConfiguration</span><br><span class="line">public class IdAutoConfiguration &#123;</span><br><span class="line">    /**</span><br><span class="line">     * 注入ID生成器实现</span><br><span class="line">     * @return see &#123;@link DefaultIdGenerator&#125;</span><br><span class="line">     */</span><br><span class="line">    @Bean</span><br><span class="line">    @ConditionalOnMissingBean</span><br><span class="line">    public IdGenerator idGenerator() &#123;</span><br><span class="line">        return new DefaultIdGenerator();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>META-INF</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">org.springframework.boot.autoconfigure.EnableAutoConfiguration=\</span><br><span class="line">     com.fbb.pomelo.id.configuration.IdAutoConfiguration</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h1 id="大厂中间件"><a href="#大厂中间件" class="headerlink" title="大厂中间件"></a>大厂中间件</h1><p><img src="https://cdn.fbbizyy.com/yuque/0/2024/jpeg/3003575/1718614818789-89d8afe6-37ff-4335-a746-1aea25018e23.jpeg" alt="画板"></p>
+<h2 id="美团-Leaf"><a href="#美团-Leaf" class="headerlink" title="美团 Leaf"></a><font style="color:rgb(88, 90, 90);">美团 Leaf</font></h2><p><a target="_blank" rel="noopener" href="https://tech.meituan.com/2019/03/07/open-source-project-leaf.html">Leaf 的官方文档</a>，简介和特性可访问了解，这里我将对 Leaf 的两种方案，Leaf segment 和 Leaf-snowflake 进行。</p>
+<h3 id="Leaf-segment"><a href="#Leaf-segment" class="headerlink" title="Leaf segment"></a>Leaf segment</h3><p>基于数据库号段模式的 ID 生成方案，上面我们介绍到普通的号段模式有一些缺点：</p>
+<ul>
+<li>数据库自身的单点故障和数据一致性问题。</li>
+<li>不安全，比如可根据自增来判断订单量。</li>
+<li>高并发场景可能会受限于数据库瓶颈。</li>
+</ul>
+<p>那么 Leaf 是如何做的呢？Leaf 采用了预分发的方式生成ID，也就是在 DB 之上挂 n 个 Leaf Server，每个Server启动时，都会去 DB 拿固定长度的 ID List。</p>
+<p>这样就做到了完全基于分布式的架构，同时因为ID是由内存分发，所以也可以做到很高效，处理流程图如下：</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/3003575/1718698426441-afdf835d-f486-4d25-b783-42521191ff2b.png?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_21,text_ZnV4aW5n,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10" alt="图片源自 Leaf"></p>
+<p><strong>其中：</strong></p>
+<ul>
+<li>Leaf Server 1：从 DB 加载号段[1，1000]。</li>
+<li>Leaf Server 2：从 DB 加载号段[1001，2000]。</li>
+<li>Leaf Server 3：从 DB 加载号段[2001，3000]。</li>
+</ul>
+<p>用户**<font style="color:#5C8D07;">通过轮询的方式</font>**调用 Leaf Server 的各个服务，所以某一个 Client 获取到的ID序列可能是：1，1001，2001，2，1002，2002。当某个 Leaf Server 号段用完之后，下一次请求就会从 DB 中加载新的号段，这样保证了每次加载的号段是递增的。</p>
+<p>为了解决在更新DB号段的时出现的耗时和阻塞服务的问题，Leaf 采用了**<font style="color:#5C8D07;">异步更新</font>**的策略，同时通过双缓存的方式，保证无论何时DB出现问题，都能有一个 Buffer 的号段可以正常对外提供服务，只要 DB 在一个 Buffer 的下发的周期内恢复，就不会影响整个 Leaf 的可用性。</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/3003575/1718698969771-dbe0fd2a-5501-44d0-8db1-2c250de2b7d9.png?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_22,text_ZnV4aW5n,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10" alt="图片源自 Leaf"></p>
+<p>除此之外，Leaf 还**<font style="color:#5C8D07;">通过动态调整步长</font>**，解决由于步长固定导致的缓存中的 ID 被过快消耗问题，以及步长设置过大导致的号段 ID 跨度过大问题，具体公式可去官方文档中了解。</p>
+<p>对于数据一致性问题，Leaf 目前是通过中间件 Zebra 加 MHA 做的主从切换。</p>
+<h3 id="Leaf-Snowflake"><a href="#Leaf-Snowflake" class="headerlink" title="Leaf Snowflake"></a>Leaf Snowflake</h3><p>Leaf-snowflake 方案沿用 Snowflake 方案的 bit 位设计。</p>
+<p>对于 workerID 的分配：当服务集群较小时，通过配置即可；服务集群较大时，基于 zookeeper 持久顺序节点的特性引入 zookeeper 组件配置 workerID。架构如下图所示：</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/3003575/1718699670231-b390838f-2dd5-4e13-a52d-f446cb8fd6dc.webp?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_16,text_ZnV4aW5n,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10"></p>
+<h2 id="百度-UidGenerator"><a href="#百度-UidGenerator" class="headerlink" title="百度 UidGenerator"></a>百度 UidGenerator</h2><p><a target="_blank" rel="noopener" href="https://github.com/baidu/uid-generator">开源地址</a></p>
+<p>UidGenerator 方案是基于 Snowflake 算法的 ID 生成器，其对雪花算法的 bit 位的分配做了微调。</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/3003575/1718700335302-7c7d4146-8057-464e-af50-6e39a5c6d527.png?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_25,text_ZnV4aW5n,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10"></p>
+<hr>
+<p><strong>结构说明（参数可在 Spring Bean 配置中进行配置）：</strong></p>
+<table>
+<thead>
+<tr>
+<th>结构</th>
+<th align="center">大小</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>符号位</td>
+<td align="center">1 bit</td>
+<td><font style="color:rgb(37, 43, 58);">最高位始终是 0。</font></td>
+</tr>
+<tr>
+<td>增量秒</td>
+<td align="center"><font style="color:rgb(37, 43, 58);">28</font> bits</td>
+<td>表示自客户纪元（2016-05-20）以来的增量秒。最大时间为 8.7 年。</td>
+</tr>
+<tr>
+<td>工作节点</td>
+<td align="center">22 bits</td>
+<td>表示工作节点 ID，最大值为 4.2 百万个。</td>
+</tr>
+<tr>
+<td>序列号</td>
+<td align="center">13 bits</td>
+<td>表示一秒钟内的序列，默认情况下每秒最多 8192 个。</td>
+</tr>
+</tbody></table>
+<p>UidGenerator 方案包含两种实现方式，DefaultUidGenerator 和 CachedUidGenerator ，性能要求高的情况下推荐 CachedUidGenerator。</p>
+<h2 id="滴滴-Tinyid"><a href="#滴滴-Tinyid" class="headerlink" title="滴滴 Tinyid"></a>滴滴 Tinyid</h2><p><a target="_blank" rel="noopener" href="https://github.com/didi/tinyid/wiki/tinyid%E5%8E%9F%E7%90%86%E4%BB%8B%E7%BB%8D">Tinyid 官方文档</a></p>
+<p>Tinyid 方案是在 Leaf-segment 的算法基础上升级而来，不仅支持了数据库多主节点模式，还提供了 tinyid-client 客户端的接入方式，使用起来更加方便。</p>
+<p>Tinyid 也是采用了异步加双缓存策略，首先可用号段加载到内存中，并在内存中生成 ID，可用号段在首次获取 ID 时加载，号段用到一定程度的时候，就去异步加载下一个号段，保证内存中始终有可用号段，则可避免性能波动。</p>
+<p><strong>实现原理如下所示：</strong></p>
+<p><img src="https://github.com/didi/tinyid/raw/master/doc/tinyid_final.png?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_29,text_ZnV4aW5n,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10" alt="图片源自 Tinyid"></p>
+<h1 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h1><p>本文对分布式 ID 以及其场景的生成方案做了介绍，还针对一下大厂的中间件进行简单分析，中间件的接入代码本文并没有做详细介绍，但是官方文档的链接都帖子了每个子标题下，其中都有详细介绍。</p>
+<p>文中还针对每个生成方案的优缺点作出了说明，具体的使用可针对优缺点加上业务需求来进行选型。</p>
+<hr>
+<blockquote>
+<p>参考：</p>
+<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/534893180">[1] 腾讯技术工程. 分布式唯一 ID 生成方案浅谈.</a></p>
+<p><a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/2377401">[2] 孟斯特. UUID 介绍.</a></p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/jiaomubai/article/details/124385324">[3] 文丑颜不良啊. 雪花算法（SnowFlake）.</a></p>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" rel="tag"><i class="fa fa-tag"></i> 微服务</a>
+              <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/" rel="tag"><i class="fa fa-tag"></i> 分布式</a>
+              <a href="/tags/ID/" rel="tag"><i class="fa fa-tag"></i> ID</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2024/03/28/%E4%BD%8E%E4%BE%B5%E5%85%A5%E7%9A%84%E7%81%B0%E5%BA%A6%E5%B9%B3%E5%8F%B0%E7%9A%84%E6%9E%84%E5%BB%BA/" rel="prev" title="springcloud项目使用nacos">
+      <i class="fa fa-chevron-left"></i> springcloud项目使用nacos
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E5%88%86%E5%B8%83%E5%BC%8F-ID"><span class="nav-number">1.</span> <span class="nav-text">为什么需要分布式 ID</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%86%E5%B8%83%E5%BC%8F-ID-%E7%9A%84%E7%89%B9%E6%80%A7"><span class="nav-number">2.</span> <span class="nav-text">分布式 ID 的特性</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%86%E5%B8%83%E5%BC%8F-ID-%E5%B8%B8%E8%A7%81%E7%94%9F%E6%88%90%E6%96%B9%E6%A1%88"><span class="nav-number">3.</span> <span class="nav-text">分布式 ID 常见生成方案</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#UUID"><span class="nav-number">3.1.</span> <span class="nav-text">UUID</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E5%BA%93%E8%87%AA%E5%A2%9E-ID"><span class="nav-number">3.2.</span> <span class="nav-text">数据库自增 ID</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E5%BA%93%E5%8F%B7%E6%AE%B5%E6%A8%A1%E5%BC%8F"><span class="nav-number">3.3.</span> <span class="nav-text">数据库号段模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E4%BA%8ERedis"><span class="nav-number">3.4.</span> <span class="nav-text">基于Redis</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9B%AA%E8%8A%B1%E7%AE%97%E6%B3%95"><span class="nav-number">3.5.</span> <span class="nav-text">雪花算法</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A4%A7%E5%8E%82%E4%B8%AD%E9%97%B4%E4%BB%B6"><span class="nav-number">4.</span> <span class="nav-text">大厂中间件</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BE%8E%E5%9B%A2-Leaf"><span class="nav-number">4.1.</span> <span class="nav-text">美团 Leaf</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Leaf-segment"><span class="nav-number">4.1.1.</span> <span class="nav-text">Leaf segment</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Leaf-Snowflake"><span class="nav-number">4.1.2.</span> <span class="nav-text">Leaf Snowflake</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%99%BE%E5%BA%A6-UidGenerator"><span class="nav-number">4.2.</span> <span class="nav-text">百度 UidGenerator</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%BB%B4%E6%BB%B4-Tinyid"><span class="nav-number">4.3.</span> <span class="nav-text">滴滴 Tinyid</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BB%93%E8%AF%AD"><span class="nav-number">5.</span> <span class="nav-text">结语</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="139"
+      src="/images/custom/avatar.jpg">
+  <p class="site-author-name" itemprop="name">139</p>
+  <div class="site-description" itemprop="description">一个普通的JAVA开发的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">12</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+  <div class="beian"><a href="https://beian.miit.gov.cn/" rel="noopener" target="_blank">浙ICP备2023004484号-1 </a>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">139</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

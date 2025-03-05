@@ -368,4 +368,584 @@
         <tag>SpringSecurity</tag>
       </tags>
   </entry>
+  <entry>
+    <title>SpringCloudGateway详解</title>
+    <url>/2024/03/25/SpringCloudGateway%E8%AF%A6%E8%A7%A3/</url>
+    <content><![CDATA[<h2 id="Spring-Cloud-Gateway-的核心功能："><a href="#Spring-Cloud-Gateway-的核心功能：" class="headerlink" title="Spring Cloud Gateway 的核心功能："></a><font style="color:rgb(25, 27, 31);">Spring Cloud Gateway 的核心功能：</font></h2><p><font style="color:rgb(25, 27, 31);">断言（Predicate）：参照 Java8 的新特性Predicate，允许开发人员匹配 HTTP 请求中的任何内容，比如请求头或请求参数，最后根据匹配结果返回一个布尔值。 路由（route）：由ID、目标URI、断言集合和过滤器集合组成。如果聚合断言结果为真，则转发到该路由。 过滤器（filter）：可以在返回请求之前或之后修改请求和响应的内容。</font></p>
+<span id="more"></span>
+<h2 id="1、路由-Route"><a href="#1、路由-Route" class="headerlink" title="1、路由 Route"></a><font style="color:rgb(25, 27, 31);">1、路由 Route</font></h2><p><font style="color:rgb(25, 27, 31);">Route 主要由 路由id、目标uri、断言集合和过滤器集合组成，那我们简单看看这些属性到底有什么作用。 （1）id：路由标识，要求唯一，名称任意（默认值 uuid，一般不用，需要自定义） （2）uri：请求最终被转发到的目标地址 （3）order： 路由优先级，数字越小，优先级越高 （4）predicates：断言数组，即判断条件，如果返回值是boolean，则转发请求到 uri 属性指定的服务中 （5）filters：过滤器数组，在请求传递过程中，对请求做一些修改</font></p>
+<h2 id="2、断言-Predicate"><a href="#2、断言-Predicate" class="headerlink" title="2、断言 Predicate"></a><font style="color:rgb(25, 27, 31);">2、断言 Predicate</font></h2><p><font style="color:rgb(25, 27, 31);">Predicate 来自于 Java8 的借口。Predicate 接受一个输入参数，返回一个布尔值结果。该接口包含多种默认方法来将 Predicate 组合成其他复杂的逻辑（比如：与，或，非）。 Predicate 可以用于接口请求参数校验、判断新老数据是否有变化需要进行更新操作。Spring Cloud Gateway 内置了许多 Predict，这些 Predict 的源码在 org.springframework.cloud.gateway.handler.predicate 包中，有兴趣可以阅读一下</font></p>
+<h2 id="3、过滤器-filter"><a href="#3、过滤器-filter" class="headerlink" title="3、过滤器 filter"></a><font style="color:rgb(25, 27, 31);">3、过滤器 filter</font></h2><p><font style="color:rgb(25, 27, 31);">Gateway 过滤器的生命周期： PRE：这种过滤器在请求被路由之前调用。我们可利用这种过滤器实现身份验证、在集群中选择请求的微服务、记录调试信息等。 POST：这种过滤器在路由到微服务以后执行。这种过滤器可用来为响应添加标准的 HTTP Header、收集统计信息和指标、将响应从微服务发送给客户端等。 Gateway 过滤器从作用范围可分为两种: GatewayFilter：应用到单个路由或者一个分组的路由上（需要在配置文件中配置） GlobalFilter：应用到所有的路由上（无需配置，全局生效） （1）局部过滤器 GatewayFilter： Spring Cloud Gateway 中内置了许多的局部过滤器；局部过滤器需要在指定路由配置才能生效，默认是不生效的</font></p>
+<p><font style="color:rgb(25, 27, 31);">（2）自定义局部过滤器： 虽说内置的过滤器能够解决很多场景，但是难免还是有些特殊需求需要定制一个过滤器，下面就来介绍一下如何自定义局部过滤器。</font></p>
+<p><font style="color:rgb(25, 27, 31);">(3) GlobalFilter 全局过滤器： 全局过滤器应用全部路由上，无需开发者配置，Spring Cloud Gateway 也内置了一些全局过滤器。GlobalFilter 的功能其实和 GatewayFilter 是相同的，只是 GlobalFilter 的作用域是所有的路由配置，而不是绑定在指定的路由配置上。多个 GlobalFilter 可以通过 @Order 或者 getOrder() 方法指定执行顺序，order值越小，执行的优先级越高。 注意，由于过滤器有 pre 和 post 两种类型，pre 类型过滤器如果 order 值越小，那么它就应该在pre过滤器链的顶层，post 类型过滤器如果 order 值越小，那么它就应该在 post 过滤器链的底层</font></p>
+<p><font style="color:rgb(25, 27, 31);">(4) 过滤器规则（Filter）</font></p>
+<p><font style="color:rgb(25, 27, 31);">过滤规则 实例 说明 PrefixPath - PrefixPath&#x3D;&#x2F;app 在请求路径前加上app RewritePath - RewritePath&#x3D;&#x2F;test, &#x2F;app&#x2F;test 访问localhost:9022&#x2F;test,请求会转发到localhost:8001&#x2F;app&#x2F;test SetPath SetPath&#x3D;&#x2F;app&#x2F;{path} 通过模板设置路径，转发的规则时会在路径前增加app，{path}表示原请求路径 RedirectTo 重定向 RemoveRequestHeader 去掉某个请求头信息 注：当配置多个filter时，优先定义的会被调用，剩余的filter将不会生效</font></p>
+<h2 id="4、Predicate-断言条件-转发规则-介绍"><a href="#4、Predicate-断言条件-转发规则-介绍" class="headerlink" title="4、Predicate 断言条件(转发规则)介绍"></a><font style="color:rgb(25, 27, 31);">4、Predicate 断言条件(转发规则)介绍</font></h2><p><font style="color:rgb(25, 27, 31);">每一个Predicate的使用，你可以理解为：当满足这种条件后才会被转发，如果是多个，那就是都满足的情况下被转发。</font></p>
+<h2 id="Path-方式匹配转发"><a href="#Path-方式匹配转发" class="headerlink" title="Path 方式匹配转发"></a><font style="color:rgb(25, 27, 31);">Path 方式匹配转发</font></h2><p><font style="color:rgb(25, 27, 31);">通过Path转发示例，我们讲解下上面的两种配置，分别是application.yml以及RouteLocator。</font></p>
+<p><font style="color:rgb(25, 27, 31);">配置文件匹配地址转发</font></p>
+<p><font style="color:rgb(25, 27, 31);">我们在application.yml配置文件内添加对应的路由配置，如下所示：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">spring:</span><br><span class="line"></span><br><span class="line">application:</span><br><span class="line"></span><br><span class="line">name: spring-cloud-gateway-sample</span><br><span class="line"></span><br><span class="line">cloud:</span><br><span class="line"></span><br><span class="line">gateway:</span><br><span class="line"></span><br><span class="line">routes:</span><br><span class="line"></span><br><span class="line">- id: blog</span><br><span class="line"></span><br><span class="line">uri: http://blog.xx.com</span><br><span class="line"></span><br><span class="line">predicates:</span><br><span class="line"></span><br><span class="line"># 匹配路径转发</span><br><span class="line"></span><br><span class="line">- Path=/api-boot-datasource-switch.html</span><br><span class="line"></span><br><span class="line"># 端口号</span><br><span class="line"></span><br><span class="line">server:</span><br><span class="line"></span><br><span class="line">port: 9090</span><br></pre></td></tr></table></figure>
+
+<font style="color:rgb(25, 27, 31);">  
+</font>
+
+<p><strong><font style="color:rgb(25, 27, 31);">先来解释下route的组成部分：</font></strong></p>
+<p><font style="color:rgb(25, 27, 31);">id：路由的ID uri：匹配路由的转发地址 predicates：配置该路由的断言，通过PredicateDefinition类进行接收配置。 在上面的配置中，当访问<a href="http://localhost:9090/api-boot-datasource-switch.html%E6%97%B6%E5%B0%B1%E4%BC%9A%E8%A2%AB%E8%87%AA%E5%8A%A8%E8%BD%AC%E5%8F%91%E5%88%B0">http://localhost:9090/api-boot-datasource-switch.html时就会被自动转发到</a></font><a href="https://link.zhihu.com/?target=http://blog.xx.com/api-boot-datasource-switch.html"><font style="color:rgb(25, 27, 31);">http://blog.xx.com/api-boot-datasource-switch.html</font></a><font style="color:rgb(25, 27, 31);">，这里要注意完全匹配Path的值时才会进行路由转发。</font></p>
+<p><font style="color:rgb(25, 27, 31);">访问效果如下所示：</font></p>
+<p><font style="color:rgb(25, 27, 31);">spring-cloud-gateway-path-predicate.png</font></p>
+<p><font style="color:rgb(25, 27, 31);">RouteLocator 匹配路径转发</font></p>
+<p><font style="color:rgb(25, 27, 31);">在上面的配置中，如果使用RouteLocator方式该怎么进行配置呢？</font></p>
+<p><font style="color:rgb(25, 27, 31);">如下所示：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">@Bean</span><br><span class="line">public RouteLocator routeLocator(RouteLocatorBuilder builder) &#123;</span><br><span class="line">return builder.routes()</span><br><span class="line">.route(&quot;blog&quot;, r -&gt;</span><br><span class="line">r.path(&quot;/api-boot-datasource-switch.html&quot;).uri(&quot;http://blog.xx.com&quot;))</span><br><span class="line">.build();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<font style="color:rgb(25, 27, 31);">  
+</font>
+
+<h2 id="Before-方式匹配转发"><a href="#Before-方式匹配转发" class="headerlink" title="Before 方式匹配转发"></a><font style="color:rgb(25, 27, 31);">Before 方式匹配转发</font></h2><p><font style="color:rgb(25, 27, 31);">当部署有访问时间限制的接口时，我们可以通过Before Predicate来完成某一个时间点之前允许访问，过时后则不允许转发请求到具体的服务，配置如下所示：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">spring:</span><br><span class="line">cloud:</span><br><span class="line">gateway:</span><br><span class="line">routes:</span><br><span class="line">- id: blog</span><br><span class="line">uri: http://blog.xx.com</span><br><span class="line">predicates:</span><br><span class="line">- Before=2019-05-01T00:00:00+08:00[Asia/Shanghai]</span><br></pre></td></tr></table></figure>
+
+<font style="color:rgb(25, 27, 31);">  
+</font>
+
+<p><font style="color:rgb(25, 27, 31);">在上面配置中，我们允许2019-05-01日凌晨之前通过路由转发到 </font><a href="https://link.zhihu.com/?target=http://blog.xx.com"><font style="color:rgb(25, 27, 31);">http://blog.xx.com</font></a><font style="color:rgb(25, 27, 31);">，通过查看org.springframework.cloud.gateway.handler.predicate.BeforeRoutePredicateFactory源码我们发现，Spring Cloud Gateway的Before断言采用的ZonedDateTime进行匹配时间，这里要注意存在时区的问题，需要配置[Asia&#x2F;Shanghai]作为中国时区。</font></p>
+<h2 id="After-方式匹配转发"><a href="#After-方式匹配转发" class="headerlink" title="After 方式匹配转发"></a><font style="color:rgb(25, 27, 31);">After 方式匹配转发</font></h2><p><font style="color:rgb(25, 27, 31);">After Predicate与Before配置使用一致，匹配某一个时间点之后允许路由转发，如下所示配置：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">spring:</span><br><span class="line">cloud:</span><br><span class="line">gateway:</span><br><span class="line">routes:</span><br><span class="line">- id: blog</span><br><span class="line">uri: http://blog.xx.com</span><br><span class="line">predicates:</span><br><span class="line">- After=2019-04-29T00:00:00+08:00[Asia/Shanghai]</span><br></pre></td></tr></table></figure>
+
+<font style="color:rgb(25, 27, 31);">  
+</font>
+
+<p><font style="color:rgb(25, 27, 31);">在上面配置中允许2019-04-29凌晨之后进行转发到 </font><a href="https://link.zhihu.com/?target=http://blog.xx.com"><font style="color:rgb(25, 27, 31);">http://blog.xx.com</font></a><font style="color:rgb(25, 27, 31);">。</font></p>
+<h2 id="Between-方式匹配转发"><a href="#Between-方式匹配转发" class="headerlink" title="Between 方式匹配转发"></a><font style="color:rgb(25, 27, 31);">Between 方式匹配转发</font></h2><p><font style="color:rgb(25, 27, 31);">那如果是一个时间段内允许请求转发，通过Before、After组合配置也可以完成，不过Spring Cloud Gateway还是提供了Between方式，如下所示：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">spring:</span><br><span class="line">cloud:</span><br><span class="line">gateway:</span><br><span class="line">routes:</span><br><span class="line">- id: blog</span><br><span class="line">uri: http://blog.xx.com</span><br><span class="line">predicates:</span><br><span class="line">- Between=2019-04-29T00:00:00+08:00[Asia/Shanghai], 2019-05-01T00:00:00+08:00[Asia/Shanghai]</span><br></pre></td></tr></table></figure>
+
+<font style="color:rgb(25, 27, 31);">  
+</font>
+
+<p><font style="color:rgb(25, 27, 31);">在上面配置中，允许在2019-04-29日凌晨后 &amp; 2019-05-01凌晨之前请求转发到 </font><a href="https://link.zhihu.com/?target=http://blog.xx.com"><font style="color:rgb(25, 27, 31);">http://blog.xx.com</font></a><font style="color:rgb(25, 27, 31);">。</font></p>
+<h2 id="Cookie-方式匹配转发"><a href="#Cookie-方式匹配转发" class="headerlink" title="Cookie 方式匹配转发"></a><font style="color:rgb(25, 27, 31);">Cookie 方式匹配转发</font></h2><p><font style="color:rgb(25, 27, 31);">Spring Cloud Gateway 还提供了根据Cookie值的方式匹配转发请求，如果请求中所携带的Cookie值与配置的Predicate匹配，那么就可以被允许转发到指定地址，如下所示：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">spring:</span><br><span class="line">cloud:</span><br><span class="line">gateway:</span><br><span class="line">routes:</span><br><span class="line">- id: blog</span><br><span class="line">uri: http://blog.xx.com</span><br><span class="line">predicates:</span><br><span class="line">- Cookie=hengboy, leo</span><br></pre></td></tr></table></figure>
+
+<font style="color:rgb(25, 27, 31);">  
+</font>
+
+<p><font style="color:rgb(25, 27, 31);">在上面配置中，如果客户端发送请求时携带了”hengboy&#x3D;leo”的Cookie信息，则允许请求转发。</font></p>
+<p><strong><font style="color:rgb(25, 27, 31);">测试Cookie方式转发：</font></strong></p>
+<p><font style="color:rgb(25, 27, 31);">curl <a href="http://localhost:9090/">http://localhost:9090</a> –cookie “hengboy&#x3D;leo” 通过上面方式我们是可以成功转发请求的，如果我们修改Cookie的值，就会导致无法转发，出现404。</font></p>
+<h2 id="Header-方式匹配转发"><a href="#Header-方式匹配转发" class="headerlink" title="Header 方式匹配转发"></a><font style="color:rgb(25, 27, 31);">Header 方式匹配转发</font></h2><p><font style="color:rgb(25, 27, 31);">Spring Cloud Gateway可以根据发送请求的Header信息进行匹配转发，加入我们可以根据X-Request-Id的值进行匹配，如下所示：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">spring:</span><br><span class="line">cloud:</span><br><span class="line">gateway:</span><br><span class="line">routes:</span><br><span class="line">- id: blog</span><br><span class="line">uri: http://blog.xx.com</span><br><span class="line">predicates:</span><br><span class="line">- Header=X-Request-Id, \d+</span><br></pre></td></tr></table></figure>
+
+<font style="color:rgb(25, 27, 31);">  
+</font>
+
+<p><font style="color:rgb(25, 27, 31);">在上面配置中，如果X-Request-Id的值为数字，那么就可以转发到 </font><a href="https://link.zhihu.com/?target=http://blog.xx.com"><font style="color:rgb(25, 27, 31);">http://blog.xx.com</font></a><font style="color:rgb(25, 27, 31);">，我们通过如下方式进行测试：</font></p>
+<p><font style="color:rgb(25, 27, 31);">curl <a href="http://localhost:9090/">http://localhost:9090</a> -H “X-Request-Id:123456” 如果头信息为X-Request-Id:abc时，就会转发失败，出现404。</font></p>
+<h2 id="Host-方式匹配转发"><a href="#Host-方式匹配转发" class="headerlink" title="Host 方式匹配转发"></a><font style="color:rgb(25, 27, 31);">Host 方式匹配转发</font></h2><p><font style="color:rgb(25, 27, 31);">Spring Cloud Gateway可以根据Host主机名进行匹配转发，如果我们的接口只允许\.</font><a href="https://link.zhihu.com/?target=http://xx.com"><font style="color:rgb(25, 27, 31);">http://xx.com</font></a><font style="color:rgb(25, 27, 31);">域名进行访问，那么配置如下所示：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">spring:</span><br><span class="line">cloud:</span><br><span class="line">gateway:</span><br><span class="line">routes:</span><br><span class="line">- id: blog</span><br><span class="line">uri: http://blog.xx.com</span><br><span class="line">predicates:</span><br><span class="line">- Host=\*\*.xx.com</span><br></pre></td></tr></table></figure>
+
+<font style="color:rgb(25, 27, 31);">  
+</font>
+
+<p><font style="color:rgb(25, 27, 31);">测试如下所示：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1. curl http://localhost:9090 -H &quot;Host: xx.com&quot; // 匹配</span><br><span class="line">2. curl http://localhost:9090 -H &quot;Host: api.xx.com&quot; // 匹配</span><br><span class="line">3. curl http://localhost:9090 -H &quot;Host: admin.xx.com&quot; // 匹配</span><br><span class="line">4. curl http://localhost:9090 -H &quot;Host: hengboy.com&quot; // 不匹配</span><br></pre></td></tr></table></figure>
+
+<font style="color:rgb(25, 27, 31);">  
+</font>
+
+<h2 id="请求方式-方式匹配转发"><a href="#请求方式-方式匹配转发" class="headerlink" title="请求方式 方式匹配转发"></a><font style="color:rgb(25, 27, 31);">请求方式 方式匹配转发</font></h2><p><font style="color:rgb(25, 27, 31);">Rest请求风格的接口内往往会存在多种请求方式的接口，如果我们的接口只允许POST请求访问，那么配置如下所示：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">spring:</span><br><span class="line">cloud:</span><br><span class="line">gateway:</span><br><span class="line">routes:</span><br><span class="line">- id: blog</span><br><span class="line">uri: http://blog.xx.com</span><br><span class="line">predicates:</span><br><span class="line">- Method=POST</span><br></pre></td></tr></table></figure>
+
+<font style="color:rgb(25, 27, 31);">  
+</font>
+
+<p><font style="color:rgb(25, 27, 31);">发送GET请求测试：</font></p>
+<p><font style="color:rgb(25, 27, 31);">~ curl <a href="http://localhost:9090/">http://localhost:9090</a></font></p>
+<p><font style="color:rgb(25, 27, 31);">{“timestamp”:”2019-04-29T06:27:41.121+0000”,”path”:”&#x2F;“,”status”:404,”error”:”Not Found”,”message”:null} 我们的请求并未被Spring Cloud Gateway进行转发，那么我们再来通过POST请求进行测试：</font></p>
+<p><font style="color:rgb(25, 27, 31);">curl -X POST <a href="http://localhost:9090/">http://localhost:9090</a> 是可以被转发到目标地址uri的，不过我的这个博客是OSS部署的，阿里云限制了POST访问，尽管如此我们也证明了可以转发。</font></p>
+<p><font style="color:rgb(25, 27, 31);">请求参数 方式匹配转发 Spring Cloud GateWay还支持根据指定的参数进行匹配，Query方式的Predicate也有两种方式匹配情况，如下所示：</font></p>
+<p><font style="color:rgb(25, 27, 31);">请求中存在xxx参数 cloud: gateway: routes: - id: blog uri: </font><a href="https://link.zhihu.com/?target=http://blog.xx.com"><font style="color:rgb(25, 27, 31);">http://blog.xx.com</font></a><font style="color:rgb(25, 27, 31);">predicates: - Query&#x3D;xxx 我们通过curl <a href="http://localhost:9090/?xxx%5C=123%E6%98%AF%E5%8F%AF%E4%BB%A5%E8%A2%AB%E6%88%90%E5%8A%9F%E8%BD%AC%E5%8F%91%E7%9A%84%EF%BC%8C%E5%8F%AA%E8%A6%81%E5%8F%82%E6%95%B0%E5%AD%98%E5%9C%A8xxx%E5%B0%B1%E4%BC%9A%E8%A2%AB%E6%88%90%E5%8A%9F%E8%BD%AC%E5%8F%91%EF%BC%8C%E5%90%A6%E5%88%99%E5%87%BA%E7%8E%B0404%E8%BD%AC%E5%8F%91%E5%A4%B1%E8%B4%A5%E3%80%82">http://localhost:9090\?xxx\=123是可以被成功转发的，只要参数存在xxx就会被成功转发，否则出现404转发失败。</a></font></p>
+<p><font style="color:rgb(25, 27, 31);">请求中存在xxx参数且值为zzz cloud: gateway: routes: - id: blog uri: </font><a href="https://link.zhihu.com/?target=http://blog.xx.com"><font style="color:rgb(25, 27, 31);">http://blog.xx.com</font></a><font style="color:rgb(25, 27, 31);">predicates: - Query&#x3D;xxx, zzz 根据上面配置，我们限定了参数xxx必须为zzz时才会被成功转发，否则同样会出现404抓发失败。</font></p>
+<p><font style="color:rgb(25, 27, 31);">请求路径 方式匹配转发 Spring Cloud Gateway提供了请求路径变量方式匹配转发，如下所示：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">spring:</span><br><span class="line">cloud:</span><br><span class="line">gateway:</span><br><span class="line">routes:</span><br><span class="line">- id: blog</span><br><span class="line">uri: http://blog.xx.com</span><br><span class="line">predicates:</span><br><span class="line">- Path=/article/&#123;articleId&#125;</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(25, 27, 31);">在上面配置中{articleId}是一个路径变量，可以是任意值，匹配&#x2F;article&#x2F;1、&#x2F;article&#x2F;abc等，测试如下所示：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">~ curl http://localhost:9090/article/1 // 匹配</span><br><span class="line">~ curl http://localhost:9090/article/abc // 匹配</span><br><span class="line">~ curl http://localhost:9090/article/1/1 // 不匹配</span><br></pre></td></tr></table></figure>
+
+<font style="color:rgb(25, 27, 31);">  
+</font>
+
+<h2 id="请求IP-方式匹配转发"><a href="#请求IP-方式匹配转发" class="headerlink" title="请求IP 方式匹配转发"></a><font style="color:rgb(25, 27, 31);">请求IP 方式匹配转发</font></h2><p><font style="color:rgb(25, 27, 31);">Spring Cloud Gateway可以限制允许访问接口的客户端IP地址，配置后只对指定IP地址的客户端进行请求转发，配置如下所示：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">spring:</span><br><span class="line">cloud:</span><br><span class="line">gateway:</span><br><span class="line">routes:</span><br><span class="line">- id: blog</span><br><span class="line">uri: http://blog.xx.com</span><br><span class="line">predicates:</span><br><span class="line">- RemoteAddr=192.168.1.56/24</span><br></pre></td></tr></table></figure>
+
+<font style="color:rgb(25, 27, 31);">  
+</font>
+
+<p><font style="color:rgb(25, 27, 31);">在上面我们配置了192.168.1.56&#x2F;24，其中192.168.1.56是客户端的IP地址，而24则是子网掩码。</font></p>
+<h2 id="组合示例"><a href="#组合示例" class="headerlink" title="组合示例"></a><font style="color:rgb(25, 27, 31);">组合示例</font></h2><p><font style="color:rgb(25, 27, 31);">相同的Predicate也可以配置多个，请求的转发是必须满足所有的Predicate后才可以进行路由转发，组合使用示例如下所示：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">spring:</span><br><span class="line">cloud:</span><br><span class="line">gateway:</span><br><span class="line">routes:</span><br><span class="line">- id: blog</span><br><span class="line">uri: http://blog.xx.com</span><br><span class="line">predicates:</span><br><span class="line">- Query=author, hengboy</span><br><span class="line">- Query=leo</span><br><span class="line">- Method=GET</span><br><span class="line">- Cookie=hengboy, leo</span><br><span class="line">- Header=X-Request-Id, \d+</span><br><span class="line">- RemoteAddr=192.168.1.56/24</span><br></pre></td></tr></table></figure>
+
+<font style="color:rgb(25, 27, 31);">  
+</font>
+
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a><font style="color:rgb(25, 27, 31);">总结</font></h2><p><font style="color:rgb(25, 27, 31);">本章节讲解了Spring Cloud Gateway的相关谓词、断言基本使用方式，GateWay内部提供了很多种灵活的路由转发规则，在同一个路由内存在多个Predicate时，同时满足规则后请求才会被路由转发。</font></p>
+]]></content>
+      <categories>
+        <category>微服务</category>
+      </categories>
+      <tags>
+        <tag>SpringCloud</tag>
+        <tag>微服务</tag>
+        <tag>SpringCloudGateway</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>springboot项目中引用SpringCloudGateway</title>
+    <url>/2024/03/26/springboot%E9%A1%B9%E7%9B%AE%E4%B8%AD%E5%BC%95%E7%94%A8SpringCloudGateway/</url>
+    <content><![CDATA[<h1 id="什么是网关"><a href="#什么是网关" class="headerlink" title="什么是网关"></a>什么是网关</h1><p>首先我们打开官网可以看到如下的描述：</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2023/png/25873401/1672730319068-d939400c-0dc9-466e-ae30-1cff4d5c6783.png"></p>
+<p>SpringCloudGateway旨在提供一种简单而有效的方式来路由到API，并为它们提供跨领域的关注点，例如：安全性、监控&#x2F;度量和弹性。</p>
+<span id="more"></span>
+<h1 id="为什么要使用网关"><a href="#为什么要使用网关" class="headerlink" title="为什么要使用网关"></a>为什么要使用网关</h1><p>当我们有多个服务的时候，前端需要访问服务的时候需要在前端维护好这几个服务的路径信息，<font style="color:rgb(0, 0, 0);">这样的架构会有如下几个典型的问题：</font></p>
+<ul>
+<li><font style="color:rgb(1, 1, 1);">每个微服务都需要配置单独的访问域名，开通外网访问权限，每新增一个服务都需要先让运维人员配置好域名映射</font></li>
+<li><font style="color:rgb(1, 1, 1);">客户端需要维护所有微服务的访问地址，试想一下如果微服务有几十几百个呢？</font></li>
+<li><font style="color:rgb(1, 1, 1);">当服务需要对接口进行权限控制，必须要认证用户才能调用，那么所有的权限逻辑在服务端都要重新编写一套。</font></li>
+</ul>
+<p><font style="color:rgb(0, 0, 0);">所以我们需要在微服务之前加一个网关服务，让所有的客户端只要访问网关，网关负责对请求进行转发；将权限校验逻辑放到网关的过滤器中，后端服务不需要再关注权限校验的代码；只需要对外提供一个可供外网访问的域名地址，新增服务后也不需要再让运维人员进行网络配置了，这样上面的架构就变成了通过网关转达到对应的服务</font></p>
+<h1 id="如何在springboot项目中引用网关"><a href="#如何在springboot项目中引用网关" class="headerlink" title="如何在springboot项目中引用网关"></a>如何在springboot项目中引用网关</h1><h3 id="增加pom"><a href="#增加pom" class="headerlink" title="增加pom"></a>增加pom</h3><p><img src="https://cdn.fbbizyy.com/yuque/0/2023/png/25873401/1672731071359-61f824de-4903-44e6-aba3-515a3f594da3.png"></p>
+<p>我们从官网可以看到gateway需要的pom项，因为我们的服务都使用nacos所以需要加上nacos的pom项</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&lt;dependencies&gt;</span><br><span class="line">       &lt;dependency&gt;</span><br><span class="line">           &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;</span><br><span class="line">           &lt;artifactId&gt;spring-cloud-starter-gateway&lt;/artifactId&gt;</span><br><span class="line">       &lt;/dependency&gt;</span><br><span class="line">       &lt;dependency&gt;</span><br><span class="line">           &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;</span><br><span class="line">           &lt;artifactId&gt;spring-cloud-loadbalancer&lt;/artifactId&gt;</span><br><span class="line">       &lt;/dependency&gt;</span><br><span class="line">       &lt;!--nacos--&gt;</span><br><span class="line">       &lt;dependency&gt;</span><br><span class="line">           &lt;groupId&gt;com.alibaba.cloud&lt;/groupId&gt;</span><br><span class="line">           &lt;artifactId&gt;spring-cloud-starter-alibaba-nacos-discovery&lt;/artifactId&gt;</span><br><span class="line">       &lt;/dependency&gt;</span><br><span class="line">       &lt;dependency&gt;</span><br><span class="line">           &lt;groupId&gt;com.alibaba.cloud&lt;/groupId&gt;</span><br><span class="line">           &lt;artifactId&gt;spring-cloud-starter-alibaba-nacos-config&lt;/artifactId&gt;</span><br><span class="line">       &lt;/dependency&gt;</span><br><span class="line">   &lt;/dependencies&gt;</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(85, 86, 102);">由于springcloud2020弃用了</font><a href="https://so.csdn.net/so/search?q=Ribbon&spm=1001.2101.3001.7020">Ribbon</a><font style="color:rgb(85, 86, 102);">，因此Alibaba在2021版本nacos中删除了Ribbon的jar包，因此无法通过lb路由到指定微服务，出现了503情况。</font></p>
+<p><font style="color:rgb(85, 86, 102);">所以只需要引入springcloud loadbalancer包即可</font></p>
+<h3 id="启动类"><a href="#启动类" class="headerlink" title="启动类"></a>启动类</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">@EnableDiscoveryClient</span><br><span class="line">@SpringBootApplication</span><br><span class="line">public class LuckGatewayApplication &#123;</span><br><span class="line"></span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        SpringApplication.run(LuckGatewayApplication.class, args);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="bootstap-yml"><a href="#bootstap-yml" class="headerlink" title="bootstap.yml"></a>bootstap.yml</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># Tomcat</span><br><span class="line">server:</span><br><span class="line">  port: 1060</span><br><span class="line"></span><br><span class="line"># Spring</span><br><span class="line">spring:</span><br><span class="line">  application:</span><br><span class="line">    # 应用名称</span><br><span class="line">    name: luck-gateway</span><br><span class="line">  profiles:</span><br><span class="line">    active: dev</span><br><span class="line">  cloud:</span><br><span class="line">    nacos:</span><br><span class="line">      discovery:</span><br><span class="line">        # 服务注册地址</span><br><span class="line">        server-addr: 你的nacos地址:8848</span><br><span class="line">        namespace: 5e81acf8-7ce3-42fe-b666-878b41d27fca</span><br><span class="line">      config:</span><br><span class="line">        # 配置中心地址</span><br><span class="line">        server-addr: 你的nacos地址:8848</span><br><span class="line">        # 配置文件格式</span><br><span class="line">        file-extension: yml</span><br><span class="line">        # 共享配置</span><br><span class="line">        shared-configs:</span><br><span class="line">          - application-$&#123;spring.profiles.active&#125;.$&#123;spring.cloud.nacos.config.file-extension&#125;</span><br><span class="line">        namespace: 5e81acf8-7ce3-42fe-b666-878b41d27fca</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="在nacos中建立网关的路由配置"><a href="#在nacos中建立网关的路由配置" class="headerlink" title="在nacos中建立网关的路由配置"></a><font style="color:rgb(1, 1, 1);">在nacos中建立网关的路由配置</font></h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">spring:</span><br><span class="line">  cloud:</span><br><span class="line">    gateway:</span><br><span class="line">      discovery:</span><br><span class="line">        locator:</span><br><span class="line">          lowerCaseServiceId: true</span><br><span class="line">          enabled: true</span><br><span class="line">      routes:</span><br><span class="line">      - id: luck-uid</span><br><span class="line">        uri: lb://luck-uid</span><br><span class="line">        predicates:</span><br><span class="line">          - Path=/uid/**</span><br><span class="line">        filters:</span><br><span class="line">          - StripPrefix=1</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="配置详解："><a href="#配置详解：" class="headerlink" title="配置详解："></a><font style="color:rgb(0, 0, 0);">配置详解：</font></h3><p><font style="color:rgb(119, 119, 119);">id: 在所有路由定义中需要唯一，不能重复</font><br><font style="color:rgb(119, 119, 119);">uri: lb:&#x2F;&#x2F;**  lb:&#x2F;&#x2F;为固定写法，表示开启负载均衡； ** 即服务在Nacos中注册的名字</font><br><font style="color:rgb(119, 119, 119);">predicates:- Path&#x3D;&#x2F;</font>uid<font style="color:rgb(119, 119, 119);">&#x2F;** 使用”Path Route Predicate Factory”，规则为&#x2F;</font>uid<font style="color:rgb(119, 119, 119);">&#x2F;** 的请求都还转发至微服务</font>luck-uid<font style="color:rgb(119, 119, 119);">中。</font></p>
+<p>filters : - StripPrefix &#x3D;1 <strong><font style="color:rgb(77, 77, 77);">若有StripPrefix过滤器时，gateway会根据StripPrefix&#x3D;1所配的值（这里是1）去掉URL路径中的部分前缀</font></strong><font style="color:rgb(77, 77, 77);">（这里去掉一个前缀，即去掉lbs）</font></p>
+<p><font style="color:rgb(0, 0, 0);"></font></p>
+]]></content>
+      <categories>
+        <category>微服务</category>
+      </categories>
+      <tags>
+        <tag>SpringCloud</tag>
+        <tag>微服务</tag>
+        <tag>SpringCloudGateway</tag>
+        <tag>Spring</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>springcloud项目使用nacos</title>
+    <url>/2024/03/28/%E4%BD%8E%E4%BE%B5%E5%85%A5%E7%9A%84%E7%81%B0%E5%BA%A6%E5%B9%B3%E5%8F%B0%E7%9A%84%E6%9E%84%E5%BB%BA/</url>
+    <content><![CDATA[<h3 id="设计简介："><a href="#设计简介：" class="headerlink" title="设计简介："></a>设计简介：</h3><p>灰度平台配置的主键是以域名来做主键配置，以域名来关联规则，依托这些规则来判断哪些哪些请求需要走灰度</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2023/jpeg/25873401/1701237832373-b55015c3-0ea5-468c-bb8f-f849cbc5daba.jpeg" alt="画板"></p>
+<h3 id="为什么要做这个平台"><a href="#为什么要做这个平台" class="headerlink" title="为什么要做这个平台"></a>为什么要做这个平台</h3><p>系统的稳定性，多有2方面造成</p>
+<p>1.生产环境运行期间，异常造成的服务宕机，造成的系统不可用。</p>
+<p>2.在更新服务时因为准备不足或者遗漏造成的更新时服务不可用。</p>
+<p>在第一点上我们可以做好监控和告警，使用容器编排工具自动重启，服务集群来避免。</p>
+<p>但是第二点人员干涉较多，很容易出现纰漏，所以构建一个灰度的平台，在系统上线后逐步的将系统开放出去，尽早的发现纰漏减少因为更新系统造成的宕机损失</p>
+<h3 id="平台功能与使用场景"><a href="#平台功能与使用场景" class="headerlink" title="平台功能与使用场景"></a>平台功能<font style="color:rgb(47, 48, 52);">与使用场景</font></h3><p>平台包含规则域名管理、规则管理、比例管理。平台与openresty通过redis联动，规则的筛选通过lua脚本来执行。</p>
+<p>域名管理：域名的增加、修改、删除、以及全量灰度修改、全量下线</p>
+<p>规则灰度：主要配置请求类型，然后根据不同的请求类型获取对应的参数，通过规则类型（大于等于小于包含不等于等符号）来判断请求是否属于灰度</p>
+<p>比例灰度：设置请求有多少数据进入灰度，这里需要注意：比例只能从小到大，最低到1%，最高到100%（第一次设置10%那后续只能从10%往上加）</p>
+<p>使用场景：</p>
+<p>服务A，B更新，创建服务A，B的灰度服务并在nacos的元空间中增加灰度版本，然后增加域名——规则灰度——ip灰度——白名单——公司IP地址；公司网络访问服务测试灰度内容，无异常后，再根据自己的需要配置参数规则匹配或者比例灰度来进行小部分的发布，当然如果对服务很有信息也可以直接更新到线上</p>
+<h3 id="为了实现灰度都做了什么"><a href="#为了实现灰度都做了什么" class="headerlink" title="为了实现灰度都做了什么"></a>为了实现灰度都做了什么</h3><p><font style="color:rgb(47, 48, 52);"></font></p>
+]]></content>
+      <categories>
+        <category>灰度平台</category>
+      </categories>
+      <tags>
+        <tag>微服务</tag>
+        <tag>灰度</tag>
+        <tag>nacos</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>springcloud项目使用nacos</title>
+    <url>/2024/03/27/springcloud%E9%A1%B9%E7%9B%AE%E4%BD%BF%E7%94%A8nacos/</url>
+    <content><![CDATA[<h1 id="参考资料："><a href="#参考资料：" class="headerlink" title="参考资料："></a>参考资料：</h1><h2 id="Nacos-融合-Spring-Cloud："><a href="#Nacos-融合-Spring-Cloud：" class="headerlink" title="Nacos 融合 Spring Cloud："></a><font style="color:rgb(36, 41, 46);">Nacos 融合 Spring Cloud：</font></h2><p><a href="https://nacos.io/zh-cn/docs/v2/ecology/use-nacos-with-spring-cloud.html">https://nacos.io/zh-cn/docs/v2/ecology/use-nacos-with-spring-cloud.html</a></p>
+<h2 id="Java-SDK："><a href="#Java-SDK：" class="headerlink" title="Java SDK："></a><font style="color:rgb(36, 41, 46);">Java SDK：</font></h2><p><a href="https://nacos.io/zh-cn/docs/v2/guide/user/sdk.html">https://nacos.io/zh-cn/docs/v2/guide/user/sdk.html</a></p>
+<h1 id="POM文件引用："><a href="#POM文件引用：" class="headerlink" title="POM文件引用："></a>POM文件引用：</h1><h2 id="父pom"><a href="#父pom" class="headerlink" title="父pom"></a>父pom</h2><p>springcloud，springboot，springcloudalibaba，nacos版本引用</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&lt;properties&gt;</span><br><span class="line">      &lt;java.version&gt;11&lt;/java.version&gt;</span><br><span class="line">      &lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;</span><br><span class="line">      &lt;project.reporting.outputEncoding&gt;UTF-8&lt;/project.reporting.outputEncoding&gt;</span><br><span class="line">      &lt;spring-boot.version&gt;2.6.13&lt;/spring-boot.version&gt;</span><br><span class="line">      &lt;spring-cloud.version&gt;2021.0.5&lt;/spring-cloud.version&gt;</span><br><span class="line">      &lt;spring-cloud-alibaba.version&gt;2021.0.4.0&lt;/spring-cloud-alibaba.version&gt;</span><br><span class="line">      &lt;alibaba.nacos.version&gt;2.1.1&lt;/alibaba.nacos.version&gt;</span><br><span class="line">  &lt;/properties&gt;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&lt;dependencyManagement&gt;</span><br><span class="line">       &lt;dependencies&gt;</span><br><span class="line">           &lt;!--统一版本--&gt;</span><br><span class="line">           &lt;dependency&gt;</span><br><span class="line">               &lt;groupId&gt;com.luck.sugar&lt;/groupId&gt;</span><br><span class="line">               &lt;artifactId&gt;luck-bom&lt;/artifactId&gt;</span><br><span class="line">               &lt;version&gt;1.0.0&lt;/version&gt;</span><br><span class="line">               &lt;type&gt;pom&lt;/type&gt;</span><br><span class="line">               &lt;scope&gt;import&lt;/scope&gt;</span><br><span class="line">           &lt;/dependency&gt;</span><br><span class="line">           &lt;!-- SpringBoot 依赖配置 --&gt;</span><br><span class="line">           &lt;dependency&gt;</span><br><span class="line">               &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;</span><br><span class="line">               &lt;artifactId&gt;spring-boot-dependencies&lt;/artifactId&gt;</span><br><span class="line">               &lt;version&gt;$&#123;spring-boot.version&#125;&lt;/version&gt;</span><br><span class="line">               &lt;type&gt;pom&lt;/type&gt;</span><br><span class="line">               &lt;scope&gt;import&lt;/scope&gt;</span><br><span class="line">           &lt;/dependency&gt;</span><br><span class="line">           &lt;!-- SpringCloud 微服务 --&gt;</span><br><span class="line">           &lt;dependency&gt;</span><br><span class="line">               &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;</span><br><span class="line">               &lt;artifactId&gt;spring-cloud-dependencies&lt;/artifactId&gt;</span><br><span class="line">               &lt;version&gt;$&#123;spring-cloud.version&#125;&lt;/version&gt;</span><br><span class="line">               &lt;type&gt;pom&lt;/type&gt;</span><br><span class="line">               &lt;scope&gt;import&lt;/scope&gt;</span><br><span class="line">           &lt;/dependency&gt;</span><br><span class="line">           &lt;!-- Alibaba Nacos 配置 --&gt;</span><br><span class="line">           &lt;dependency&gt;</span><br><span class="line">               &lt;groupId&gt;com.alibaba.nacos&lt;/groupId&gt;</span><br><span class="line">               &lt;artifactId&gt;nacos-client&lt;/artifactId&gt;</span><br><span class="line">               &lt;version&gt;$&#123;alibaba.nacos.version&#125;&lt;/version&gt;</span><br><span class="line">           &lt;/dependency&gt;</span><br><span class="line">           &lt;!-- Mybatis 依赖配置 --&gt;</span><br><span class="line"></span><br><span class="line">           &lt;!-- SpringCloud Alibaba 微服务 --&gt;</span><br><span class="line">           &lt;dependency&gt;</span><br><span class="line">               &lt;groupId&gt;com.alibaba.cloud&lt;/groupId&gt;</span><br><span class="line">               &lt;artifactId&gt;spring-cloud-alibaba-dependencies&lt;/artifactId&gt;</span><br><span class="line">               &lt;version&gt;$&#123;spring-cloud-alibaba.version&#125;&lt;/version&gt;</span><br><span class="line">               &lt;type&gt;pom&lt;/type&gt;</span><br><span class="line">               &lt;scope&gt;import&lt;/scope&gt;</span><br><span class="line">           &lt;/dependency&gt;</span><br><span class="line">       &lt;/dependencies&gt;</span><br><span class="line">   &lt;/dependencyManagement&gt;</span><br></pre></td></tr></table></figure>
+
+<p>因为我们使用了注册中心所以配置不能再使用application.yaml，需要优先级更高的bootstrap文件来找到nacos的配置文件，在springboot2.2以后bootstrap默认是关闭的需要打开才能默认使用bootstrap文件为配置文件，需要在pom文件中添加模块引用</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&lt;dependencies&gt;</span><br><span class="line">    &lt;!-- bootstrap 启动器 --&gt;</span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;spring-cloud-starter-bootstrap&lt;/artifactId&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line">&lt;/dependencies&gt;</span><br></pre></td></tr></table></figure>
+
+<h2 id="子pom"><a href="#子pom" class="headerlink" title="子pom"></a>子pom</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&lt;dependencies&gt;</span><br><span class="line">      &lt;!--  spring web --&gt;</span><br><span class="line">      &lt;dependency&gt;</span><br><span class="line">          &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;</span><br><span class="line">          &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;</span><br><span class="line">      &lt;/dependency&gt;</span><br><span class="line">      &lt;!-- spring test --&gt;</span><br><span class="line">      &lt;dependency&gt;</span><br><span class="line">          &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;</span><br><span class="line">          &lt;artifactId&gt;spring-boot-starter-test&lt;/artifactId&gt;</span><br><span class="line">          &lt;scope&gt;test&lt;/scope&gt;</span><br><span class="line">      &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">      &lt;!--nacos--&gt;</span><br><span class="line">      &lt;dependency&gt;</span><br><span class="line">          &lt;groupId&gt;com.alibaba.cloud&lt;/groupId&gt;</span><br><span class="line">          &lt;artifactId&gt;spring-cloud-starter-alibaba-nacos-discovery&lt;/artifactId&gt;</span><br><span class="line">      &lt;/dependency&gt;</span><br><span class="line">      &lt;dependency&gt;</span><br><span class="line">          &lt;groupId&gt;com.alibaba.cloud&lt;/groupId&gt;</span><br><span class="line">          &lt;artifactId&gt;spring-cloud-starter-alibaba-nacos-config&lt;/artifactId&gt;</span><br><span class="line">      &lt;/dependency&gt;</span><br><span class="line">  &lt;/dependencies&gt;</span><br></pre></td></tr></table></figure>
+
+<h1 id="配置文件修改："><a href="#配置文件修改：" class="headerlink" title="配置文件修改："></a>配置文件修改：</h1><p>上节解释了配置文件变化，以下是bootstrap.yml的示例</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># Tomcat</span><br><span class="line">server:</span><br><span class="line">  port: 1066</span><br><span class="line"></span><br><span class="line"># Spring</span><br><span class="line">spring:</span><br><span class="line">  application:</span><br><span class="line">    # 应用名称</span><br><span class="line">    name: luck-uid</span><br><span class="line">  profiles:</span><br><span class="line">    active: dev</span><br><span class="line">  cloud:</span><br><span class="line">    nacos:</span><br><span class="line">      discovery:</span><br><span class="line">        # 服务注册地址</span><br><span class="line">        server-addr: 49.235.122.65:8848</span><br><span class="line">        namespace: 5e81acf8-7ce3-42fe-b666-878b41d27fca</span><br><span class="line">      config:</span><br><span class="line">        # 配置中心地址</span><br><span class="line">        server-addr: 49.235.122.65:8848</span><br><span class="line">        # 配置文件格式</span><br><span class="line">        file-extension: yml</span><br><span class="line">        # 共享配置</span><br><span class="line">        shared-configs:</span><br><span class="line">          - application-$&#123;spring.profiles.active&#125;.$&#123;spring.cloud.nacos.config.file-extension&#125;</span><br><span class="line">        namespace: 5e81acf8-7ce3-42fe-b666-878b41d27fca</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="启动类注解添加："><a href="#启动类注解添加：" class="headerlink" title="启动类注解添加："></a>启动类注解添加：</h1><p><font style="color:#bbb529;">@EnableDiscoveryClient</font></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">@EnableDiscoveryClient</span><br><span class="line">@SpringBootApplication</span><br><span class="line">public class LuckUidApplication &#123;</span><br><span class="line"></span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        SpringApplication.run(LuckUidApplication.class, args);</span><br><span class="line">        System.out.println(&quot;(♥◠‿◠)ﾉﾞ  ID服务启动成功   ლ(´ڡ`ლ)ﾞ  \n&quot; +</span><br><span class="line">                &quot; .-------.       .-------.          \n&quot; +</span><br><span class="line">                &quot; | i--------------------i |         \n&quot; +</span><br><span class="line">                &quot; | |                    | |         \n&quot; +</span><br><span class="line">                &quot; \\|   O       O        |/          \n&quot; +</span><br><span class="line">                &quot;   |      /\\           |           \n&quot; +</span><br><span class="line">                &quot;   |     /  \\          |           \n&quot; +</span><br><span class="line">                &quot;   |    \\__/           |           \n&quot; +</span><br><span class="line">                &quot;   |      __-- .        |           \n&quot; +</span><br><span class="line">                &quot;           `-..-&#x27;              &quot;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="效果展示："><a href="#效果展示：" class="headerlink" title="效果展示："></a>效果展示：</h1><p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1670814234495-463d58c8-b5df-4c44-9129-728a4b419988.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1670814281972-0e0c6a3b-0840-43c4-aafc-63de05ef2b20.png"></p>
+<h1 id="异常备注："><a href="#异常备注：" class="headerlink" title="异常备注："></a>异常备注：</h1><h3 id="bootstrap-yml未生效：链接地址为-127-0-0-1"><a href="#bootstrap-yml未生效：链接地址为-127-0-0-1" class="headerlink" title="bootstrap.yml未生效：链接地址为 127.0.0.1"></a>bootstrap.yml未生效：链接地址为 127.0.0.1</h3><p>pom未添加spring-cloud-starter-bootstrap，</p>
+<p>配置文件格式异常</p>
+<h3 id="项目启动完成后没有注册到nacos中："><a href="#项目启动完成后没有注册到nacos中：" class="headerlink" title="项目启动完成后没有注册到nacos中："></a>项目启动完成后没有注册到nacos中：</h3><p>子pom中未引用：spring-cloud-starter-alibaba-nacos-discovery</p>
+]]></content>
+      <categories>
+        <category>微服务</category>
+      </categories>
+      <tags>
+        <tag>SpringCloud</tag>
+        <tag>微服务</tag>
+        <tag>Spring</tag>
+        <tag>nacos</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>分布式ID总结</title>
+    <url>/2024/04/11/%E5%88%86%E5%B8%83%E5%BC%8FID/</url>
+    <content><![CDATA[<p>:::success<br>分布式系统中，我们经常需要对数据、消息等进行唯一标识，这个唯一标识就是分布式 ID，那么我们如何设计它呢？本文将详细讲述分布式 ID 及其生成方案。</p>
+<p>:::</p>
+<hr>
+<h1 id="为什么需要分布式-ID"><a href="#为什么需要分布式-ID" class="headerlink" title="为什么需要分布式 ID"></a>为什么需要分布式 ID</h1><p>目前大部分的系统都已是分布式系统，所以在这种场景的业务开发中，经常会需要唯一 ID 对数据进行标识，比如用户身份标识、消息标识等等。</p>
+<p>并且在数据量达到一定规模后，大部分的系统也需要进行分库分表，这种场景下单库的自增 ID 已达不到我们的预期。所以我们需要分布式 ID 来对各种场景的数据进行唯一标识。</p>
+<h1 id="分布式-ID-的特性"><a href="#分布式-ID-的特性" class="headerlink" title="分布式 ID 的特性"></a>分布式 ID 的特性</h1><p><strong>主要特性：</strong></p>
+<ul>
+<li>全局唯一：分布式 ID 最基本要求，必须全局唯一。</li>
+<li>高可用：高并发下要保证 ID 的生成效率，避免影响系统。</li>
+<li>易用性：使用简单，可快速接入。</li>
+</ul>
+<p><strong>除此之外根据不同场景还有：</strong></p>
+<ul>
+<li>有序性：数据库场景下的主键 ID，有序性可便于数据写入和排序。</li>
+<li>安全性：无规则 ID，一般用于避免业务信息泄露场景，如订单量。</li>
+</ul>
+<h1 id="分布式-ID-常见生成方案"><a href="#分布式-ID-常见生成方案" class="headerlink" title="分布式 ID 常见生成方案"></a>分布式 ID 常见生成方案</h1><p><img src="https://cdn.fbbizyy.com/yuque/0/2024/jpeg/3003575/1718614981558-bee358fe-b5f6-4890-b69e-9eb60310084d.jpeg" alt="画板"></p>
+<h2 id="UUID"><a href="#UUID" class="headerlink" title="UUID"></a>UUID</h2><p><strong>UUID</strong>（Universally Unique Identifier），即通用唯一识别码。UUID 的目的是让分布式系统中的所有元素都能有唯一的识别信息。</p>
+<p>UUID 是由128位二进制数组成，通常表示为32个十六进制字符，形如：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">550e8400-e29b-41d4-a716-446655440000</span><br></pre></td></tr></table></figure>
+
+
+
+<p>这个字符串由五个部分组成，以连字符<code>-</code>分隔开，具体如下：</p>
+<table>
+<thead>
+<tr>
+<th align="center">部分</th>
+<th align="center">大小</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">时间戳</td>
+<td align="center">32 bits</td>
+<td>UUID的前32位表示当前的时间戳。</td>
+</tr>
+<tr>
+<td align="center">时钟序列和随机数</td>
+<td align="center">16 bits</td>
+<td>用于保证在同一时刻生成的UUID的唯一性。</td>
+</tr>
+<tr>
+<td align="center">变体标识</td>
+<td align="center">4 bits</td>
+<td>标识 UUID 的变体，通常为固定值，表示是由 RFC 4122 定义。</td>
+</tr>
+<tr>
+<td align="center">版本号</td>
+<td align="center">4 bits</td>
+<td>标识UUID的版本，常见版本有1、3、4和5</td>
+</tr>
+<tr>
+<td align="center">节点</td>
+<td align="center">48 bits</td>
+<td>在版本 1 中，这部分包含生成 UUID 的计算机的唯一标识。</td>
+</tr>
+</tbody></table>
+<p><strong>主要的 UUID 版本及其生成规则：</strong></p>
+<table>
+<thead>
+<tr>
+<th align="center">版本</th>
+<th align="center">场景</th>
+<th>生成规则</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">版本 1</td>
+<td align="center">基于时间和节点</td>
+<td>由当前的时间戳和节点信息生成。包括时间戳、时钟序列、节点标识。</td>
+</tr>
+<tr>
+<td align="center">版本 2</td>
+<td align="center">基于DCE安全标识符</td>
+<td>类似版本 1，但在时间戳部分包含 POSIX UID&#x2F;GID 信息。</td>
+</tr>
+<tr>
+<td align="center">版本 3</td>
+<td align="center">基于名字和散列值（MD5 版）</td>
+<td>由命名空间和名字的MD5散列生成。</td>
+</tr>
+<tr>
+<td align="center">版本 4</td>
+<td align="center">完全随机生成</td>
+<td>通过随机或伪随机生成128位数字。</td>
+</tr>
+<tr>
+<td align="center">版本 5</td>
+<td align="center">基于名字和散列值（SHA-1 版）</td>
+<td>通过随机或伪随机生成128位数字。</td>
+</tr>
+</tbody></table>
+<p><strong>Java中 UUID 对版本 4 进行了实现：</strong></p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span> <span class="params">(String[] args)</span> &#123;</span><br><span class="line">    <span class="comment">// 默认版本 4</span></span><br><span class="line">    System.out.println(UUID.randomUUID());</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 版本 3，由命名空间和名字的MD5散列生成，相同命名空间结果相同</span></span><br><span class="line">    <span class="comment">// 如下，&quot;fuxing&quot;返回的UUID一直为8b9b6bc3-90c8-37ef-bbef-0ed0c552718f</span></span><br><span class="line">    System.out.println(UUID.nameUUIDFromBytes(<span class="string">&quot;fuxing&quot;</span>.getBytes()));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>优点：</strong>本地生成，没有网络消耗，性能非常高。</p>
+<p><strong>缺点：</strong></p>
+<ul>
+<li>占用空间大，32 个字符串，128 位。</li>
+<li>不安全：版本 1 可能会造成 mac 地址泄露。</li>
+<li>无序，非自增。</li>
+<li>机器时间不对，可能造成 UUID 重复。</li>
+</ul>
+<h2 id="数据库自增-ID"><a href="#数据库自增-ID" class="headerlink" title="数据库自增 ID"></a>数据库自增 ID</h2><p>实现简单，解释通过数据库表中的主键 ID 自增来生成唯一标识。如下，维护一个 MySQL 表来生成 ID。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">CREATE TABLE `unique_id` (</span><br><span class="line">  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,</span><br><span class="line">  `value` char(10) NOT NULL DEFAULT &#x27;&#x27;,</span><br><span class="line">  PRIMARY KEY (`id`),</span><br><span class="line">) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<p>当需要生成分布式 ID 时，向表中插入数据并返回主键 ID，这里 value 无含义，只是为了占位，方便插入数据。</p>
+<p><strong>优点：</strong>实现简单，基本满足业务需求，且天然有序。</p>
+<p><strong>缺点：</strong></p>
+<ul>
+<li>数据库自身的单点故障和数据一致性问题。</li>
+<li>不安全，比如可根据自增来判断订单量。</li>
+<li>高并发场景可能会受限于数据库瓶颈。</li>
+</ul>
+<p>那么有没有办法解决数据库自增 ID 的缺点呢？</p>
+<p>通过水平拆分的方案，将表设置到不同的数据库中，设置不同的起始值和步长，这样可以有效的生成集群中的唯一 ID，也大大降低 ID 生成数据库操作的负载，示例如下。</p>
+<p><code>&lt;font style=&quot;color:rgb(62, 62, 62);&quot;&gt;unique_id_1&lt;/font&gt;</code><font style="color:rgb(62, 62, 62);">配置：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set @@auto_increment_offset = 1;     -- 起始值</span><br><span class="line">set @@auto_increment_increment = 2;  -- 步长</span><br></pre></td></tr></table></figure>
+
+<p><code>&lt;font style=&quot;color:rgb(62, 62, 62);&quot;&gt;unique_id_2&lt;/font&gt;</code><font style="color:rgb(62, 62, 62);">配置：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set @@auto_increment_offset = 2;     -- 起始值</span><br><span class="line">set @@auto_increment_increment = 2;  -- 步长</span><br></pre></td></tr></table></figure>
+
+
+
+<p>这个还是需要根据自己的业务需求来，水平扩展的集群数量要符合自己的数据量，因为当设置的集群数量不足以满足高并发时，再次进行扩容集群会很麻烦。多台机器的起始值和步长都需要重新配置。</p>
+<h2 id="数据库号段模式"><a href="#数据库号段模式" class="headerlink" title="数据库号段模式"></a>数据库号段模式</h2><p>号段模式是当下分布式 ID 生成器的主流实现方式之一，比如美团 Leaf-segment、滴滴 Tinyid、微信序列号等都使用的该方案，下面的大厂中间件中会展开说明。</p>
+<p>号段模式也是基于数据库的自增 ID，数据库自增 ID 是一次性获取一个分布式 ID，**<font style="color:#5C8D07;">号段模式可以理解成从数据库批量获取 ID，然后将 ID 缓存在本地</font>**，以此来提高业务获取 ID 的效率。</p>
+<p>例如，每次从数据库获取 ID 时，获取一个号段，如(1,1000]，这个范围表示 1000 个 ID，业务应用在请求获取 ID 时，只需要在本地从 1 开始自增并返回，而不用每次去请求数据库，一直到本地自增到 1000 时，才去数据库重新获取新的号段，后续流程循环往复。</p>
+<p>表结构可进行如下设计：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">CREATE TABLE `id_generator` (</span><br><span class="line">  `id` int(10) NOT NULL,</span><br><span class="line">  `max_id` bigint(20) NOT NULL COMMENT &#x27;当前最大id&#x27;,</span><br><span class="line">  `step` int(10) NOT NULL COMMENT &#x27;号段的步长&#x27;,</span><br><span class="line">  `version` int(20) NOT NULL COMMENT &#x27;版本号&#x27;,</span><br><span class="line">  `biz_type` int(20) NOT NULL COMMENT &#x27;业务场景&#x27;,</span><br><span class="line">   PRIMARY KEY (`id`)</span><br><span class="line">) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>其中<code>max_id</code>和<code>step</code>用于获取批量的 ID，<code>version</code>是一个乐观锁，保证并发时数据的正确性。</p>
+<p>比如，我们新增一条表数据如下。</p>
+<table>
+<thead>
+<tr>
+<th align="center">id</th>
+<th align="center">max_id</th>
+<th align="center">step</th>
+<th align="center">version</th>
+<th align="center">biz_type</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">1</td>
+<td align="center">100</td>
+<td align="center">1000</td>
+<td align="center">0</td>
+<td align="center">001</td>
+</tr>
+</tbody></table>
+<p>然后我们可以使用该号段批量生成的 ID，当<code>max_id = 1000</code>，则执行 update 操作生成新的号段。新的号段的 SQL。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">UPDATE </span><br><span class="line">id_generator </span><br><span class="line">SET </span><br><span class="line">max_id = #&#123;max_id+ step&#125;, </span><br><span class="line">version = version + 1 </span><br><span class="line">WHERE </span><br><span class="line">version = #&#123;version&#125; AND biz_type = 001;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>优点：</strong>ID 有序递增、存储消耗空间小。</p>
+<p><strong>缺点：</strong></p>
+<ul>
+<li>数据库自身的单点故障和数据一致性问题。</li>
+<li>不安全，比如可根据自增来判断订单量。</li>
+<li>高并发场景可能会受限于数据库瓶颈。</li>
+</ul>
+<p>缺点同样可以通过集群的方式进行优化，也可以如Tinyid 采用双缓存进行优化，下面的大厂中间件中会展开说明。</p>
+<h2 id="基于Redis"><a href="#基于Redis" class="headerlink" title="基于Redis"></a>基于Redis</h2><p>当使用数据库来生成 ID 性能不够的时候，可以尝试使用 Redis 来生成 ID。原理则是利用 Redis 的原子操作 INCR 和 INCRBY 来实现。</p>
+<p><strong>命令示例：</strong></p>
+<table>
+<thead>
+<tr>
+<th align="center"><strong>命令</strong></th>
+<th><strong>说明</strong></th>
+<th><strong>示例</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center"><strong>INCR</strong></td>
+<td>让一个整形的key自增1</td>
+<td>:::tips redis&gt; <font style="color:#E8323C;">SET</font> mykey “10”<br/>“OK”<br/>redis&gt; <font style="color:#E8323C;">INCR</font> mykey<br/>(integer) 11<br/>:::</td>
+</tr>
+<tr>
+<td align="center"><strong>INCRBY</strong></td>
+<td>让一个整形的key自增并指定步长</td>
+<td>:::tips redis&gt; <font style="color:#E8323C;">SET</font> mykey “10”<br/>“OK”<br/>redis&gt; <font style="color:#E8323C;">INCRBY</font> mykey 5<br/>(integer) 15<br/>:::</td>
+</tr>
+</tbody></table>
+<p><strong>优点：</strong>不依赖于数据库，使用灵活，支持高并发。</p>
+<p><strong>缺点：</strong></p>
+<ul>
+<li>系统须引入 Redis 数据库。</li>
+<li>不安全，比如可根据自增来判断订单量。</li>
+<li><font style="color:rgb(25, 27, 31);">Redis 出现单点故障问题，可能会丢数据导致 ID 重复</font>。</li>
+</ul>
+<h2 id="雪花算法"><a href="#雪花算法" class="headerlink" title="雪花算法"></a>雪花算法</h2><p>雪花算法（Snowflake）是 twitter 公司内部分布式项目采用的 ID 生成算法。结果是一个 long 型的 ID。Snowflake 算法将 64bit 划分为多段，分开来标识机器、时间等信息，具体组成结构如下图所示：</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/jpeg/3003575/1718695293290-53f569fe-4b3d-4e3b-8161-804a80c69b7a.jpeg" alt="画板"></p>
+<p><strong>结构说明：</strong></p>
+<table>
+<thead>
+<tr>
+<th align="center">结构</th>
+<th align="center">大小</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">符号位</td>
+<td align="center">1 bit</td>
+<td>0 表示正数，1 表示负数。</td>
+</tr>
+<tr>
+<td align="center">时间戳</td>
+<td align="center">41 bits</td>
+<td>存储的是<code>当前时间戳 - 开始时间戳</code>，最长 69 年。</td>
+</tr>
+<tr>
+<td align="center">机器位</td>
+<td align="center">10 bits</td>
+<td>前 5位 datacenterId，后 5 位 workerId ，最多表示 1024 台。</td>
+</tr>
+<tr>
+<td align="center">序列号</td>
+<td align="center">12 bits</td>
+<td>毫秒内的流水号，意味着每个节点在每毫秒可以产生 4096 个 ID。</td>
+</tr>
+</tbody></table>
+<p><strong>优点：</strong></p>
+<p>稳定性高，不依赖于数据库等第三方系统。</p>
+<p>使用灵活方便，可以根据业务需求的特性来调整算法中的 bit 位。</p>
+<p>单机上 ID 单调自增，毫秒数在高位，自增序列在低位，整体上按照时间自增排序。</p>
+<p><strong>缺点：</strong></p>
+<ul>
+<li>强依赖机器时钟，如果机器上时钟回拨，可能导致发号重复或者服务处于不可用状态。</li>
+<li>ID 可能不是全局递增，虽然 ID 在单机上是递增的。</li>
+<li><font style="color:rgb(25, 27, 31);">Redis 出现单点故障问题，可能会丢数据导致 ID 重复</font>。</li>
+</ul>
+<p>当我们选择了雪花算法可以参考<font style="color:rgb(47, 48, 52);">shardingsphere的雪花算法，以此为例来写一个starter</font></p>
+<p><font style="color:rgb(47, 48, 52);">定义接口</font></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">public class DefaultIdGenerator implements IdGenerator &#123;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public long nextId() &#123;</span><br><span class="line">        Comparable&lt;?&gt; key=  IDUtils.generateKey();</span><br><span class="line">        return (Long) key;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>定义雪花算法实现</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">package com.fbb.pomelo.id.utils;</span><br><span class="line"></span><br><span class="line">import com.google.common.base.Preconditions;</span><br><span class="line">import lombok.Getter;</span><br><span class="line">import lombok.Setter;</span><br><span class="line">import lombok.SneakyThrows;</span><br><span class="line">import lombok.experimental.UtilityClass;</span><br><span class="line">import lombok.extern.slf4j.Slf4j;</span><br><span class="line"></span><br><span class="line">import java.net.NetworkInterface;</span><br><span class="line">import java.util.*;</span><br><span class="line">import java.util.concurrent.ThreadLocalRandom;</span><br><span class="line"></span><br><span class="line">@Slf4j</span><br><span class="line">@UtilityClass</span><br><span class="line">public final class IDUtils &#123;</span><br><span class="line">    public static final long EPOCH;</span><br><span class="line"></span><br><span class="line">    private static final long SEQUENCE_BITS = 12L;</span><br><span class="line"></span><br><span class="line">    private static final long WORKER_ID_BITS = 10L;</span><br><span class="line"></span><br><span class="line">    private static final long SEQUENCE_MASK = (1 &lt;&lt; SEQUENCE_BITS) - 1;</span><br><span class="line"></span><br><span class="line">    private static final long WORKER_ID_LEFT_SHIFT_BITS = SEQUENCE_BITS;</span><br><span class="line"></span><br><span class="line">    private static final long TIMESTAMP_LEFT_SHIFT_BITS = WORKER_ID_LEFT_SHIFT_BITS + WORKER_ID_BITS;</span><br><span class="line"></span><br><span class="line">    private static final long WORKER_ID_MAX_VALUE = 1L &lt;&lt; WORKER_ID_BITS;</span><br><span class="line"></span><br><span class="line">    private static final long WORKER_ID = 0;</span><br><span class="line"></span><br><span class="line">    private static final int DEFAULT_VIBRATION_VALUE = 1;</span><br><span class="line"></span><br><span class="line">    private static final int MAX_TOLERATE_TIME_DIFFERENCE_MILLISECONDS = 10;</span><br><span class="line"></span><br><span class="line">    @Setter</span><br><span class="line">    private static TimeService timeService = new TimeService();</span><br><span class="line"></span><br><span class="line">    @Getter</span><br><span class="line">    @Setter</span><br><span class="line">    private Properties properties = new Properties();</span><br><span class="line"></span><br><span class="line">    private int sequenceOffset = -1;</span><br><span class="line"></span><br><span class="line">    private long sequence;</span><br><span class="line"></span><br><span class="line">    private long lastMilliseconds;</span><br><span class="line"></span><br><span class="line">    static &#123;</span><br><span class="line">        Calendar calendar = Calendar.getInstance();</span><br><span class="line">        calendar.set(2016, Calendar.NOVEMBER, 1);</span><br><span class="line">        calendar.set(Calendar.HOUR_OF_DAY, 0);</span><br><span class="line">        calendar.set(Calendar.MINUTE, 0);</span><br><span class="line">        calendar.set(Calendar.SECOND, 0);</span><br><span class="line">        calendar.set(Calendar.MILLISECOND, 0);</span><br><span class="line">        EPOCH = calendar.getTimeInMillis();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public synchronized Comparable&lt;?&gt; generateKey() &#123;</span><br><span class="line">        long currentMilliseconds = timeService.getCurrentMillis();</span><br><span class="line">        if (waitTolerateTimeDifferenceIfNeed(currentMilliseconds)) &#123;</span><br><span class="line">            currentMilliseconds = timeService.getCurrentMillis();</span><br><span class="line">        &#125;</span><br><span class="line">        if (lastMilliseconds == currentMilliseconds) &#123;</span><br><span class="line">            if (0L == (sequence = (sequence + 1) &amp; SEQUENCE_MASK)) &#123;</span><br><span class="line">                currentMilliseconds = waitUntilNextTime(currentMilliseconds);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            vibrateSequenceOffset();</span><br><span class="line">            sequence = sequenceOffset;</span><br><span class="line">        &#125;</span><br><span class="line">        lastMilliseconds = currentMilliseconds;</span><br><span class="line">        return ((currentMilliseconds - EPOCH) &lt;&lt; TIMESTAMP_LEFT_SHIFT_BITS) | (getWorkerId() &lt;&lt; WORKER_ID_LEFT_SHIFT_BITS) | sequence;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @SneakyThrows</span><br><span class="line">    private boolean waitTolerateTimeDifferenceIfNeed(final long currentMilliseconds) &#123;</span><br><span class="line">        if (lastMilliseconds &lt;= currentMilliseconds) &#123;</span><br><span class="line">            return false;</span><br><span class="line">        &#125;</span><br><span class="line">        long timeDifferenceMilliseconds = lastMilliseconds - currentMilliseconds;</span><br><span class="line">        Preconditions.checkState(timeDifferenceMilliseconds &lt; getMaxTolerateTimeDifferenceMilliseconds(),</span><br><span class="line">                &quot;Clock is moving backwards, last time is %d milliseconds, current time is %d milliseconds&quot;, lastMilliseconds, currentMilliseconds);</span><br><span class="line">        Thread.sleep(timeDifferenceMilliseconds);</span><br><span class="line">        return true;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private long getWorkerId() &#123;</span><br><span class="line">        long result = Long.valueOf(properties.getProperty(&quot;worker.id&quot;, String.valueOf(WORKER_ID)));</span><br><span class="line">        if (result &lt;= 0L)&#123;</span><br><span class="line">            result = generateWorkerId();</span><br><span class="line">        &#125;</span><br><span class="line">        Preconditions.checkArgument(result &gt;= 0L &amp;&amp; result &lt; WORKER_ID_MAX_VALUE);</span><br><span class="line">        return result;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private int getMaxVibrationOffset() &#123;</span><br><span class="line">        int result = Integer.parseInt(properties.getProperty(&quot;max.vibration.offset&quot;, String.valueOf(DEFAULT_VIBRATION_VALUE)));</span><br><span class="line">        Preconditions.checkArgument(result &gt;= 0 &amp;&amp; result &lt;= SEQUENCE_MASK, &quot;Illegal max vibration offset&quot;);</span><br><span class="line">        return result;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private int getMaxTolerateTimeDifferenceMilliseconds() &#123;</span><br><span class="line">        return Integer.valueOf(properties.getProperty(&quot;max.tolerate.time.difference.milliseconds&quot;, String.valueOf(MAX_TOLERATE_TIME_DIFFERENCE_MILLISECONDS)));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private long waitUntilNextTime(final long lastTime) &#123;</span><br><span class="line">        long result = timeService.getCurrentMillis();</span><br><span class="line">        while (result &lt;= lastTime) &#123;</span><br><span class="line">            result = timeService.getCurrentMillis();</span><br><span class="line">        &#125;</span><br><span class="line">        return result;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private void vibrateSequenceOffset() &#123;</span><br><span class="line">        sequenceOffset = sequenceOffset &gt;= getMaxVibrationOffset() ? 0 : sequenceOffset + 1;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private long generateWorkerId() &#123;</span><br><span class="line">        try &#123;</span><br><span class="line">            return generateWorkerIdBaseOnMac();</span><br><span class="line">        &#125; catch (Exception e) &#123;</span><br><span class="line">            return generateRandomWorkerId();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    /**</span><br><span class="line">     * randomly generate one as workerId</span><br><span class="line">     * @return workerId</span><br><span class="line">     */</span><br><span class="line">    private long generateRandomWorkerId() &#123;</span><br><span class="line">        return new Random().nextInt((int)WORKER_ID_MAX_VALUE + 1);</span><br><span class="line">    &#125;</span><br><span class="line">    /**</span><br><span class="line">     * use lowest 10 bit of available MAC as workerId</span><br><span class="line">     * @return workerId</span><br><span class="line">     * @throws Exception when there is no available mac found</span><br><span class="line">     */</span><br><span class="line">    private long generateWorkerIdBaseOnMac() throws Exception &#123;</span><br><span class="line">        Enumeration&lt;NetworkInterface&gt; all = NetworkInterface.getNetworkInterfaces();</span><br><span class="line">        while (all.hasMoreElements()) &#123;</span><br><span class="line">            NetworkInterface networkInterface = all.nextElement();</span><br><span class="line">            boolean loopBack = networkInterface.isLoopback();</span><br><span class="line">            boolean isVirtual = networkInterface.isVirtual();</span><br><span class="line">            if (loopBack || isVirtual) &#123;</span><br><span class="line">                continue;</span><br><span class="line">            &#125;</span><br><span class="line">            byte[] mac = networkInterface.getHardwareAddress();</span><br><span class="line">            return ((mac[4] &amp; 0B11) &lt;&lt; 8) | (mac[5] &amp; 0xFF);</span><br><span class="line">        &#125;</span><br><span class="line">        throw new RuntimeException(&quot;no available mac found&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">    /**</span><br><span class="line">     * 获取随机ID</span><br><span class="line">     * @return 随机ID用以替代传统的UUID</span><br><span class="line">     */</span><br><span class="line">    public String get32UUID() &#123;</span><br><span class="line">        ThreadLocalRandom random = ThreadLocalRandom.current();</span><br><span class="line">        return (new UUID(random.nextLong(), random.nextLong())).toString().replace(&quot;-&quot;, &quot;&quot;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">public class TimeService &#123;</span><br><span class="line">    public long getCurrentMillis() &#123;</span><br><span class="line">        return System.currentTimeMillis();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>配置文件</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">@SpringBootConfiguration</span><br><span class="line">public class IdAutoConfiguration &#123;</span><br><span class="line">    /**</span><br><span class="line">     * 注入ID生成器实现</span><br><span class="line">     * @return see &#123;@link DefaultIdGenerator&#125;</span><br><span class="line">     */</span><br><span class="line">    @Bean</span><br><span class="line">    @ConditionalOnMissingBean</span><br><span class="line">    public IdGenerator idGenerator() &#123;</span><br><span class="line">        return new DefaultIdGenerator();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>META-INF</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">org.springframework.boot.autoconfigure.EnableAutoConfiguration=\</span><br><span class="line">     com.fbb.pomelo.id.configuration.IdAutoConfiguration</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h1 id="大厂中间件"><a href="#大厂中间件" class="headerlink" title="大厂中间件"></a>大厂中间件</h1><p><img src="https://cdn.fbbizyy.com/yuque/0/2024/jpeg/3003575/1718614818789-89d8afe6-37ff-4335-a746-1aea25018e23.jpeg" alt="画板"></p>
+<h2 id="美团-Leaf"><a href="#美团-Leaf" class="headerlink" title="美团 Leaf"></a><font style="color:rgb(88, 90, 90);">美团 Leaf</font></h2><p><a href="https://tech.meituan.com/2019/03/07/open-source-project-leaf.html">Leaf 的官方文档</a>，简介和特性可访问了解，这里我将对 Leaf 的两种方案，Leaf segment 和 Leaf-snowflake 进行。</p>
+<h3 id="Leaf-segment"><a href="#Leaf-segment" class="headerlink" title="Leaf segment"></a>Leaf segment</h3><p>基于数据库号段模式的 ID 生成方案，上面我们介绍到普通的号段模式有一些缺点：</p>
+<ul>
+<li>数据库自身的单点故障和数据一致性问题。</li>
+<li>不安全，比如可根据自增来判断订单量。</li>
+<li>高并发场景可能会受限于数据库瓶颈。</li>
+</ul>
+<p>那么 Leaf 是如何做的呢？Leaf 采用了预分发的方式生成ID，也就是在 DB 之上挂 n 个 Leaf Server，每个Server启动时，都会去 DB 拿固定长度的 ID List。</p>
+<p>这样就做到了完全基于分布式的架构，同时因为ID是由内存分发，所以也可以做到很高效，处理流程图如下：</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/3003575/1718698426441-afdf835d-f486-4d25-b783-42521191ff2b.png?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_21,text_ZnV4aW5n,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10" alt="图片源自 Leaf"></p>
+<p><strong>其中：</strong></p>
+<ul>
+<li>Leaf Server 1：从 DB 加载号段[1，1000]。</li>
+<li>Leaf Server 2：从 DB 加载号段[1001，2000]。</li>
+<li>Leaf Server 3：从 DB 加载号段[2001，3000]。</li>
+</ul>
+<p>用户**<font style="color:#5C8D07;">通过轮询的方式</font>**调用 Leaf Server 的各个服务，所以某一个 Client 获取到的ID序列可能是：1，1001，2001，2，1002，2002。当某个 Leaf Server 号段用完之后，下一次请求就会从 DB 中加载新的号段，这样保证了每次加载的号段是递增的。</p>
+<p>为了解决在更新DB号段的时出现的耗时和阻塞服务的问题，Leaf 采用了**<font style="color:#5C8D07;">异步更新</font>**的策略，同时通过双缓存的方式，保证无论何时DB出现问题，都能有一个 Buffer 的号段可以正常对外提供服务，只要 DB 在一个 Buffer 的下发的周期内恢复，就不会影响整个 Leaf 的可用性。</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/3003575/1718698969771-dbe0fd2a-5501-44d0-8db1-2c250de2b7d9.png?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_22,text_ZnV4aW5n,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10" alt="图片源自 Leaf"></p>
+<p>除此之外，Leaf 还**<font style="color:#5C8D07;">通过动态调整步长</font>**，解决由于步长固定导致的缓存中的 ID 被过快消耗问题，以及步长设置过大导致的号段 ID 跨度过大问题，具体公式可去官方文档中了解。</p>
+<p>对于数据一致性问题，Leaf 目前是通过中间件 Zebra 加 MHA 做的主从切换。</p>
+<h3 id="Leaf-Snowflake"><a href="#Leaf-Snowflake" class="headerlink" title="Leaf Snowflake"></a>Leaf Snowflake</h3><p>Leaf-snowflake 方案沿用 Snowflake 方案的 bit 位设计。</p>
+<p>对于 workerID 的分配：当服务集群较小时，通过配置即可；服务集群较大时，基于 zookeeper 持久顺序节点的特性引入 zookeeper 组件配置 workerID。架构如下图所示：</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/3003575/1718699670231-b390838f-2dd5-4e13-a52d-f446cb8fd6dc.webp?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_16,text_ZnV4aW5n,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10"></p>
+<h2 id="百度-UidGenerator"><a href="#百度-UidGenerator" class="headerlink" title="百度 UidGenerator"></a>百度 UidGenerator</h2><p><a href="https://github.com/baidu/uid-generator">开源地址</a></p>
+<p>UidGenerator 方案是基于 Snowflake 算法的 ID 生成器，其对雪花算法的 bit 位的分配做了微调。</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/3003575/1718700335302-7c7d4146-8057-464e-af50-6e39a5c6d527.png?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_25,text_ZnV4aW5n,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10"></p>
+<hr>
+<p><strong>结构说明（参数可在 Spring Bean 配置中进行配置）：</strong></p>
+<table>
+<thead>
+<tr>
+<th>结构</th>
+<th align="center">大小</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>符号位</td>
+<td align="center">1 bit</td>
+<td><font style="color:rgb(37, 43, 58);">最高位始终是 0。</font></td>
+</tr>
+<tr>
+<td>增量秒</td>
+<td align="center"><font style="color:rgb(37, 43, 58);">28</font> bits</td>
+<td>表示自客户纪元（2016-05-20）以来的增量秒。最大时间为 8.7 年。</td>
+</tr>
+<tr>
+<td>工作节点</td>
+<td align="center">22 bits</td>
+<td>表示工作节点 ID，最大值为 4.2 百万个。</td>
+</tr>
+<tr>
+<td>序列号</td>
+<td align="center">13 bits</td>
+<td>表示一秒钟内的序列，默认情况下每秒最多 8192 个。</td>
+</tr>
+</tbody></table>
+<p>UidGenerator 方案包含两种实现方式，DefaultUidGenerator 和 CachedUidGenerator ，性能要求高的情况下推荐 CachedUidGenerator。</p>
+<h2 id="滴滴-Tinyid"><a href="#滴滴-Tinyid" class="headerlink" title="滴滴 Tinyid"></a>滴滴 Tinyid</h2><p><a href="https://github.com/didi/tinyid/wiki/tinyid%E5%8E%9F%E7%90%86%E4%BB%8B%E7%BB%8D">Tinyid 官方文档</a></p>
+<p>Tinyid 方案是在 Leaf-segment 的算法基础上升级而来，不仅支持了数据库多主节点模式，还提供了 tinyid-client 客户端的接入方式，使用起来更加方便。</p>
+<p>Tinyid 也是采用了异步加双缓存策略，首先可用号段加载到内存中，并在内存中生成 ID，可用号段在首次获取 ID 时加载，号段用到一定程度的时候，就去异步加载下一个号段，保证内存中始终有可用号段，则可避免性能波动。</p>
+<p><strong>实现原理如下所示：</strong></p>
+<p><img src="https://github.com/didi/tinyid/raw/master/doc/tinyid_final.png?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_29,text_ZnV4aW5n,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10" alt="图片源自 Tinyid"></p>
+<h1 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h1><p>本文对分布式 ID 以及其场景的生成方案做了介绍，还针对一下大厂的中间件进行简单分析，中间件的接入代码本文并没有做详细介绍，但是官方文档的链接都帖子了每个子标题下，其中都有详细介绍。</p>
+<p>文中还针对每个生成方案的优缺点作出了说明，具体的使用可针对优缺点加上业务需求来进行选型。</p>
+<hr>
+<blockquote>
+<p>参考：</p>
+<p><a href="https://zhuanlan.zhihu.com/p/534893180">[1] 腾讯技术工程. 分布式唯一 ID 生成方案浅谈.</a></p>
+<p><a href="https://cloud.tencent.com/developer/article/2377401">[2] 孟斯特. UUID 介绍.</a></p>
+<p><a href="https://blog.csdn.net/jiaomubai/article/details/124385324">[3] 文丑颜不良啊. 雪花算法（SnowFlake）.</a></p>
+</blockquote>
+]]></content>
+      <categories>
+        <category>分布式</category>
+      </categories>
+      <tags>
+        <tag>微服务</tag>
+        <tag>分布式</tag>
+        <tag>ID</tag>
+      </tags>
+  </entry>
 </search>

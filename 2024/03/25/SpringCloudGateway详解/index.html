@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Spring Cloud Gateway 的核心功能：断言（Predicate）：参照 Java8 的新特性Predicate，允许开发人员匹配 HTTP 请求中的任何内容，比如请求头或请求参数，最后根据匹配结果返回一个布尔值。 路由（route）：由ID、目标URI、断言集合和过滤器集合组成。如果聚合断言结果为真，则转发到该路由。 过滤器（filter）：可以在返回请求之前或之后修改请求和响应的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SpringCloudGateway详解">
+<meta property="og:url" content="http://example.com/2024/03/25/SpringCloudGateway%E8%AF%A6%E8%A7%A3/index.html">
+<meta property="og:site_name" content="进学阁">
+<meta property="og:description" content="Spring Cloud Gateway 的核心功能：断言（Predicate）：参照 Java8 的新特性Predicate，允许开发人员匹配 HTTP 请求中的任何内容，比如请求头或请求参数，最后根据匹配结果返回一个布尔值。 路由（route）：由ID、目标URI、断言集合和过滤器集合组成。如果聚合断言结果为真，则转发到该路由。 过滤器（filter）：可以在返回请求之前或之后修改请求和响应的">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-03-25T08:52:22.000Z">
+<meta property="article:modified_time" content="2025-03-05T09:33:17.170Z">
+<meta property="article:author" content="139">
+<meta property="article:tag" content="SpringCloud">
+<meta property="article:tag" content="微服务">
+<meta property="article:tag" content="SpringCloudGateway">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2024/03/25/SpringCloudGateway%E8%AF%A6%E8%A7%A3/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>SpringCloudGateway详解 | 进学阁</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">进学阁</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">业精于勤荒于嬉，行成于思毁于随</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">14</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">5</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">12</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/03/25/SpringCloudGateway%E8%AF%A6%E8%A7%A3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          SpringCloudGateway详解
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-03-25 16:52:22" itemprop="dateCreated datePublished" datetime="2024-03-25T16:52:22+08:00">2024-03-25</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-05 17:33:17" itemprop="dateModified" datetime="2025-03-05T17:33:17+08:00">2025-03-05</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" itemprop="url" rel="index"><span itemprop="name">微服务</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="Spring-Cloud-Gateway-的核心功能："><a href="#Spring-Cloud-Gateway-的核心功能：" class="headerlink" title="Spring Cloud Gateway 的核心功能："></a><font style="color:rgb(25, 27, 31);">Spring Cloud Gateway 的核心功能：</font></h2><p><font style="color:rgb(25, 27, 31);">断言（Predicate）：参照 Java8 的新特性Predicate，允许开发人员匹配 HTTP 请求中的任何内容，比如请求头或请求参数，最后根据匹配结果返回一个布尔值。 路由（route）：由ID、目标URI、断言集合和过滤器集合组成。如果聚合断言结果为真，则转发到该路由。 过滤器（filter）：可以在返回请求之前或之后修改请求和响应的内容。</font></p>
+<span id="more"></span>
+<h2 id="1、路由-Route"><a href="#1、路由-Route" class="headerlink" title="1、路由 Route"></a><font style="color:rgb(25, 27, 31);">1、路由 Route</font></h2><p><font style="color:rgb(25, 27, 31);">Route 主要由 路由id、目标uri、断言集合和过滤器集合组成，那我们简单看看这些属性到底有什么作用。 （1）id：路由标识，要求唯一，名称任意（默认值 uuid，一般不用，需要自定义） （2）uri：请求最终被转发到的目标地址 （3）order： 路由优先级，数字越小，优先级越高 （4）predicates：断言数组，即判断条件，如果返回值是boolean，则转发请求到 uri 属性指定的服务中 （5）filters：过滤器数组，在请求传递过程中，对请求做一些修改</font></p>
+<h2 id="2、断言-Predicate"><a href="#2、断言-Predicate" class="headerlink" title="2、断言 Predicate"></a><font style="color:rgb(25, 27, 31);">2、断言 Predicate</font></h2><p><font style="color:rgb(25, 27, 31);">Predicate 来自于 Java8 的借口。Predicate 接受一个输入参数，返回一个布尔值结果。该接口包含多种默认方法来将 Predicate 组合成其他复杂的逻辑（比如：与，或，非）。 Predicate 可以用于接口请求参数校验、判断新老数据是否有变化需要进行更新操作。Spring Cloud Gateway 内置了许多 Predict，这些 Predict 的源码在 org.springframework.cloud.gateway.handler.predicate 包中，有兴趣可以阅读一下</font></p>
+<h2 id="3、过滤器-filter"><a href="#3、过滤器-filter" class="headerlink" title="3、过滤器 filter"></a><font style="color:rgb(25, 27, 31);">3、过滤器 filter</font></h2><p><font style="color:rgb(25, 27, 31);">Gateway 过滤器的生命周期： PRE：这种过滤器在请求被路由之前调用。我们可利用这种过滤器实现身份验证、在集群中选择请求的微服务、记录调试信息等。 POST：这种过滤器在路由到微服务以后执行。这种过滤器可用来为响应添加标准的 HTTP Header、收集统计信息和指标、将响应从微服务发送给客户端等。 Gateway 过滤器从作用范围可分为两种: GatewayFilter：应用到单个路由或者一个分组的路由上（需要在配置文件中配置） GlobalFilter：应用到所有的路由上（无需配置，全局生效） （1）局部过滤器 GatewayFilter： Spring Cloud Gateway 中内置了许多的局部过滤器；局部过滤器需要在指定路由配置才能生效，默认是不生效的</font></p>
+<p><font style="color:rgb(25, 27, 31);">（2）自定义局部过滤器： 虽说内置的过滤器能够解决很多场景，但是难免还是有些特殊需求需要定制一个过滤器，下面就来介绍一下如何自定义局部过滤器。</font></p>
+<p><font style="color:rgb(25, 27, 31);">(3) GlobalFilter 全局过滤器： 全局过滤器应用全部路由上，无需开发者配置，Spring Cloud Gateway 也内置了一些全局过滤器。GlobalFilter 的功能其实和 GatewayFilter 是相同的，只是 GlobalFilter 的作用域是所有的路由配置，而不是绑定在指定的路由配置上。多个 GlobalFilter 可以通过 @Order 或者 getOrder() 方法指定执行顺序，order值越小，执行的优先级越高。 注意，由于过滤器有 pre 和 post 两种类型，pre 类型过滤器如果 order 值越小，那么它就应该在pre过滤器链的顶层，post 类型过滤器如果 order 值越小，那么它就应该在 post 过滤器链的底层</font></p>
+<p><font style="color:rgb(25, 27, 31);">(4) 过滤器规则（Filter）</font></p>
+<p><font style="color:rgb(25, 27, 31);">过滤规则 实例 说明 PrefixPath - PrefixPath&#x3D;&#x2F;app 在请求路径前加上app RewritePath - RewritePath&#x3D;&#x2F;test, &#x2F;app&#x2F;test 访问localhost:9022&#x2F;test,请求会转发到localhost:8001&#x2F;app&#x2F;test SetPath SetPath&#x3D;&#x2F;app&#x2F;{path} 通过模板设置路径，转发的规则时会在路径前增加app，{path}表示原请求路径 RedirectTo 重定向 RemoveRequestHeader 去掉某个请求头信息 注：当配置多个filter时，优先定义的会被调用，剩余的filter将不会生效</font></p>
+<h2 id="4、Predicate-断言条件-转发规则-介绍"><a href="#4、Predicate-断言条件-转发规则-介绍" class="headerlink" title="4、Predicate 断言条件(转发规则)介绍"></a><font style="color:rgb(25, 27, 31);">4、Predicate 断言条件(转发规则)介绍</font></h2><p><font style="color:rgb(25, 27, 31);">每一个Predicate的使用，你可以理解为：当满足这种条件后才会被转发，如果是多个，那就是都满足的情况下被转发。</font></p>
+<h2 id="Path-方式匹配转发"><a href="#Path-方式匹配转发" class="headerlink" title="Path 方式匹配转发"></a><font style="color:rgb(25, 27, 31);">Path 方式匹配转发</font></h2><p><font style="color:rgb(25, 27, 31);">通过Path转发示例，我们讲解下上面的两种配置，分别是application.yml以及RouteLocator。</font></p>
+<p><font style="color:rgb(25, 27, 31);">配置文件匹配地址转发</font></p>
+<p><font style="color:rgb(25, 27, 31);">我们在application.yml配置文件内添加对应的路由配置，如下所示：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">spring:</span><br><span class="line"></span><br><span class="line">application:</span><br><span class="line"></span><br><span class="line">name: spring-cloud-gateway-sample</span><br><span class="line"></span><br><span class="line">cloud:</span><br><span class="line"></span><br><span class="line">gateway:</span><br><span class="line"></span><br><span class="line">routes:</span><br><span class="line"></span><br><span class="line">- id: blog</span><br><span class="line"></span><br><span class="line">uri: http://blog.xx.com</span><br><span class="line"></span><br><span class="line">predicates:</span><br><span class="line"></span><br><span class="line"># 匹配路径转发</span><br><span class="line"></span><br><span class="line">- Path=/api-boot-datasource-switch.html</span><br><span class="line"></span><br><span class="line"># 端口号</span><br><span class="line"></span><br><span class="line">server:</span><br><span class="line"></span><br><span class="line">port: 9090</span><br></pre></td></tr></table></figure>
+
+<font style="color:rgb(25, 27, 31);">  
+</font>
+
+<p><strong><font style="color:rgb(25, 27, 31);">先来解释下route的组成部分：</font></strong></p>
+<p><font style="color:rgb(25, 27, 31);">id：路由的ID uri：匹配路由的转发地址 predicates：配置该路由的断言，通过PredicateDefinition类进行接收配置。 在上面的配置中，当访问<a target="_blank" rel="noopener" href="http://localhost:9090/api-boot-datasource-switch.html%E6%97%B6%E5%B0%B1%E4%BC%9A%E8%A2%AB%E8%87%AA%E5%8A%A8%E8%BD%AC%E5%8F%91%E5%88%B0">http://localhost:9090/api-boot-datasource-switch.html时就会被自动转发到</a></font><a href="https://link.zhihu.com/?target=http://blog.xx.com/api-boot-datasource-switch.html"><font style="color:rgb(25, 27, 31);">http://blog.xx.com/api-boot-datasource-switch.html</font></a><font style="color:rgb(25, 27, 31);">，这里要注意完全匹配Path的值时才会进行路由转发。</font></p>
+<p><font style="color:rgb(25, 27, 31);">访问效果如下所示：</font></p>
+<p><font style="color:rgb(25, 27, 31);">spring-cloud-gateway-path-predicate.png</font></p>
+<p><font style="color:rgb(25, 27, 31);">RouteLocator 匹配路径转发</font></p>
+<p><font style="color:rgb(25, 27, 31);">在上面的配置中，如果使用RouteLocator方式该怎么进行配置呢？</font></p>
+<p><font style="color:rgb(25, 27, 31);">如下所示：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">@Bean</span><br><span class="line">public RouteLocator routeLocator(RouteLocatorBuilder builder) &#123;</span><br><span class="line">return builder.routes()</span><br><span class="line">.route(&quot;blog&quot;, r -&gt;</span><br><span class="line">r.path(&quot;/api-boot-datasource-switch.html&quot;).uri(&quot;http://blog.xx.com&quot;))</span><br><span class="line">.build();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<font style="color:rgb(25, 27, 31);">  
+</font>
+
+<h2 id="Before-方式匹配转发"><a href="#Before-方式匹配转发" class="headerlink" title="Before 方式匹配转发"></a><font style="color:rgb(25, 27, 31);">Before 方式匹配转发</font></h2><p><font style="color:rgb(25, 27, 31);">当部署有访问时间限制的接口时，我们可以通过Before Predicate来完成某一个时间点之前允许访问，过时后则不允许转发请求到具体的服务，配置如下所示：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">spring:</span><br><span class="line">cloud:</span><br><span class="line">gateway:</span><br><span class="line">routes:</span><br><span class="line">- id: blog</span><br><span class="line">uri: http://blog.xx.com</span><br><span class="line">predicates:</span><br><span class="line">- Before=2019-05-01T00:00:00+08:00[Asia/Shanghai]</span><br></pre></td></tr></table></figure>
+
+<font style="color:rgb(25, 27, 31);">  
+</font>
+
+<p><font style="color:rgb(25, 27, 31);">在上面配置中，我们允许2019-05-01日凌晨之前通过路由转发到 </font><a href="https://link.zhihu.com/?target=http://blog.xx.com"><font style="color:rgb(25, 27, 31);">http://blog.xx.com</font></a><font style="color:rgb(25, 27, 31);">，通过查看org.springframework.cloud.gateway.handler.predicate.BeforeRoutePredicateFactory源码我们发现，Spring Cloud Gateway的Before断言采用的ZonedDateTime进行匹配时间，这里要注意存在时区的问题，需要配置[Asia&#x2F;Shanghai]作为中国时区。</font></p>
+<h2 id="After-方式匹配转发"><a href="#After-方式匹配转发" class="headerlink" title="After 方式匹配转发"></a><font style="color:rgb(25, 27, 31);">After 方式匹配转发</font></h2><p><font style="color:rgb(25, 27, 31);">After Predicate与Before配置使用一致，匹配某一个时间点之后允许路由转发，如下所示配置：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">spring:</span><br><span class="line">cloud:</span><br><span class="line">gateway:</span><br><span class="line">routes:</span><br><span class="line">- id: blog</span><br><span class="line">uri: http://blog.xx.com</span><br><span class="line">predicates:</span><br><span class="line">- After=2019-04-29T00:00:00+08:00[Asia/Shanghai]</span><br></pre></td></tr></table></figure>
+
+<font style="color:rgb(25, 27, 31);">  
+</font>
+
+<p><font style="color:rgb(25, 27, 31);">在上面配置中允许2019-04-29凌晨之后进行转发到 </font><a href="https://link.zhihu.com/?target=http://blog.xx.com"><font style="color:rgb(25, 27, 31);">http://blog.xx.com</font></a><font style="color:rgb(25, 27, 31);">。</font></p>
+<h2 id="Between-方式匹配转发"><a href="#Between-方式匹配转发" class="headerlink" title="Between 方式匹配转发"></a><font style="color:rgb(25, 27, 31);">Between 方式匹配转发</font></h2><p><font style="color:rgb(25, 27, 31);">那如果是一个时间段内允许请求转发，通过Before、After组合配置也可以完成，不过Spring Cloud Gateway还是提供了Between方式，如下所示：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">spring:</span><br><span class="line">cloud:</span><br><span class="line">gateway:</span><br><span class="line">routes:</span><br><span class="line">- id: blog</span><br><span class="line">uri: http://blog.xx.com</span><br><span class="line">predicates:</span><br><span class="line">- Between=2019-04-29T00:00:00+08:00[Asia/Shanghai], 2019-05-01T00:00:00+08:00[Asia/Shanghai]</span><br></pre></td></tr></table></figure>
+
+<font style="color:rgb(25, 27, 31);">  
+</font>
+
+<p><font style="color:rgb(25, 27, 31);">在上面配置中，允许在2019-04-29日凌晨后 &amp; 2019-05-01凌晨之前请求转发到 </font><a href="https://link.zhihu.com/?target=http://blog.xx.com"><font style="color:rgb(25, 27, 31);">http://blog.xx.com</font></a><font style="color:rgb(25, 27, 31);">。</font></p>
+<h2 id="Cookie-方式匹配转发"><a href="#Cookie-方式匹配转发" class="headerlink" title="Cookie 方式匹配转发"></a><font style="color:rgb(25, 27, 31);">Cookie 方式匹配转发</font></h2><p><font style="color:rgb(25, 27, 31);">Spring Cloud Gateway 还提供了根据Cookie值的方式匹配转发请求，如果请求中所携带的Cookie值与配置的Predicate匹配，那么就可以被允许转发到指定地址，如下所示：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">spring:</span><br><span class="line">cloud:</span><br><span class="line">gateway:</span><br><span class="line">routes:</span><br><span class="line">- id: blog</span><br><span class="line">uri: http://blog.xx.com</span><br><span class="line">predicates:</span><br><span class="line">- Cookie=hengboy, leo</span><br></pre></td></tr></table></figure>
+
+<font style="color:rgb(25, 27, 31);">  
+</font>
+
+<p><font style="color:rgb(25, 27, 31);">在上面配置中，如果客户端发送请求时携带了”hengboy&#x3D;leo”的Cookie信息，则允许请求转发。</font></p>
+<p><strong><font style="color:rgb(25, 27, 31);">测试Cookie方式转发：</font></strong></p>
+<p><font style="color:rgb(25, 27, 31);">curl <a target="_blank" rel="noopener" href="http://localhost:9090/">http://localhost:9090</a> –cookie “hengboy&#x3D;leo” 通过上面方式我们是可以成功转发请求的，如果我们修改Cookie的值，就会导致无法转发，出现404。</font></p>
+<h2 id="Header-方式匹配转发"><a href="#Header-方式匹配转发" class="headerlink" title="Header 方式匹配转发"></a><font style="color:rgb(25, 27, 31);">Header 方式匹配转发</font></h2><p><font style="color:rgb(25, 27, 31);">Spring Cloud Gateway可以根据发送请求的Header信息进行匹配转发，加入我们可以根据X-Request-Id的值进行匹配，如下所示：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">spring:</span><br><span class="line">cloud:</span><br><span class="line">gateway:</span><br><span class="line">routes:</span><br><span class="line">- id: blog</span><br><span class="line">uri: http://blog.xx.com</span><br><span class="line">predicates:</span><br><span class="line">- Header=X-Request-Id, \d+</span><br></pre></td></tr></table></figure>
+
+<font style="color:rgb(25, 27, 31);">  
+</font>
+
+<p><font style="color:rgb(25, 27, 31);">在上面配置中，如果X-Request-Id的值为数字，那么就可以转发到 </font><a href="https://link.zhihu.com/?target=http://blog.xx.com"><font style="color:rgb(25, 27, 31);">http://blog.xx.com</font></a><font style="color:rgb(25, 27, 31);">，我们通过如下方式进行测试：</font></p>
+<p><font style="color:rgb(25, 27, 31);">curl <a target="_blank" rel="noopener" href="http://localhost:9090/">http://localhost:9090</a> -H “X-Request-Id:123456” 如果头信息为X-Request-Id:abc时，就会转发失败，出现404。</font></p>
+<h2 id="Host-方式匹配转发"><a href="#Host-方式匹配转发" class="headerlink" title="Host 方式匹配转发"></a><font style="color:rgb(25, 27, 31);">Host 方式匹配转发</font></h2><p><font style="color:rgb(25, 27, 31);">Spring Cloud Gateway可以根据Host主机名进行匹配转发，如果我们的接口只允许\.</font><a href="https://link.zhihu.com/?target=http://xx.com"><font style="color:rgb(25, 27, 31);">http://xx.com</font></a><font style="color:rgb(25, 27, 31);">域名进行访问，那么配置如下所示：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">spring:</span><br><span class="line">cloud:</span><br><span class="line">gateway:</span><br><span class="line">routes:</span><br><span class="line">- id: blog</span><br><span class="line">uri: http://blog.xx.com</span><br><span class="line">predicates:</span><br><span class="line">- Host=\*\*.xx.com</span><br></pre></td></tr></table></figure>
+
+<font style="color:rgb(25, 27, 31);">  
+</font>
+
+<p><font style="color:rgb(25, 27, 31);">测试如下所示：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">1. curl http://localhost:9090 -H &quot;Host: xx.com&quot; // 匹配</span><br><span class="line">2. curl http://localhost:9090 -H &quot;Host: api.xx.com&quot; // 匹配</span><br><span class="line">3. curl http://localhost:9090 -H &quot;Host: admin.xx.com&quot; // 匹配</span><br><span class="line">4. curl http://localhost:9090 -H &quot;Host: hengboy.com&quot; // 不匹配</span><br></pre></td></tr></table></figure>
+
+<font style="color:rgb(25, 27, 31);">  
+</font>
+
+<h2 id="请求方式-方式匹配转发"><a href="#请求方式-方式匹配转发" class="headerlink" title="请求方式 方式匹配转发"></a><font style="color:rgb(25, 27, 31);">请求方式 方式匹配转发</font></h2><p><font style="color:rgb(25, 27, 31);">Rest请求风格的接口内往往会存在多种请求方式的接口，如果我们的接口只允许POST请求访问，那么配置如下所示：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">spring:</span><br><span class="line">cloud:</span><br><span class="line">gateway:</span><br><span class="line">routes:</span><br><span class="line">- id: blog</span><br><span class="line">uri: http://blog.xx.com</span><br><span class="line">predicates:</span><br><span class="line">- Method=POST</span><br></pre></td></tr></table></figure>
+
+<font style="color:rgb(25, 27, 31);">  
+</font>
+
+<p><font style="color:rgb(25, 27, 31);">发送GET请求测试：</font></p>
+<p><font style="color:rgb(25, 27, 31);">~ curl <a target="_blank" rel="noopener" href="http://localhost:9090/">http://localhost:9090</a></font></p>
+<p><font style="color:rgb(25, 27, 31);">{“timestamp”:”2019-04-29T06:27:41.121+0000”,”path”:”&#x2F;“,”status”:404,”error”:”Not Found”,”message”:null} 我们的请求并未被Spring Cloud Gateway进行转发，那么我们再来通过POST请求进行测试：</font></p>
+<p><font style="color:rgb(25, 27, 31);">curl -X POST <a target="_blank" rel="noopener" href="http://localhost:9090/">http://localhost:9090</a> 是可以被转发到目标地址uri的，不过我的这个博客是OSS部署的，阿里云限制了POST访问，尽管如此我们也证明了可以转发。</font></p>
+<p><font style="color:rgb(25, 27, 31);">请求参数 方式匹配转发 Spring Cloud GateWay还支持根据指定的参数进行匹配，Query方式的Predicate也有两种方式匹配情况，如下所示：</font></p>
+<p><font style="color:rgb(25, 27, 31);">请求中存在xxx参数 cloud: gateway: routes: - id: blog uri: </font><a href="https://link.zhihu.com/?target=http://blog.xx.com"><font style="color:rgb(25, 27, 31);">http://blog.xx.com</font></a><font style="color:rgb(25, 27, 31);">predicates: - Query&#x3D;xxx 我们通过curl <a target="_blank" rel="noopener" href="http://localhost:9090/?xxx%5C=123%E6%98%AF%E5%8F%AF%E4%BB%A5%E8%A2%AB%E6%88%90%E5%8A%9F%E8%BD%AC%E5%8F%91%E7%9A%84%EF%BC%8C%E5%8F%AA%E8%A6%81%E5%8F%82%E6%95%B0%E5%AD%98%E5%9C%A8xxx%E5%B0%B1%E4%BC%9A%E8%A2%AB%E6%88%90%E5%8A%9F%E8%BD%AC%E5%8F%91%EF%BC%8C%E5%90%A6%E5%88%99%E5%87%BA%E7%8E%B0404%E8%BD%AC%E5%8F%91%E5%A4%B1%E8%B4%A5%E3%80%82">http://localhost:9090\?xxx\=123是可以被成功转发的，只要参数存在xxx就会被成功转发，否则出现404转发失败。</a></font></p>
+<p><font style="color:rgb(25, 27, 31);">请求中存在xxx参数且值为zzz cloud: gateway: routes: - id: blog uri: </font><a href="https://link.zhihu.com/?target=http://blog.xx.com"><font style="color:rgb(25, 27, 31);">http://blog.xx.com</font></a><font style="color:rgb(25, 27, 31);">predicates: - Query&#x3D;xxx, zzz 根据上面配置，我们限定了参数xxx必须为zzz时才会被成功转发，否则同样会出现404抓发失败。</font></p>
+<p><font style="color:rgb(25, 27, 31);">请求路径 方式匹配转发 Spring Cloud Gateway提供了请求路径变量方式匹配转发，如下所示：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">spring:</span><br><span class="line">cloud:</span><br><span class="line">gateway:</span><br><span class="line">routes:</span><br><span class="line">- id: blog</span><br><span class="line">uri: http://blog.xx.com</span><br><span class="line">predicates:</span><br><span class="line">- Path=/article/&#123;articleId&#125;</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(25, 27, 31);">在上面配置中{articleId}是一个路径变量，可以是任意值，匹配&#x2F;article&#x2F;1、&#x2F;article&#x2F;abc等，测试如下所示：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">~ curl http://localhost:9090/article/1 // 匹配</span><br><span class="line">~ curl http://localhost:9090/article/abc // 匹配</span><br><span class="line">~ curl http://localhost:9090/article/1/1 // 不匹配</span><br></pre></td></tr></table></figure>
+
+<font style="color:rgb(25, 27, 31);">  
+</font>
+
+<h2 id="请求IP-方式匹配转发"><a href="#请求IP-方式匹配转发" class="headerlink" title="请求IP 方式匹配转发"></a><font style="color:rgb(25, 27, 31);">请求IP 方式匹配转发</font></h2><p><font style="color:rgb(25, 27, 31);">Spring Cloud Gateway可以限制允许访问接口的客户端IP地址，配置后只对指定IP地址的客户端进行请求转发，配置如下所示：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">spring:</span><br><span class="line">cloud:</span><br><span class="line">gateway:</span><br><span class="line">routes:</span><br><span class="line">- id: blog</span><br><span class="line">uri: http://blog.xx.com</span><br><span class="line">predicates:</span><br><span class="line">- RemoteAddr=192.168.1.56/24</span><br></pre></td></tr></table></figure>
+
+<font style="color:rgb(25, 27, 31);">  
+</font>
+
+<p><font style="color:rgb(25, 27, 31);">在上面我们配置了192.168.1.56&#x2F;24，其中192.168.1.56是客户端的IP地址，而24则是子网掩码。</font></p>
+<h2 id="组合示例"><a href="#组合示例" class="headerlink" title="组合示例"></a><font style="color:rgb(25, 27, 31);">组合示例</font></h2><p><font style="color:rgb(25, 27, 31);">相同的Predicate也可以配置多个，请求的转发是必须满足所有的Predicate后才可以进行路由转发，组合使用示例如下所示：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">spring:</span><br><span class="line">cloud:</span><br><span class="line">gateway:</span><br><span class="line">routes:</span><br><span class="line">- id: blog</span><br><span class="line">uri: http://blog.xx.com</span><br><span class="line">predicates:</span><br><span class="line">- Query=author, hengboy</span><br><span class="line">- Query=leo</span><br><span class="line">- Method=GET</span><br><span class="line">- Cookie=hengboy, leo</span><br><span class="line">- Header=X-Request-Id, \d+</span><br><span class="line">- RemoteAddr=192.168.1.56/24</span><br></pre></td></tr></table></figure>
+
+<font style="color:rgb(25, 27, 31);">  
+</font>
+
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a><font style="color:rgb(25, 27, 31);">总结</font></h2><p><font style="color:rgb(25, 27, 31);">本章节讲解了Spring Cloud Gateway的相关谓词、断言基本使用方式，GateWay内部提供了很多种灵活的路由转发规则，在同一个路由内存在多个Predicate时，同时满足规则后请求才会被路由转发。</font></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/SpringCloud/" rel="tag"><i class="fa fa-tag"></i> SpringCloud</a>
+              <a href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" rel="tag"><i class="fa fa-tag"></i> 微服务</a>
+              <a href="/tags/SpringCloudGateway/" rel="tag"><i class="fa fa-tag"></i> SpringCloudGateway</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2024/03/15/%E8%B5%84%E6%BA%90%E6%9C%8D%E5%8A%A1%E5%99%A8/" rel="prev" title="资源服务器鉴权处理">
+      <i class="fa fa-chevron-left"></i> 资源服务器鉴权处理
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2024/03/26/springboot%E9%A1%B9%E7%9B%AE%E4%B8%AD%E5%BC%95%E7%94%A8SpringCloudGateway/" rel="next" title="springboot项目中引用SpringCloudGateway">
+      springboot项目中引用SpringCloudGateway <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Spring-Cloud-Gateway-%E7%9A%84%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%EF%BC%9A"><span class="nav-number">1.</span> <span class="nav-text">Spring Cloud Gateway 的核心功能：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1%E3%80%81%E8%B7%AF%E7%94%B1-Route"><span class="nav-number">2.</span> <span class="nav-text">1、路由 Route</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2%E3%80%81%E6%96%AD%E8%A8%80-Predicate"><span class="nav-number">3.</span> <span class="nav-text">2、断言 Predicate</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3%E3%80%81%E8%BF%87%E6%BB%A4%E5%99%A8-filter"><span class="nav-number">4.</span> <span class="nav-text">3、过滤器 filter</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4%E3%80%81Predicate-%E6%96%AD%E8%A8%80%E6%9D%A1%E4%BB%B6-%E8%BD%AC%E5%8F%91%E8%A7%84%E5%88%99-%E4%BB%8B%E7%BB%8D"><span class="nav-number">5.</span> <span class="nav-text">4、Predicate 断言条件(转发规则)介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Path-%E6%96%B9%E5%BC%8F%E5%8C%B9%E9%85%8D%E8%BD%AC%E5%8F%91"><span class="nav-number">6.</span> <span class="nav-text">Path 方式匹配转发</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Before-%E6%96%B9%E5%BC%8F%E5%8C%B9%E9%85%8D%E8%BD%AC%E5%8F%91"><span class="nav-number">7.</span> <span class="nav-text">Before 方式匹配转发</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#After-%E6%96%B9%E5%BC%8F%E5%8C%B9%E9%85%8D%E8%BD%AC%E5%8F%91"><span class="nav-number">8.</span> <span class="nav-text">After 方式匹配转发</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Between-%E6%96%B9%E5%BC%8F%E5%8C%B9%E9%85%8D%E8%BD%AC%E5%8F%91"><span class="nav-number">9.</span> <span class="nav-text">Between 方式匹配转发</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Cookie-%E6%96%B9%E5%BC%8F%E5%8C%B9%E9%85%8D%E8%BD%AC%E5%8F%91"><span class="nav-number">10.</span> <span class="nav-text">Cookie 方式匹配转发</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Header-%E6%96%B9%E5%BC%8F%E5%8C%B9%E9%85%8D%E8%BD%AC%E5%8F%91"><span class="nav-number">11.</span> <span class="nav-text">Header 方式匹配转发</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Host-%E6%96%B9%E5%BC%8F%E5%8C%B9%E9%85%8D%E8%BD%AC%E5%8F%91"><span class="nav-number">12.</span> <span class="nav-text">Host 方式匹配转发</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AF%B7%E6%B1%82%E6%96%B9%E5%BC%8F-%E6%96%B9%E5%BC%8F%E5%8C%B9%E9%85%8D%E8%BD%AC%E5%8F%91"><span class="nav-number">13.</span> <span class="nav-text">请求方式 方式匹配转发</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AF%B7%E6%B1%82IP-%E6%96%B9%E5%BC%8F%E5%8C%B9%E9%85%8D%E8%BD%AC%E5%8F%91"><span class="nav-number">14.</span> <span class="nav-text">请求IP 方式匹配转发</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%84%E5%90%88%E7%A4%BA%E4%BE%8B"><span class="nav-number">15.</span> <span class="nav-text">组合示例</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">16.</span> <span class="nav-text">总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="139"
+      src="/images/custom/avatar.jpg">
+  <p class="site-author-name" itemprop="name">139</p>
+  <div class="site-description" itemprop="description">一个普通的JAVA开发的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">12</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+  <div class="beian"><a href="https://beian.miit.gov.cn/" rel="noopener" target="_blank">浙ICP备2023004484号-1 </a>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">139</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
