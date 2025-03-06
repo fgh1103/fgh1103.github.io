@@ -22,27 +22,28 @@
 
   <meta name="description" content="MySQL中的锁有很多种，各种锁应用在不同的地方。「MySQL依靠锁机制可以让多个事务更新一行数据的时候串行化」。 MySQL中锁总的来说有两种概念：Lock和LatchLatch称为闩锁（轻量级的锁），因为Latch要求锁定的时间非常短。其目的是用来保证并发线程操作临界资源的正确性，并且通常没有死锁检测的机制。在InnoDB引擎中，Latch又分为mutex（互斥量）和rwlock（读写锁）。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="进学阁">
-<meta property="og:url" content="http://example.com/2025/03/06/%E9%94%81/index.html">
+<meta property="og:title" content="锁">
+<meta property="og:url" content="http://example.com/2023/06/11/%E9%94%81/index.html">
 <meta property="og:site_name" content="进学阁">
 <meta property="og:description" content="MySQL中的锁有很多种，各种锁应用在不同的地方。「MySQL依靠锁机制可以让多个事务更新一行数据的时候串行化」。 MySQL中锁总的来说有两种概念：Lock和LatchLatch称为闩锁（轻量级的锁），因为Latch要求锁定的时间非常短。其目的是用来保证并发线程操作临界资源的正确性，并且通常没有死锁检测的机制。在InnoDB引擎中，Latch又分为mutex（互斥量）和rwlock（读写锁）。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2024/webp/25873401/1717493025735-21d37d3d-d44f-4630-9c74-164d49c9a0a5.webp">
-<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2024/webp/25873401/1717493194895-993157fd-0135-475f-9273-d775d95f816d.webp">
-<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2024/webp/25873401/1717493323068-f9450a45-f4b2-4fc6-89bc-22581c433220.webp">
-<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2024/webp/25873401/1717493783109-fa03c60a-317e-44b3-a7ba-fe41d1efa5f4.webp">
-<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2024/webp/25873401/1717494031661-8f50afb4-dfd1-4c3f-b5b8-1ad2bfcd08aa.webp">
-<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2024/webp/25873401/1717494031436-fb63f286-d50a-441e-86d4-258f1846b377.webp">
-<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2024/webp/25873401/1717494286146-4dc235b7-cb95-4295-8a6b-9ab2efae8976.webp">
-<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2024/webp/25873401/1717494286117-bd00a4e5-f604-4a47-ba66-6b8816e34a52.webp">
-<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2024/png/25873401/1717494286096-e778a408-9b71-4257-be1e-b5ee19f36a64.png">
-<meta property="article:published_time" content="2025-03-06T09:14:09.453Z">
-<meta property="article:modified_time" content="2025-03-06T09:14:11.650Z">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717493025735-21d37d3d-d44f-4630-9c74-164d49c9a0a5.webp">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717493194895-993157fd-0135-475f-9273-d775d95f816d.webp">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717493323068-f9450a45-f4b2-4fc6-89bc-22581c433220.webp">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717493783109-fa03c60a-317e-44b3-a7ba-fe41d1efa5f4.webp">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717494031661-8f50afb4-dfd1-4c3f-b5b8-1ad2bfcd08aa.webp">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717494031436-fb63f286-d50a-441e-86d4-258f1846b377.webp">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717494286146-4dc235b7-cb95-4295-8a6b-9ab2efae8976.webp">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717494286117-bd00a4e5-f604-4a47-ba66-6b8816e34a52.webp">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1717494286096-e778a408-9b71-4257-be1e-b5ee19f36a64.png">
+<meta property="article:published_time" content="2023-06-10T16:00:00.000Z">
+<meta property="article:modified_time" content="2025-03-06T10:02:36.030Z">
 <meta property="article:author" content="139">
+<meta property="article:tag" content="mysql">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://cdn.nlark.com/yuque/0/2024/webp/25873401/1717493025735-21d37d3d-d44f-4630-9c74-164d49c9a0a5.webp">
+<meta name="twitter:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717493025735-21d37d3d-d44f-4630-9c74-164d49c9a0a5.webp">
 
-<link rel="canonical" href="http://example.com/2025/03/06/%E9%94%81/">
+<link rel="canonical" href="http://example.com/2023/06/11/%E9%94%81/">
 
 
 <script id="page-configurations">
@@ -55,7 +56,7 @@
   };
 </script>
 
-  <title> | 进学阁</title>
+  <title>锁 | 进学阁</title>
   
 
 
@@ -204,7 +205,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/06/%E9%94%81/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/06/11/%E9%94%81/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/custom/avatar.jpg">
@@ -217,7 +218,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          
+          锁
         </h1>
 
         <div class="post-meta">
@@ -226,9 +227,24 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2025-03-06 17:14:09 / 修改时间：17:14:11" itemprop="dateCreated datePublished" datetime="2025-03-06T17:14:09+08:00">2025-03-06</time>
+              <time title="创建时间：2023-06-11 00:00:00" itemprop="dateCreated datePublished" datetime="2023-06-11T00:00:00+08:00">2023-06-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-06 18:02:36" itemprop="dateModified" datetime="2025-03-06T18:02:36+08:00">2025-03-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                </span>
             </span>
 
           
@@ -253,6 +269,7 @@
 <h3 id="MySQL中锁总的来说有两种概念：Lock和Latch"><a href="#MySQL中锁总的来说有两种概念：Lock和Latch" class="headerlink" title="MySQL中锁总的来说有两种概念：Lock和Latch"></a><font style="color:black;">MySQL中锁总的来说有两种概念：Lock和Latch</font></h3><h4 id="Latch"><a href="#Latch" class="headerlink" title="Latch"></a><font style="color:black;">Latch</font></h4><p><font style="color:black;">称为闩锁（轻量级的锁），因为Latch要求锁定的时间非常短。其目的是用来保证并发线程操作临界资源的正确性，并且通常没有死锁检测的机制。在InnoDB引擎中，Latch又分为mutex（互斥量）和rwlock（读写锁）。</font></p>
 <p><font style="color:black;">mutex：互斥量；有时候有些资源需要共享和并发，但是又不是分频繁，所以向操作系统申请一个mutex，mutex都是排他的。</font></p>
 <p><font style="color:black;"> RW-LATCH : 读写锁</font></p>
+<span id="more"></span>
 <h4 id="Lock"><a href="#Lock" class="headerlink" title="Lock"></a><font style="color:black;">Lock</font></h4><p><strong><font style="color:rgb(145, 109, 213);">「Lock的对象是事务，用来锁定的是数据库中的对象，如表、页、行」</font></strong><font style="color:black;">。并且一般lock的对象仅在事务commit或rollback后进行释放（不同事务隔离级别释放的时间可能不同）。</font></p>
 <h3 id="锁的分类"><a href="#锁的分类" class="headerlink" title="锁的分类"></a><font style="color:black;">锁的分类</font></h3><p><font style="color:rgb(0, 0, 0);">实际上MySQL的锁在不同的维度上划分是多种多样的，在特地的场景下，发挥不一样的作用，下面来看看锁的分类。</font></p>
 <h3 id="按照粒度划分："><a href="#按照粒度划分：" class="headerlink" title="按照粒度划分："></a>按照粒度划分：</h3><h4 id="全局锁："><a href="#全局锁：" class="headerlink" title="全局锁："></a>全局锁：</h4><p><strong><font style="color:rgb(145, 109, 213);">「全局锁，即对整个数据库实例加锁」</font></strong><font style="color:rgb(0, 0, 0);">。一般当我们需要让整个库处于只读状态的时候，可以给数据库加上全局锁。</font><strong><font style="color:rgb(145, 109, 213);">「加上全局锁之后其他线程的：数据更新语句（增删改）、数据定义语句（包括建表、修改表结构等）都会被阻塞」</font></strong><font style="color:rgb(0, 0, 0);">。</font></p>
@@ -785,7 +802,7 @@
 <li><strong><font style="color:rgb(145, 109, 213);">「悲观锁的形式（类型）」</font></strong></li>
 </ul>
 <p><strong><font style="color:rgb(145, 109, 213);">「数据库的行锁、表锁、读锁、写锁、共享锁、排他锁等，以及syncronized 实现的锁都是悲观锁的范畴」</font></strong><font style="color:black;">。</font></p>
-<p><img src="https://cdn.nlark.com/yuque/0/2024/webp/25873401/1717493025735-21d37d3d-d44f-4630-9c74-164d49c9a0a5.webp"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717493025735-21d37d3d-d44f-4630-9c74-164d49c9a0a5.webp"></p>
 <ul>
 <li><strong><font style="color:rgb(145, 109, 213);">「优点」</font></strong></li>
 </ul>
@@ -832,7 +849,7 @@
 <li><strong><font style="color:rgb(145, 109, 213);">「使用时间戳（Timestamp）」</font></strong></li>
 </ul>
 <p><font style="color:black;">与使用version版本字段基本一致，</font><strong><font style="color:rgb(145, 109, 213);">「同样需要给在数据表增加一个字段，字段类型使用timestamp时间戳，通过时间戳比较数据版本」</font></strong><font style="color:black;">。</font></p>
-<p><img src="https://cdn.nlark.com/yuque/0/2024/webp/25873401/1717493194895-993157fd-0135-475f-9273-d775d95f816d.webp"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717493194895-993157fd-0135-475f-9273-d775d95f816d.webp"></p>
 <ul>
 <li><strong><font style="color:rgb(145, 109, 213);">「乐观锁实现案例」</font></strong></li>
 </ul>
@@ -853,7 +870,7 @@
 <p><font style="color:black;">CAS算法涉及到三个操作数</font></p>
 <p><strong><font style="color:rgb(145, 109, 213);">「当且仅当V的值等于A时，CAS通过原子方式用新值B来更新V的值，否则不会执行任何操作」</font></strong><font style="color:black;">（比较和替换是一个原子操作），一般情况下是一个自旋操作，即不断的重试。</font></p>
 <ul>
-<li><img src="https://cdn.nlark.com/yuque/0/2024/webp/25873401/1717493323068-f9450a45-f4b2-4fc6-89bc-22581c433220.webp"><ul>
+<li><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717493323068-f9450a45-f4b2-4fc6-89bc-22581c433220.webp"><ul>
 <li><font style="color:rgb(1, 1, 1);">变量当前内存值 V</font></li>
 <li><font style="color:rgb(1, 1, 1);">旧的预期值 A</font></li>
 <li><font style="color:rgb(1, 1, 1);">要写入的新值 B</font></li>
@@ -897,7 +914,7 @@
 <p><strong><font style="color:rgb(145, 109, 213);">「产生原因」</font></strong></p>
 <p><font style="color:black;">上述案例由于线程B已经锁住订单表，线程A必须等待线程B释放订单表能继续，同样线程B要等线程A释放用户表才能继续，</font><strong><font style="color:rgb(145, 109, 213);">「线程A、B相互等待对方释放锁，就产生了死锁」</font></strong><font style="color:black;">。</font></p>
 <ul>
-<li><img src="https://cdn.nlark.com/yuque/0/2024/webp/25873401/1717493783109-fa03c60a-317e-44b3-a7ba-fe41d1efa5f4.webp"></li>
+<li><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717493783109-fa03c60a-317e-44b3-a7ba-fe41d1efa5f4.webp"></li>
 <li><strong><font style="color:rgb(145, 109, 213);">「解决方案」</font></strong></li>
 </ul>
 <p><strong><font style="color:rgb(145, 109, 213);">「这种死锁是由于程序的BUG产生的，比较常见，只能通过调整程序的逻辑来解决」</font></strong><font style="color:black;">。</font></p>
@@ -921,12 +938,12 @@
 <pre><code>- **&lt;font style=&quot;color:rgb(145, 109, 213);&quot;&gt;「产生原因」&lt;/font&gt;**
 </code></pre>
 <p><font style="color:black;">两个事务分别想拿到对方持有的锁，互相等待，于是产生死锁。</font></p>
-<p><img src="https://cdn.nlark.com/yuque/0/2024/webp/25873401/1717494031661-8f50afb4-dfd1-4c3f-b5b8-1ad2bfcd08aa.webp"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717494031661-8f50afb4-dfd1-4c3f-b5b8-1ad2bfcd08aa.webp"></p>
 <pre><code>- **&lt;font style=&quot;color:rgb(145, 109, 213);&quot;&gt;「解决方案」&lt;/font&gt;**
     * &lt;font style=&quot;color:black;&quot;&gt;在同一个事务中，尽量一次锁定需要的所有资源&lt;/font&gt;
     * &lt;font style=&quot;color:black;&quot;&gt;将每个资源编号，通过资源编号的线性顺序来预防死锁，当一个进程占有编号为i的资源时，那么它下一次只能申请编号大于i的资源。&lt;/font&gt;
 </code></pre>
-<p><img src="https://cdn.nlark.com/yuque/0/2024/webp/25873401/1717494031436-fb63f286-d50a-441e-86d4-258f1846b377.webp"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717494031436-fb63f286-d50a-441e-86d4-258f1846b377.webp"></p>
 <h5 id="共享锁转换为排他锁"><a href="#共享锁转换为排他锁" class="headerlink" title="共享锁转换为排他锁"></a><font style="color:black;">共享锁转换为排他锁</font></h5><ul>
 <li><strong><font style="color:rgb(145, 109, 213);">「案例」</font></strong></li>
 </ul>
@@ -947,7 +964,7 @@
 </ul>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">show engine innodb status;</span><br></pre></td></tr></table></figure>
 
-<p><img src="https://cdn.nlark.com/yuque/0/2024/webp/25873401/1717494286146-4dc235b7-cb95-4295-8a6b-9ab2efae8976.webp"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717494286146-4dc235b7-cb95-4295-8a6b-9ab2efae8976.webp"></p>
 <p><font style="color:black;">通过以上命令查看近期死锁日志信息，然后使用执行计划进行SQL优化</font></p>
 <ul>
 <li><strong><font style="color:rgb(145, 109, 213);">「查看锁状态变量」</font></strong></li>
@@ -955,7 +972,7 @@
 <p><font style="color:black;">通过以下命令可以检查锁状态变量，从而分析系统中的行锁的争夺情况</font></p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">show status like&#x27;innodb_row_lock%&#x27;;</span><br></pre></td></tr></table></figure>
 
-<p><img src="https://cdn.nlark.com/yuque/0/2024/webp/25873401/1717494286117-bd00a4e5-f604-4a47-ba66-6b8816e34a52.webp"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717494286117-bd00a4e5-f604-4a47-ba66-6b8816e34a52.webp"></p>
 <pre><code>- &lt;font style=&quot;color:rgb(1, 1, 1);&quot;&gt;Innodb_row_lock_current_waits：当前正在等待锁的数量&lt;/font&gt;
 - &lt;font style=&quot;color:rgb(1, 1, 1);&quot;&gt;Innodb_row_lock_time：从系统启动到现在锁定总时间长度&lt;/font&gt;
 - &lt;font style=&quot;color:rgb(1, 1, 1);&quot;&gt;Innodb_row_lock_time_avg：每次等待锁的平均时间&lt;/font&gt;
@@ -963,7 +980,7 @@
 - &lt;font style=&quot;color:rgb(1, 1, 1);&quot;&gt;Innodb_row_lock_waits：系统启动后到现在总共等待的次数&lt;/font&gt;
 </code></pre>
 <p><strong><font style="color:rgb(145, 109, 213);">「如果等待次数高，而且每次等待时间长，则需要对其进行分析优化」</font></strong><font style="color:black;">。</font></p>
-<p><img src="https://cdn.nlark.com/yuque/0/2024/png/25873401/1717494286096-e778a408-9b71-4257-be1e-b5ee19f36a64.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1717494286096-e778a408-9b71-4257-be1e-b5ee19f36a64.png"></p>
 <p><strong>星河之码</strong></p>
 <p>不惟有超世之才，亦必有坚忍不拔之志。</p>
 <p>94篇原创内容</p>
@@ -977,6 +994,10 @@
     
 
       <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/mysql/" rel="tag"><i class="fa fa-tag"></i> mysql</a>
+          </div>
 
         
 
@@ -984,10 +1005,13 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2024/10/19/%E8%87%AA%E5%AE%9A%E4%B9%89%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1/" rel="prev" title="OpenFeign调用时如何传递传递Token并且多线程环境也能适用">
-      <i class="fa fa-chevron-left"></i> OpenFeign调用时如何传递传递Token并且多线程环境也能适用
+    <a href="/2022/06/11/Canal/" rel="prev" title="Canal">
+      <i class="fa fa-chevron-left"></i> Canal
     </a></div>
-      <div class="post-nav-item"></div>
+      <div class="post-nav-item">
+    <a href="/2023/06/11/%E7%B4%A2%E5%BC%95%E5%A4%B1%E6%95%88%E7%9A%84%E5%9C%BA%E6%99%AF/" rel="next" title="索引失效场景">
+      索引失效场景 <i class="fa fa-chevron-right"></i>
+    </a></div>
     </div>
       </footer>
     
