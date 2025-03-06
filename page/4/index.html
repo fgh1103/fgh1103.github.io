@@ -124,7 +124,7 @@
   </li>
         <li class="menu-item menu-item-tags">
 
-    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">34</span></a>
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">38</span></a>
 
   </li>
         <li class="menu-item menu-item-categories">
@@ -134,7 +134,7 @@
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">40</span></a>
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">54</span></a>
 
   </li>
       <li class="menu-item menu-item-search">
@@ -191,7 +191,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2023/06/15/Mysql%E8%BF%90%E7%AE%97%E7%AC%A6/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/04/11/%E5%88%86%E5%B8%83%E5%BC%8FID/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/custom/avatar.jpg">
@@ -205,7 +205,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2023/06/15/Mysql%E8%BF%90%E7%AE%97%E7%AC%A6/" class="post-title-link" itemprop="url">MySQL运算符</a>
+            <a href="/2024/04/11/%E5%88%86%E5%B8%83%E5%BC%8FID/" class="post-title-link" itemprop="url">分布式ID总结</a>
         </h2>
 
         <div class="post-meta">
@@ -215,14 +215,14 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2023-06-15 00:00:00" itemprop="dateCreated datePublished" datetime="2023-06-15T00:00:00+08:00">2023-06-15</time>
+              <time title="创建时间：2024-04-11 00:00:00" itemprop="dateCreated datePublished" datetime="2024-04-11T00:00:00+08:00">2024-04-11</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-06 17:35:30" itemprop="dateModified" datetime="2025-03-06T17:35:30+08:00">2025-03-06</time>
+                <time title="修改时间：2025-03-05 17:46:18" itemprop="dateModified" datetime="2025-03-05T17:46:18+08:00">2025-03-05</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -230,7 +230,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                  <a href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">分布式</span></a>
                 </span>
             </span>
 
@@ -245,11 +245,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p><strong><font style="color:rgba(0, 0, 0, 0.75);">算术运算符</font></strong></p>
-<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1716952872238-4ee53880-6fa9-4013-aa2a-78b906778163.png"></p>
+          <h2 id="分布式系统中，我们经常需要对数据、消息等进行唯一标识，这个唯一标识就是分布式-ID，那么我们如何设计它呢？本文将详细讲述分布式-ID-及其生成方案。"><a href="#分布式系统中，我们经常需要对数据、消息等进行唯一标识，这个唯一标识就是分布式-ID，那么我们如何设计它呢？本文将详细讲述分布式-ID-及其生成方案。" class="headerlink" title="分布式系统中，我们经常需要对数据、消息等进行唯一标识，这个唯一标识就是分布式 ID，那么我们如何设计它呢？本文将详细讲述分布式 ID 及其生成方案。"></a>分布式系统中，我们经常需要对数据、消息等进行唯一标识，这个唯一标识就是分布式 ID，那么我们如何设计它呢？本文将详细讲述分布式 ID 及其生成方案。</h2><h1 id="为什么需要分布式-ID"><a href="#为什么需要分布式-ID" class="headerlink" title="为什么需要分布式 ID"></a>为什么需要分布式 ID</h1><p>目前大部分的系统都已是分布式系统，所以在这种场景的业务开发中，经常会需要唯一 ID 对数据进行标识，比如用户身份标识、消息标识等等。</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2023/06/15/Mysql%E8%BF%90%E7%AE%97%E7%AC%A6/#more" rel="contents">
+              <a class="btn" href="/2024/04/11/%E5%88%86%E5%B8%83%E5%BC%8FID/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -273,7 +272,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2023/06/15/mysql%E5%BC%80%E5%90%AFbinlog/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/03/28/%E4%BD%8E%E4%BE%B5%E5%85%A5%E7%9A%84%E7%81%B0%E5%BA%A6%E5%B9%B3%E5%8F%B0%E7%9A%84%E6%9E%84%E5%BB%BA/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/custom/avatar.jpg">
@@ -287,7 +286,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2023/06/15/mysql%E5%BC%80%E5%90%AFbinlog/" class="post-title-link" itemprop="url">MySQL开启binlog</a>
+            <a href="/2024/03/28/%E4%BD%8E%E4%BE%B5%E5%85%A5%E7%9A%84%E7%81%B0%E5%BA%A6%E5%B9%B3%E5%8F%B0%E7%9A%84%E6%9E%84%E5%BB%BA/" class="post-title-link" itemprop="url">springcloud项目使用nacos</a>
         </h2>
 
         <div class="post-meta">
@@ -297,14 +296,14 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2023-06-15 00:00:00" itemprop="dateCreated datePublished" datetime="2023-06-15T00:00:00+08:00">2023-06-15</time>
+              <time title="创建时间：2024-03-28 00:00:00" itemprop="dateCreated datePublished" datetime="2024-03-28T00:00:00+08:00">2024-03-28</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-06 17:37:26" itemprop="dateModified" datetime="2025-03-06T17:37:26+08:00">2025-03-06</time>
+                <time title="修改时间：2025-03-05 17:46:21" itemprop="dateModified" datetime="2025-03-05T17:46:21+08:00">2025-03-05</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -312,7 +311,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                  <a href="/categories/%E7%81%B0%E5%BA%A6%E5%B9%B3%E5%8F%B0/" itemprop="url" rel="index"><span itemprop="name">灰度平台</span></a>
                 </span>
             </span>
 
@@ -327,11 +326,11 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>binlog是二进制日志文件，用于记录mysql的数据变更，数据在恢复的时候binlog日志起着至关重要的作用。</p>
-<p>开启binlog<br>默认情况下mysql是关闭状态off状态，我的已经设置过了是on状态</p>
+          <h3 id="设计简介："><a href="#设计简介：" class="headerlink" title="设计简介："></a>设计简介：</h3><p>灰度平台配置的主键是以域名来做主键配置，以域名来关联规则，依托这些规则来判断哪些哪些请求需要走灰度</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2023/jpeg/25873401/1701237832373-b55015c3-0ea5-468c-bb8f-f849cbc5daba.jpeg" alt="画板"></p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2023/06/15/mysql%E5%BC%80%E5%90%AFbinlog/#more" rel="contents">
+              <a class="btn" href="/2024/03/28/%E4%BD%8E%E4%BE%B5%E5%85%A5%E7%9A%84%E7%81%B0%E5%BA%A6%E5%B9%B3%E5%8F%B0%E7%9A%84%E6%9E%84%E5%BB%BA/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -355,7 +354,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2023/06/15/too%20many%20connections%20%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/03/27/springcloud%E9%A1%B9%E7%9B%AE%E4%BD%BF%E7%94%A8nacos/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/custom/avatar.jpg">
@@ -369,7 +368,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2023/06/15/too%20many%20connections%20%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/" class="post-title-link" itemprop="url">too many connections 解决方法</a>
+            <a href="/2024/03/27/springcloud%E9%A1%B9%E7%9B%AE%E4%BD%BF%E7%94%A8nacos/" class="post-title-link" itemprop="url">springcloud项目使用nacos</a>
         </h2>
 
         <div class="post-meta">
@@ -379,14 +378,14 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2023-06-15 00:00:00" itemprop="dateCreated datePublished" datetime="2023-06-15T00:00:00+08:00">2023-06-15</time>
+              <time title="创建时间：2024-03-27 00:00:00" itemprop="dateCreated datePublished" datetime="2024-03-27T00:00:00+08:00">2024-03-27</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-06 17:38:40" itemprop="dateModified" datetime="2025-03-06T17:38:40+08:00">2025-03-06</time>
+                <time title="修改时间：2025-03-05 17:46:10" itemprop="dateModified" datetime="2025-03-05T17:46:10+08:00">2025-03-05</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -394,7 +393,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                  <a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" itemprop="url" rel="index"><span itemprop="name">微服务</span></a>
                 </span>
             </span>
 
@@ -409,16 +408,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>mysql -u root -p<font style="color:rgb(77, 77, 77);"> 回车输入密码进入mysql</font></p>
-<p><font style="color:rgb(77, 77, 77);"></font></p>
-<h1 id="too-many-connections-解决方法"><a href="#too-many-connections-解决方法" class="headerlink" title="too many connections 解决方法"></a><font style="color:rgb(38, 38, 38);">too many connections 解决方法</font></h1><p><font style="background-color:rgb(247, 247, 247);">mysql -u root -p</font><font style="color:rgb(77, 77, 77);"> 回车输入密码进入mysql</font></p>
-<font style="color:rgb(38, 38, 38);">  
-</font>
-
-<p><img src="https://cdn.nlark.com/yuque/0/2022/png/25873401/1646018837018-04475fb7-2931-430a-80fc-e6c91d289b2c.png"></p>
+          <h1 id="参考资料："><a href="#参考资料：" class="headerlink" title="参考资料："></a>参考资料：</h1><h2 id="Nacos-融合-Spring-Cloud："><a href="#Nacos-融合-Spring-Cloud：" class="headerlink" title="Nacos 融合 Spring Cloud："></a><font style="color:rgb(36, 41, 46);">Nacos 融合 Spring Cloud：</font></h2><p><a target="_blank" rel="noopener" href="https://nacos.io/zh-cn/docs/v2/ecology/use-nacos-with-spring-cloud.html">https://nacos.io/zh-cn/docs/v2/ecology/use-nacos-with-spring-cloud.html</a></p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2023/06/15/too%20many%20connections%20%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/#more" rel="contents">
+              <a class="btn" href="/2024/03/27/springcloud%E9%A1%B9%E7%9B%AE%E4%BD%BF%E7%94%A8nacos/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -442,7 +435,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2023/06/15/%E7%B4%A2%E5%BC%95%E5%88%86%E6%9E%90%E4%B8%8E%E4%BC%98%E5%8C%96/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/03/26/springboot%E9%A1%B9%E7%9B%AE%E4%B8%AD%E5%BC%95%E7%94%A8SpringCloudGateway/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/custom/avatar.jpg">
@@ -456,7 +449,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2023/06/15/%E7%B4%A2%E5%BC%95%E5%88%86%E6%9E%90%E4%B8%8E%E4%BC%98%E5%8C%96/" class="post-title-link" itemprop="url">索引分析与优化</a>
+            <a href="/2024/03/26/springboot%E9%A1%B9%E7%9B%AE%E4%B8%AD%E5%BC%95%E7%94%A8SpringCloudGateway/" class="post-title-link" itemprop="url">springboot项目中引用SpringCloudGateway</a>
         </h2>
 
         <div class="post-meta">
@@ -466,14 +459,14 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2023-06-15 00:00:00" itemprop="dateCreated datePublished" datetime="2023-06-15T00:00:00+08:00">2023-06-15</time>
+              <time title="创建时间：2024-03-26 00:00:00" itemprop="dateCreated datePublished" datetime="2024-03-26T00:00:00+08:00">2024-03-26</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-06 17:35:12" itemprop="dateModified" datetime="2025-03-06T17:35:12+08:00">2025-03-06</time>
+                <time title="修改时间：2025-03-05 17:46:05" itemprop="dateModified" datetime="2025-03-05T17:46:05+08:00">2025-03-05</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -481,7 +474,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                  <a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" itemprop="url" rel="index"><span itemprop="name">微服务</span></a>
                 </span>
             </span>
 
@@ -496,13 +489,11 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h3 id="EXPLAIN"><a href="#EXPLAIN" class="headerlink" title="EXPLAIN"></a><font style="color:rgb(34, 34, 34);">EXPLAIN</font></h3><p><font style="color:rgb(34, 34, 34);">MySQL 提供了一个 EXPLAIN 命令，它可以对 SELECT 语句进行分析，并输出 SELECT 执行的详细信息，供开发人员有针对性的优化。例如：</font></p>
-<p><font style="color:rgb(34, 34, 34);">EXPLAIN SELECT * from user WHERE id &lt; 3;</font></p>
-<p><font style="color:rgb(34, 34, 34);">EXPLAIN 命令的输出内容大致如下：</font></p>
-<p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1656582561774-3eca4d5a-9d80-402a-9bf5-941d77d94c23.png"></p>
+          <h1 id="什么是网关"><a href="#什么是网关" class="headerlink" title="什么是网关"></a>什么是网关</h1><p>首先我们打开官网可以看到如下的描述：</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2023/png/25873401/1672730319068-d939400c-0dc9-466e-ae30-1cff4d5c6783.png"></p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2023/06/15/%E7%B4%A2%E5%BC%95%E5%88%86%E6%9E%90%E4%B8%8E%E4%BC%98%E5%8C%96/#more" rel="contents">
+              <a class="btn" href="/2024/03/26/springboot%E9%A1%B9%E7%9B%AE%E4%B8%AD%E5%BC%95%E7%94%A8SpringCloudGateway/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -526,7 +517,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2023/06/14/%E7%B4%A2%E5%BC%95/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/03/25/SpringCloudGateway%E8%AF%A6%E8%A7%A3/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/custom/avatar.jpg">
@@ -540,7 +531,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2023/06/14/%E7%B4%A2%E5%BC%95/" class="post-title-link" itemprop="url">索引</a>
+            <a href="/2024/03/25/SpringCloudGateway%E8%AF%A6%E8%A7%A3/" class="post-title-link" itemprop="url">SpringCloudGateway详解</a>
         </h2>
 
         <div class="post-meta">
@@ -550,14 +541,14 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2023-06-14 00:00:00" itemprop="dateCreated datePublished" datetime="2023-06-14T00:00:00+08:00">2023-06-14</time>
+              <time title="创建时间：2024-03-25 16:52:22" itemprop="dateCreated datePublished" datetime="2024-03-25T16:52:22+08:00">2024-03-25</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-06 17:30:53" itemprop="dateModified" datetime="2025-03-06T17:30:53+08:00">2025-03-06</time>
+                <time title="修改时间：2025-03-05 17:33:17" itemprop="dateModified" datetime="2025-03-05T17:33:17+08:00">2025-03-05</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -565,7 +556,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                  <a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" itemprop="url" rel="index"><span itemprop="name">微服务</span></a>
                 </span>
             </span>
 
@@ -580,15 +571,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p><font style="color:rgb(34, 34, 34);">MySQL官方对索引定义：是存储引擎用于快速查找记录的一种数据结构。需要额外开辟空间和数据维护工作。</font></p>
-<ul>
-<li><font style="color:rgb(34, 34, 34);">索引是物理数据页存储，在数据文件中（InnoDB，ibd文件），利用数据页(page)存储。</font></li>
-<li><font style="color:rgb(34, 34, 34);">索引可以加快检索速度，但是同时也会降低增删改操作速度，索引维护需要代价。</font></li>
-</ul>
-<p><font style="color:rgb(34, 34, 34);">索引涉及的理论知识：二分查找法、Hash和B+Tree。</font></p>
+          <h2 id="Spring-Cloud-Gateway-的核心功能："><a href="#Spring-Cloud-Gateway-的核心功能：" class="headerlink" title="Spring Cloud Gateway 的核心功能："></a><font style="color:rgb(25, 27, 31);">Spring Cloud Gateway 的核心功能：</font></h2><p><font style="color:rgb(25, 27, 31);">断言（Predicate）：参照 Java8 的新特性Predicate，允许开发人员匹配 HTTP 请求中的任何内容，比如请求头或请求参数，最后根据匹配结果返回一个布尔值。 路由（route）：由ID、目标URI、断言集合和过滤器集合组成。如果聚合断言结果为真，则转发到该路由。 过滤器（filter）：可以在返回请求之前或之后修改请求和响应的内容。</font></p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2023/06/14/%E7%B4%A2%E5%BC%95/#more" rel="contents">
+              <a class="btn" href="/2024/03/25/SpringCloudGateway%E8%AF%A6%E8%A7%A3/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -612,7 +598,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2023/06/13/%E4%BA%8B%E5%8A%A1%E5%A4%84%E7%90%86/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/03/15/%E8%B5%84%E6%BA%90%E6%9C%8D%E5%8A%A1%E5%99%A8/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/custom/avatar.jpg">
@@ -626,7 +612,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2023/06/13/%E4%BA%8B%E5%8A%A1%E5%A4%84%E7%90%86/" class="post-title-link" itemprop="url">事务处理</a>
+            <a href="/2024/03/15/%E8%B5%84%E6%BA%90%E6%9C%8D%E5%8A%A1%E5%99%A8/" class="post-title-link" itemprop="url">资源服务器鉴权处理</a>
         </h2>
 
         <div class="post-meta">
@@ -636,14 +622,14 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2023-06-13 00:00:00" itemprop="dateCreated datePublished" datetime="2023-06-13T00:00:00+08:00">2023-06-13</time>
+              <time title="创建时间：2024-03-15 19:53:16" itemprop="dateCreated datePublished" datetime="2024-03-15T19:53:16+08:00">2024-03-15</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-06 17:30:49" itemprop="dateModified" datetime="2025-03-06T17:30:49+08:00">2025-03-06</time>
+                <time title="修改时间：2025-03-05 17:14:15" itemprop="dateModified" datetime="2025-03-05T17:14:15+08:00">2025-03-05</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -651,7 +637,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                  <a href="/categories/%E6%8E%88%E6%9D%83/" itemprop="url" rel="index"><span itemprop="name">授权</span></a>
                 </span>
             </span>
 
@@ -666,12 +652,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h4 id="事务的四大特性"><a href="#事务的四大特性" class="headerlink" title="		事务的四大特性"></a><font style="color:rgb(79, 79, 79);">		事务的四大特性</font></h4><ol>
-<li><strong><font style="color:rgba(0, 0, 0, 0.75);">原子性(Atomicity) </font></strong><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">事务是最小的执行单位，不允许分割</font><font style="color:rgba(0, 0, 0, 0.75);">。事务的原子性确保动作要么全部完成，要么完全不起作用；</font></li>
-<li><strong><font style="color:rgba(0, 0, 0, 0.75);">一致性(Consistency) </font></strong><font style="color:rgba(0, 0, 0, 0.75);">一致性是指</font><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">事务必须使数据库从一个一致性状态变换到另一个一致性状态</font><font style="color:rgba(0, 0, 0, 0.75);">，也就是说一个事务执行之前和执行之后都必须处于一致性状态。</font>
+          <h2 id="简介："><a href="#简介：" class="headerlink" title="简介："></a>简介：</h2><p>在oauth2中授权服务器颁发过令牌后，用户就可以对资源进行访问，这时会有一个问题就是需要验证令牌，而前边文章中令牌使用的jwt格式，所以需要一个统一的资源管理器来验证令牌解析令牌</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2023/06/13/%E4%BA%8B%E5%8A%A1%E5%A4%84%E7%90%86/#more" rel="contents">
+              <a class="btn" href="/2024/03/15/%E8%B5%84%E6%BA%90%E6%9C%8D%E5%8A%A1%E5%99%A8/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -695,7 +679,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2023/06/11/sql%E8%AF%AD%E6%B3%95%E6%95%B4%E7%90%86/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/03/14/%E6%94%B9%E9%80%A0%E7%BD%91%E5%85%B3%E5%AE%9E%E7%8E%B0%E6%8E%88%E6%9D%83/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/custom/avatar.jpg">
@@ -709,7 +693,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2023/06/11/sql%E8%AF%AD%E6%B3%95%E6%95%B4%E7%90%86/" class="post-title-link" itemprop="url">MySQL语法整理</a>
+            <a href="/2024/03/14/%E6%94%B9%E9%80%A0%E7%BD%91%E5%85%B3%E5%AE%9E%E7%8E%B0%E6%8E%88%E6%9D%83/" class="post-title-link" itemprop="url">改造网关实现授权</a>
         </h2>
 
         <div class="post-meta">
@@ -719,14 +703,14 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2023-06-11 00:00:00" itemprop="dateCreated datePublished" datetime="2023-06-11T00:00:00+08:00">2023-06-11</time>
+              <time title="创建时间：2024-03-14 21:21:13" itemprop="dateCreated datePublished" datetime="2024-03-14T21:21:13+08:00">2024-03-14</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-06 17:16:53" itemprop="dateModified" datetime="2025-03-06T17:16:53+08:00">2025-03-06</time>
+                <time title="修改时间：2025-03-05 17:14:06" itemprop="dateModified" datetime="2025-03-05T17:14:06+08:00">2025-03-05</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -734,7 +718,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                  <a href="/categories/%E6%8E%88%E6%9D%83/" itemprop="url" rel="index"><span itemprop="name">授权</span></a>
                 </span>
             </span>
 
@@ -749,14 +733,11 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h2 id="SQL通用语法"><a href="#SQL通用语法" class="headerlink" title="SQL通用语法"></a><font style="color:rgb(79, 79, 79);">SQL通用语法</font></h2><ul>
-<li><font style="color:rgb(77, 77, 77);">SQL语句可以单行或多行书写，以分号结尾。</font></li>
-<li><font style="color:rgb(77, 77, 77);">可使用空格和缩进来增强语句的可读性。</font></li>
-<li><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">MySQL数据库的SQL语言不区分大小写，关键字建议使用大写</font><font style="color:rgb(77, 77, 77);">，对所有列和表名使用小写，这样做使代码更容易阅读和调试。</font></li>
-<li><font style="color:rgb(77, 77, 77);">3种注释：</font>
+          <h2 id="前言："><a href="#前言：" class="headerlink" title="前言："></a>前言：</h2><p>先看下认证授权的过程，认证客户端的认证是最先被认证的，只有先认证客户端可会进行token的认证，而我们不应该把客户端的信息暴漏在外面所以客户端的信息只能通过网关转发的时候注入到请求中</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/27343190/1667726854430-5c1f32f8-d71b-4c75-815c-c75de9cac331.png"></p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2023/06/11/sql%E8%AF%AD%E6%B3%95%E6%95%B4%E7%90%86/#more" rel="contents">
+              <a class="btn" href="/2024/03/14/%E6%94%B9%E9%80%A0%E7%BD%91%E5%85%B3%E5%AE%9E%E7%8E%B0%E6%8E%88%E6%9D%83/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -780,7 +761,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2023/06/11/%E7%B4%A2%E5%BC%95%E5%A4%B1%E6%95%88%E7%9A%84%E5%9C%BA%E6%99%AF/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/03/12/%E8%87%AA%E5%AE%9A%E4%B9%89%E5%AF%86%E7%A0%81%E6%A8%A1%E5%BC%8F/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/custom/avatar.jpg">
@@ -794,7 +775,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2023/06/11/%E7%B4%A2%E5%BC%95%E5%A4%B1%E6%95%88%E7%9A%84%E5%9C%BA%E6%99%AF/" class="post-title-link" itemprop="url">索引失效场景</a>
+            <a href="/2024/03/12/%E8%87%AA%E5%AE%9A%E4%B9%89%E5%AF%86%E7%A0%81%E6%A8%A1%E5%BC%8F/" class="post-title-link" itemprop="url">自定义密码模式</a>
         </h2>
 
         <div class="post-meta">
@@ -804,14 +785,14 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2023-06-11 00:00:00" itemprop="dateCreated datePublished" datetime="2023-06-11T00:00:00+08:00">2023-06-11</time>
+              <time title="创建时间：2024-03-12 19:21:00" itemprop="dateCreated datePublished" datetime="2024-03-12T19:21:00+08:00">2024-03-12</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-06 17:31:01" itemprop="dateModified" datetime="2025-03-06T17:31:01+08:00">2025-03-06</time>
+                <time title="修改时间：2025-03-05 17:14:18" itemprop="dateModified" datetime="2025-03-05T17:14:18+08:00">2025-03-05</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -819,7 +800,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                  <a href="/categories/%E6%8E%88%E6%9D%83/" itemprop="url" rel="index"><span itemprop="name">授权</span></a>
                 </span>
             </span>
 
@@ -834,20 +815,11 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <ol>
-<li>没有遵从最左原则：因为常用的索引是B+树结构的，而B+树是有序的，而这个有序是根据索引最左边的字段排序的，所以相对的组合索引中其他的字段并不是有序的</li>
-<li>范围查询放在最后（这里需要注意并不是在写语句的时候讲范围查询放在最后，而是将索引字段中可能出现范围查询的字段放在最后）</li>
-<li>使用select  from table 聚合索引和非聚合索引的差距就在于聚合索引的根保存的是完整的数据，而非聚合索引保存的是索引的值+聚合索引的Key，所以这里就引出了覆盖索引的概念，当你搜索的值都是索引列，就会用到覆盖索引，直接返回结果，不用再使用聚合索引的key去回表查询，效率就会有所提高。select * 大概率是要回表的。</li>
-<li>索引列上有计算。+ - 等</li>
-<li>索引列上使用了函数  sum  cover</li>
-<li>索引列是字符串的搜索的时候没有加’’ 比如 123 - ‘123’</li>
-<li>在不可为空列中使用is null 和 is not null</li>
-<li>like 左边有%</li>
-<li>or两边的列不一致会导致索引实现  可以使用union</li>
-</ol>
+          <h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p><img src="https://cdn.fbbizyy.com/yuque/0/2023/png/25873401/1679106524585-028d887a-7d9d-4e18-af56-f2bcdc192049.png"></p>
+<p>在官方的说明中我们可以看到OAuth 2.1 废弃了 OAuth 2.0 中的密码模式，只提供了三种授权类型：授权码、刷新令牌、客户端凭证。</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2023/06/11/%E7%B4%A2%E5%BC%95%E5%A4%B1%E6%95%88%E7%9A%84%E5%9C%BA%E6%99%AF/#more" rel="contents">
+              <a class="btn" href="/2024/03/12/%E8%87%AA%E5%AE%9A%E4%B9%89%E5%AF%86%E7%A0%81%E6%A8%A1%E5%BC%8F/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -871,7 +843,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/06/11/Canal/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/03/11/%E8%87%AA%E5%AE%9A%E4%B9%89%E7%94%A8%E6%88%B7%E4%BF%A1%E6%81%AF/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/custom/avatar.jpg">
@@ -885,7 +857,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2022/06/11/Canal/" class="post-title-link" itemprop="url">Canal</a>
+            <a href="/2024/03/11/%E8%87%AA%E5%AE%9A%E4%B9%89%E7%94%A8%E6%88%B7%E4%BF%A1%E6%81%AF/" class="post-title-link" itemprop="url">自定义用户信息</a>
         </h2>
 
         <div class="post-meta">
@@ -895,14 +867,14 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2022-06-11 10:10:23" itemprop="dateCreated datePublished" datetime="2022-06-11T10:10:23+08:00">2022-06-11</time>
+              <time title="创建时间：2024-03-11 23:17:16" itemprop="dateCreated datePublished" datetime="2024-03-11T23:17:16+08:00">2024-03-11</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2023-03-08 16:22:42" itemprop="dateModified" datetime="2023-03-08T16:22:42+08:00">2023-03-08</time>
+                <time title="修改时间：2025-03-05 17:14:11" itemprop="dateModified" datetime="2025-03-05T17:14:11+08:00">2025-03-05</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -910,7 +882,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%B7%A5%E5%85%B7/" itemprop="url" rel="index"><span itemprop="name">工具</span></a>
+                  <a href="/categories/%E6%8E%88%E6%9D%83/" itemprop="url" rel="index"><span itemprop="name">授权</span></a>
                 </span>
             </span>
 
@@ -925,10 +897,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h2 id="什么是Canal"><a href="#什么是Canal" class="headerlink" title="什么是Canal"></a>什么是Canal</h2><p>canal译意为水道&#x2F;管道&#x2F;沟渠，主要用途是基于 MySQL 数据库增量日志解析，提供增量数据订阅和消费。<br>从这句话理解到了什么？<br>基于MySQL，并且通过MySQL日志进行的增量解析，这也就意味着对原有的业务代码完全是无侵入性的。</p>
+          <h2 id="回顾"><a href="#回顾" class="headerlink" title="回顾"></a>回顾</h2><p>在集成Oauth2.1认证中心，采用默认的数据结构实现了认证，但是大部分时候默认的用户结构并不能满足生产的需要，所以接下来以RBAC权限设计来实现用户</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2022/06/11/Canal/#more" rel="contents">
+              <a class="btn" href="/2024/03/11/%E8%87%AA%E5%AE%9A%E4%B9%89%E7%94%A8%E6%88%B7%E4%BF%A1%E6%81%AF/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -952,7 +924,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/01/11/%E5%AE%89%E8%A3%85RabbitMQ/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/03/11/%E9%9B%86%E6%88%90Oauth2.1%E8%AE%A4%E8%AF%81%E4%B8%AD%E5%BF%83/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/custom/avatar.jpg">
@@ -966,7 +938,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2022/01/11/%E5%AE%89%E8%A3%85RabbitMQ/" class="post-title-link" itemprop="url">安装RabbitMQ</a>
+            <a href="/2024/03/11/%E9%9B%86%E6%88%90Oauth2.1%E8%AE%A4%E8%AF%81%E4%B8%AD%E5%BF%83/" class="post-title-link" itemprop="url">集成Oauth2.1认证中心</a>
         </h2>
 
         <div class="post-meta">
@@ -976,14 +948,14 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2022-01-11 09:10:23" itemprop="dateCreated datePublished" datetime="2022-01-11T09:10:23+08:00">2022-01-11</time>
+              <time title="创建时间：2024-03-11 20:10:23" itemprop="dateCreated datePublished" datetime="2024-03-11T20:10:23+08:00">2024-03-11</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2023-03-08 16:22:58" itemprop="dateModified" datetime="2023-03-08T16:22:58+08:00">2023-03-08</time>
+                <time title="修改时间：2025-03-05 17:14:21" itemprop="dateModified" datetime="2025-03-05T17:14:21+08:00">2025-03-05</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -991,7 +963,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%B7%A5%E5%85%B7/" itemprop="url" rel="index"><span itemprop="name">工具</span></a>
+                  <a href="/categories/%E6%8E%88%E6%9D%83/" itemprop="url" rel="index"><span itemprop="name">授权</span></a>
                 </span>
             </span>
 
@@ -1006,10 +978,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h2 id="参照官网："><a href="#参照官网：" class="headerlink" title="参照官网："></a>参照官网：</h2><p><a target="_blank" rel="noopener" href="https://www.rabbitmq.com/install-rpm.html#package-cloud">https://www.rabbitmq.com/install-rpm.html#package-cloud</a></p>
+          <h2 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h2><p>新版本中的springcloud已经将springcloudoauth2包取消掉，oauth2新增了一个spring-authorization-server的项目，在spring-authorization-server下现在已经有3个可用版本，其中0.3.0对应的是jdk11版本， 0.4.0对应的是jdk8版本，1.0版本对应的是jdk17。以下的实例是以jdk11为例</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2022/01/11/%E5%AE%89%E8%A3%85RabbitMQ/#more" rel="contents">
+              <a class="btn" href="/2024/03/11/%E9%9B%86%E6%88%90Oauth2.1%E8%AE%A4%E8%AF%81%E4%B8%AD%E5%BF%83/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -1032,7 +1004,7 @@
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/3/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/3/">3</a><span class="page-number current">4</span>
+    <a class="extend prev" rel="prev" href="/page/3/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/3/">3</a><span class="page-number current">4</span><a class="page-number" href="/page/5/">5</a><a class="page-number" href="/page/6/">6</a><a class="extend next" rel="next" href="/page/5/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
   </nav>
 
 
@@ -1100,7 +1072,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">40</span>
+          <span class="site-state-item-count">54</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1113,7 +1085,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">34</span>
+        <span class="site-state-item-count">38</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>

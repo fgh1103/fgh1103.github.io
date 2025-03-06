@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="「MySQL存储引擎最大的特点就是【插件化】，可以根据自己的需求使用不同的存储引擎，innodb存储引擎支持行级锁以及事务特性，也是多种场合使用较多的存储引擎。」 当官方的存储引擎不足以满足时，我们通过抽象的API接口实现自己的存储引擎。 抽象存储引擎API接口是通过抽象类handler来实现，handler类提供诸如打开&#x2F;关闭table、扫表、查询Key数据、写记录、删除记录等基础操作">
+<meta property="og:type" content="article">
+<meta property="og:title" content="InnoDB的存储结构">
+<meta property="og:url" content="http://example.com/2024/07/15/InnoDB%E7%9A%84%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84/index.html">
+<meta property="og:site_name" content="进学阁">
+<meta property="og:description" content="「MySQL存储引擎最大的特点就是【插件化】，可以根据自己的需求使用不同的存储引擎，innodb存储引擎支持行级锁以及事务特性，也是多种场合使用较多的存储引擎。」 当官方的存储引擎不足以满足时，我们通过抽象的API接口实现自己的存储引擎。 抽象存储引擎API接口是通过抽象类handler来实现，handler类提供诸如打开&#x2F;关闭table、扫表、查询Key数据、写记录、删除记录等基础操作">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717641572383-136b49bf-eb93-41b0-9b95-38874c5bcd94.webp">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717641572373-8acb8e9d-fcd7-4906-87da-2cdd223aeb51.webp">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717641572335-aed40968-c335-4097-85a0-c3995be5d733.webp">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717641572342-4ae82348-ec26-499a-b813-5dc66fe77507.webp">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717641572361-25a6aaec-14c2-4d87-903c-a76e215530ad.webp">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717641572822-8b5a0843-fe88-4f83-a7e6-7d530aad04f4.webp">
+<meta property="article:published_time" content="2024-07-14T16:00:00.000Z">
+<meta property="article:modified_time" content="2025-03-06T09:52:38.882Z">
+<meta property="article:author" content="139">
+<meta property="article:tag" content="mysql">
+<meta property="article:tag" content="存储引擎">
+<meta property="article:tag" content="InnoDb">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717641572383-136b49bf-eb93-41b0-9b95-38874c5bcd94.webp">
+
+<link rel="canonical" href="http://example.com/2024/07/15/InnoDB%E7%9A%84%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>InnoDB的存储结构 | 进学阁</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">进学阁</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">业精于勤荒于嬉，行成于思毁于随</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">38</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">8</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">54</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/07/15/InnoDB%E7%9A%84%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          InnoDB的存储结构
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-07-15 00:00:00" itemprop="dateCreated datePublished" datetime="2024-07-15T00:00:00+08:00">2024-07-15</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-06 17:52:38" itemprop="dateModified" datetime="2025-03-06T17:52:38+08:00">2025-03-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><strong><font style="color:rgb(145, 109, 213);">「MySQL存储引擎最大的特点就是【插件化】，可以根据自己的需求使用不同的存储引擎，innodb存储引擎支持行级锁以及事务特性，也是多种场合使用较多的存储引擎。」</font></strong></p>
+<p><font style="color:black;background-color:rgb(244, 238, 255);">当官方的存储引擎不足以满足时，我们通过抽象的API接口实现自己的存储引擎。</font></p>
+<p><font style="color:black;background-color:rgb(244, 238, 255);">抽象存储引擎API接口是通过抽象类handler来实现，handler类提供诸如打开&#x2F;关闭table、扫表、查询Key数据、写记录、删除记录等基础操作方法。</font></p>
+<p><font style="color:black;background-color:rgb(244, 238, 255);">每一个存储引擎通过继承handler类，实现以上提到的方法，在方法里面实现对底层存储引擎的读写接口的转调。</font></p>
+<span id="more"></span>
+<p><strong><font style="color:rgb(145, 109, 213);">「InnoDB是为处理巨大数据量时的最大性能设计。它的CPU效率可能是任何其它基于磁盘的关系数据库引擎所不能匹敌的」</font></strong><font style="color:black;">。这是官网给出的一句话，可见InnoDB在mysql中的地位。</font></p>
+<ul>
+<li><font style="color:black;">在MYSQL5.5版本，具体是在5.5.8版本之后,，</font><strong><font style="color:rgb(145, 109, 213);">「InnoDB代替MYISAM称为MYSQL的默认存储引擎」</font></strong><font style="color:black;">。</font></li>
+<li><font style="color:black;">InnoDB存储引擎支持事务，具有自动崩溃恢复的特性，特点是行锁设计、支持外键，并支持类似于Oracle的非锁定读，即默认读取操作不会产生锁，在日常开发中使用非常广泛。</font></li>
+</ul>
+<h2 id="一、InnoDB架构组成"><a href="#一、InnoDB架构组成" class="headerlink" title="一、InnoDB架构组成"></a><strong><font style="color:black;">一、InnoDB架构组成</font></strong></h2><p><font style="color:black;">InnoDB的存储结构分为</font><strong><font style="color:rgb(145, 109, 213);">「内存结构(左)和磁盘结构(右)两大部分」</font></strong><font style="color:black;">，</font></p>
+<p><font style="color:black;">官方的InnoDB引擎架构图如下：</font></p>
+<ul>
+<li><font style="color:rgb(1, 1, 1);">MySQL 5.7以前的版本</font></li>
+</ul>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717641572383-136b49bf-eb93-41b0-9b95-38874c5bcd94.webp"></p>
+<ul>
+<li><font style="color:rgb(1, 1, 1);">MySQL 5.7 版本</font></li>
+</ul>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717641572373-8acb8e9d-fcd7-4906-87da-2cdd223aeb51.webp"></p>
+<p><font style="color:black;">由上面两张架构图可以看出，</font><strong><font style="color:rgb(145, 109, 213);">「InnoDB存储结构在MySQL 5.7 版本之后做了一些调整」</font></strong></p>
+<ul>
+<li><font style="color:rgb(1, 1, 1);">将 Undo日志表空间从共享表空间 ibdata 文件中分离出来，可以在安装MySQL 时由用户自行指定文件大小和数量。</font></li>
+<li><font style="color:rgb(1, 1, 1);">增加了 temporary 临时表空间，里面存储着临时表或临时查询结果集的数据。</font></li>
+<li><font style="color:rgb(1, 1, 1);">Buffer Pool 大小可以动态修改，无需重启数据库实例。</font></li>
+</ul>
+<h2 id="二、-InnoDB内存结构"><a href="#二、-InnoDB内存结构" class="headerlink" title="二、 InnoDB内存结构"></a><strong><font style="color:black;">二、 InnoDB内存结构</font></strong></h2><p><font style="color:black;">从架构图中可以看出【</font><strong><font style="color:rgb(145, 109, 213);">「内存结构主要包括Buffer Pool、Change Buffer、Adaptive Hash Index和Log Buffer四大组件」</font></strong><font style="color:black;">】。</font></p>
+<h3 id="2-1-Buffer-Pool"><a href="#2-1-Buffer-Pool" class="headerlink" title="2.1 Buffer Pool"></a><font style="color:black;">2.1 Buffer Pool</font></h3><p><strong><font style="color:rgb(145, 109, 213);">「即【缓冲池，简称BP】。BP以Page页为单位，默认大小16K，BP的底层采用链表数据结构管理Page」</font></strong><font style="color:black;">。</font></p>
+<p><font style="color:black;">在InnoDB访问表记录和索引时会在Page页中缓存，以后使用可以减少磁 盘IO操作，提升效率。</font></p>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「Page管理机制」</font></strong></li>
+</ul>
+<p><font style="color:black;">Page根据状态可以分为三种类型：</font></p>
+<p><strong><font style="color:rgb(145, 109, 213);">「InnoDB通过三种链表结构来维护和管理上述三种page类型」</font></strong></p>
+<pre><code>- &lt;font style=&quot;color:black;&quot;&gt;【free list】：空闲缓冲区，管理free page&lt;/font&gt;
+- &lt;font style=&quot;color:black;&quot;&gt;【flush list】：刷新到磁盘的缓冲区，管理dirty page&lt;/font&gt;
+</code></pre>
+<p><font style="color:black;">内部page按修改时间排序。脏页即存在于flush链表，也在LRU链表中，两种互不影响，</font><strong><font style="color:rgb(145, 109, 213);">「LRU链表负责管理page的可用性和释放，而flush链表负责管理脏页的刷盘操作」</font></strong><font style="color:black;"> </font><font style="color:black;">。</font></p>
+<pre><code>- &lt;font style=&quot;color:black;&quot;&gt;【lru list】：正在使用的缓冲区，管理clean page和dirty page&lt;/font&gt;
+</code></pre>
+<p><font style="color:black;">缓冲区以midpoint为基点：</font></p>
+<p><font style="color:black;">前面链表称为new列表区，存放经常访问的数据，占63%；</font></p>
+<p><font style="color:black;">后面的链表称为old列表区，存放使用较少数据，占37%。</font></p>
+<pre><code>- &lt;font style=&quot;color:rgb(1, 1, 1);&quot;&gt;【free page】 ：空闲page，未被使用&lt;/font&gt;
+- &lt;font style=&quot;color:rgb(1, 1, 1);&quot;&gt;【clean page】：被使用page，数据没有被修改过&lt;/font&gt;
+- &lt;font style=&quot;color:rgb(1, 1, 1);&quot;&gt;【dirty page】：脏页，page的数据被修改过，页中数据和磁盘的数据产生了不 一致&lt;/font&gt;
+</code></pre>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「改进型LRU算法维护」</font></strong></li>
+</ul>
+<p><strong><font style="color:rgb(145, 109, 213);background-color:rgb(244, 238, 255);">「每当有新的page数据读取到buffer pool时，InnoDb引擎会判断是否有空闲页，是否足够，如果有就将free page从free list列表删除，放入到LRU列表中。没有空闲页，就会根据LRU算法淘汰LRU链表默认的页，将内存空间释放分配给新的页。」</font></strong></p>
+<pre><code>- **&lt;font style=&quot;color:rgb(145, 109, 213);&quot;&gt;「普通LRU」&lt;/font&gt;**
+</code></pre>
+<p><font style="color:black;">末尾淘汰法，新数据从链表头部加入，释放空间时从末尾淘汰</font></p>
+<pre><code>- **&lt;font style=&quot;color:rgb(145, 109, 213);&quot;&gt;「改性LRU」&lt;/font&gt;**
+</code></pre>
+<p><strong><font style="color:rgb(145, 109, 213);">「链表分为new和old两个部分，加入元素时并不是从表头插入，而是从中间midpoint位置插入」</font></strong><font style="color:black;">，如果数据很快被访问，那么page就会向new列表头部移动，如果数据没有被访问，会逐步向old尾部移动，等待淘汰。</font></p>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「Buffer Pool配置参数」</font></strong></li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">show variables like &#x27;%innodb_page_size%&#x27;;</span><br></pre></td></tr></table></figure>
+
+<pre><code>- &lt;font style=&quot;color:rgb(1, 1, 1);&quot;&gt;查看page页大小&lt;/font&gt;
+</code></pre>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717641572335-aed40968-c335-4097-85a0-c3995be5d733.webp"></p>
+<ul>
+<li><font style="color:rgb(1, 1, 1);">查看lru list中old列表参数</font></li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">show variables like &#x27;%innodb_old%&#x27;;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717641572342-4ae82348-ec26-499a-b813-5dc66fe77507.webp"></p>
+<ul>
+<li><font style="color:rgb(1, 1, 1);">查看buffer pool参数</font></li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">show variables like &#x27;%innodb_buffer%&#x27;;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717641572361-25a6aaec-14c2-4d87-903c-a76e215530ad.webp"></p>
+<p><strong><font style="color:rgb(145, 109, 213);">「一般我们将innodb_buffer_pool_size设置为总内存大小的60%-80%， innodb_buffer_pool_instances可以设置为多个避免缓存争夺。」</font></strong></p>
+<h3 id="2-2-Change-Buffer"><a href="#2-2-Change-Buffer" class="headerlink" title="2.2 Change Buffer"></a><font style="color:black;">2.2 Change Buffer</font></h3><p><strong><font style="color:rgb(145, 109, 213);">「写【缓冲区，简称CB】。在进行DML操作时，如果BP没有其相应的Page数据， 并不会立刻将磁盘页加载到缓冲池，而是在CB记录缓冲变更，等未来数据被读取时，再将数据合并恢复到BP中。」</font></strong></p>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「ChangeBuffer占用BufferPool空间」</font></strong><font style="color:rgb(1, 1, 1);">，默认占25%，最大允许占50%，可以根据读写业务量来进行调整。</font></li>
+</ul>
+<p><font style="color:black;">调整参数为：innodb_change_buffer_max_size</font></p>
+<p><strong><font style="color:rgb(145, 109, 213);background-color:rgb(244, 238, 255);">「当更新一条记录时，该记录在BufferPool存在，直接在BufferPool修改，一次内存操作。」</font></strong></p>
+<p><strong><font style="color:rgb(145, 109, 213);background-color:rgb(244, 238, 255);">「如果该记录在BufferPool不存在（没有命中），会直接在ChangeBuffer进行一次内存操作，不用再去磁盘查询数据，避免一次磁盘IO。」</font></strong></p>
+<p><strong><font style="color:rgb(145, 109, 213);background-color:rgb(244, 238, 255);">「当下次查询记录时，会先进行磁盘读取，然后再从 ChangeBuffer中读取信息合并，最终载入BufferPool中。」</font></strong></p>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「写缓冲区仅适用于非唯一普通索引页」</font></strong></li>
+</ul>
+<p><font style="color:black;background-color:rgb(244, 238, 255);">如果在索引设置唯一性，在进行修改时，InnoDB必须要做唯一性校验，因此必须查询磁盘， 做一次IO操作。会直接将记录查询到BufferPool中，然后在缓冲池修改，不会在 ChangeBuffer操作。</font></p>
+<h3 id="2-3-Adaptive-Hash-Index"><a href="#2-3-Adaptive-Hash-Index" class="headerlink" title="2.3 Adaptive Hash Index"></a><font style="color:black;">2.3 Adaptive Hash Index</font></h3><p><strong><font style="color:rgb(145, 109, 213);">「即【自适应哈希索引】，用于优化对BP数据的查询」</font></strong><font style="color:black;">。</font></p>
+<p><strong><font style="color:rgb(145, 109, 213);">「InnoDB存储引擎会监控对表索引的查找，如果观察到建立哈希索引可以带来速度的提升，则建立自适应哈希索引，所以称之为自适应」</font></strong><font style="color:black;">。InnoDB存储引擎会自动根据访问的频率和模式来为某些页建立哈希索引。</font></p>
+<p><font style="color:black;">实现本质上就是一个从某个检索条件到某个数据页的【哈希表】。</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; show variables like &#x27;%hash%&#x27;;</span><br><span class="line">+----------------------------------+-------+</span><br><span class="line">| Variable_name                    | Value |</span><br><span class="line">+----------------------------------+-------+</span><br><span class="line">| innodb_adaptive_hash_index       | ON    |</span><br><span class="line">| innodb_adaptive_hash_index_parts | 8     |</span><br><span class="line">+----------------------------------+-------+</span><br><span class="line">2 rows in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「innodb_adaptive_hash_index」</font></strong></li>
+</ul>
+<p><font style="color:black;">控制innodb自适应哈希索引特性是否开启参数</font></p>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「innodb_adaptive_hash_index_parts」</font></strong></li>
+</ul>
+<p><font style="color:black;">凡是缓存都会涉及多个缓存消费者间的锁竞争。</font></p>
+<p><font style="color:black;">MySQL通过设立多个AHI分区，每个分区使用独立的锁，来减少锁竞争。</font></p>
+<h3 id="2-4-Log-Buffer"><a href="#2-4-Log-Buffer" class="headerlink" title="2.4 Log Buffer"></a><font style="color:black;">2.4 Log Buffer</font></h3><p><strong><font style="color:rgb(145, 109, 213);">「即【日志缓冲区】，用来保存要写入磁盘上log文件（Redo&#x2F;Undo）的数据」</font></strong><font style="color:black;">。</font></p>
+<p><font style="color:black;">日志缓冲区刷盘时机：</font></p>
+<ul>
+<li><font style="color:black;">日志缓冲区的内容</font><strong><font style="color:rgb(145, 109, 213);">「定期刷新」</font></strong><font style="color:black;">到磁盘log文件中。</font></li>
+<li><strong><font style="color:rgb(145, 109, 213);">「日志缓冲区满时会自动将其刷新」</font></strong><font style="color:black;">到磁盘，可以改变innodb_log_buffer_size参数大小，减少磁盘IO频率。</font></li>
+</ul>
+<p><font style="color:black;">当遇到BLOB类型或多行更新的大事务操作时，增加日志缓冲区可以节省磁盘I&#x2F;O。</font></p>
+<p><font style="color:black;">LogBuffer主要是用于记录InnoDB引擎日志，在DML操作时会产生Redo和Undo日志。</font></p>
+<h2 id="三、-InnoDB磁盘结构"><a href="#三、-InnoDB磁盘结构" class="headerlink" title="三、 InnoDB磁盘结构"></a><strong><font style="color:black;">三、 InnoDB磁盘结构</font></strong></h2><p><font style="color:black;">InnoDB磁盘主要包含【Tablespaces，InnoDB Data Dictionary，Doublewrite Buffer、Redo Log 和Undo Logs】五部分组成。</font></p>
+<h3 id="3-1-表空间（Tablespaces）"><a href="#3-1-表空间（Tablespaces）" class="headerlink" title="3.1 表空间（Tablespaces）"></a><font style="color:black;">3.1 表空间（Tablespaces）</font></h3><p><font style="color:black;">innodb存储引擎在存储设计上模仿了Oracle的存储结构，其数据是按照表空间进行管理的。</font><strong><font style="color:rgb(145, 109, 213);">「表空间用于存储表结构和数据」</font></strong><font style="color:black;">。表空间又分为系统表空间、独立表空间、 通用表空间、临时表空间、Undo表空间等多种类型。</font></p>
+<h4 id="3-1-1-表空间组成"><a href="#3-1-1-表空间组成" class="headerlink" title="3.1.1 表空间组成"></a><font style="color:black;">3.1.1 表空间组成</font></h4><ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「物理结构组成」</font></strong></li>
+</ul>
+<p><strong><font style="color:rgb(145, 109, 213);">「在系统表空间由于所有的表公用一个.ibdatat1数据文件，所以针对每个表只有一个.frm表结构文件」</font></strong><font style="color:black;">。</font></p>
+<p><strong><font style="color:rgb(145, 109, 213);">「在独立表空间中，每个表分别都有一个.frm表结构文件，一个.ibd数据文件」</font></strong><font style="color:black;">。</font></p>
+<p><font style="color:black;">innodb存储引擎物理组织形式可以理解为其在磁盘的存储形式，表现为各种文件，其分类大概为</font></p>
+<table>
+<thead>
+<tr>
+<th align="left"><strong><font style="color:rgb(1, 1, 1);">文件</font></strong></th>
+<th align="left"><strong><font style="color:rgb(1, 1, 1);">功能</font></strong></th>
+<th align="left"><strong><font style="color:rgb(1, 1, 1);">描述</font></strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><font style="color:rgb(1, 1, 1);">ibdatat1</font></td>
+<td align="left"><font style="color:rgb(1, 1, 1);">共享表空间文件</font></td>
+<td align="left"><font style="color:rgb(1, 1, 1);">系统&#x2F;共享表空间，存储各种缓冲数据</font></td>
+</tr>
+<tr>
+<td align="left"><font style="color:rgb(1, 1, 1);">.frm</font></td>
+<td align="left"><font style="color:rgb(1, 1, 1);">表定义文件</font></td>
+<td align="left"><font style="color:rgb(1, 1, 1);">记录表的定义，列名以及列的数据类型</font></td>
+</tr>
+<tr>
+<td align="left"><font style="color:rgb(1, 1, 1);">.ibd</font></td>
+<td align="left"><font style="color:rgb(1, 1, 1);">表数据存储文件</font></td>
+<td align="left"><font style="color:rgb(1, 1, 1);">独立表空间，存储数据表的数据，按行存储</font></td>
+</tr>
+<tr>
+<td align="left"><font style="color:rgb(1, 1, 1);">ib_logfile0&#x2F;1</font></td>
+<td align="left"><font style="color:rgb(1, 1, 1);">redo日志文件</font></td>
+<td align="left"><font style="color:rgb(1, 1, 1);">重做日志文件，一共两个循环使用，一个写完即写另一个</font></td>
+</tr>
+</tbody></table>
+<p><strong><font style="color:rgb(145, 109, 213);">「表空间是innodb存储引擎逻辑结构的最高层，所有的数据都存储在表空间中，默认innodb有一个共享表空间，所有的数据都存储在共享表空间中，可以通参数innodb_per_table设置每张表单独存放在一个表空间中」</font></strong><font style="color:black;">。</font></p>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「独立表空间内存储的只是数据、索引、插入缓冲页」</font></strong><font style="color:black;">。</font></li>
+<li><strong><font style="color:rgb(145, 109, 213);">「回滚日志、插入缓冲索引页、事务信息、二次写缓冲等其他数据还是存放在共享表空间」</font></strong><font style="color:black;">。</font></li>
+</ul>
+<h4 id="3-1-2-表空间的五种类型"><a href="#3-1-2-表空间的五种类型" class="headerlink" title="3.1.2 表空间的五种类型"></a><font style="color:black;">3.1.2 表空间的五种类型</font></h4><ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「系统表空间」</font></strong><font style="color:black;">（The System Tablespace）</font></li>
+</ul>
+<p><font style="color:black;background-color:rgb(244, 238, 255);">innodb_data_file_path用来指定innodb tablespace文件，如果我们不在My.cnf文件中指定innodb_data_home_dir和innodb_data_file_path那么默认会在datadir目录下创建ibdata1 作为innodb tablespace。</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">#默认值:</span><br><span class="line">innodb_data_file_path = ibdata1:12M:autoextend</span><br><span class="line"># ibdata1 : 文件名为ibdata1</span><br><span class="line"># 12M : 大小为12M</span><br><span class="line"># autoextend : 自动扩展</span><br></pre></td></tr></table></figure>
+
+<pre><code>- &lt;font style=&quot;color:black;&quot;&gt;包含InnoDB数据字典，Doublewrite Buffer，Change Buffer，Undo Logs的&lt;/font&gt;**&lt;font style=&quot;color:rgb(145, 109, 213);&quot;&gt;「存储区域」&lt;/font&gt;**&lt;font style=&quot;color:black;&quot;&gt;。&lt;/font&gt;
+- &lt;font style=&quot;color:black;&quot;&gt;系统表空间也默认包含任何用户在&lt;/font&gt;**&lt;font style=&quot;color:rgb(145, 109, 213);&quot;&gt;「系统表空间创建」&lt;/font&gt;**&lt;font style=&quot;color:black;&quot;&gt;的表数据和索引数据。&lt;/font&gt;
+- &lt;font style=&quot;color:black;&quot;&gt;系统表空间是一个共享的表空间因为它是被多个表共享的。&lt;/font&gt;
+</code></pre>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「独立表空间」</font></strong><font style="color:black;">（File-Per-Table Tablespaces）</font></li>
+</ul>
+<p><strong><font style="color:rgb(145, 109, 213);">「默认开启，独立表空间是一个单表表空间，该表创建于自己的数据文件中，而非创建于系统表空间中」</font></strong><font style="color:black;">。</font></p>
+<p><font style="color:black;">开启独立表空间参数为：innodb_file_per_table</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">innodb_file_per_table = ON：独立表空间：tablename.ibd</span><br><span class="line">innodb_file_per_table = OFF：系统表空间：ibdataX</span><br></pre></td></tr></table></figure>
+
+<pre><code>- &lt;font style=&quot;color:black;&quot;&gt;【innodb_file_per_table = ON】&lt;/font&gt;
+</code></pre>
+<p><strong><font style="color:rgb(145, 109, 213);">「新建表被创建于【表空间】中,每一个表建立ibd的扩展文件,文件名为：表名.ibd」</font></strong><font style="color:black;">，该文件默认被创建于数据库目录中,表空间的表文件支持动态和压缩行格式。</font></p>
+<pre><code>- &lt;font style=&quot;color:black;&quot;&gt;【innodb_file_per_table = OFF】&lt;/font&gt;
+</code></pre>
+<p><strong><font style="color:rgb(145, 109, 213);">「innodb将被创建于【系统表空间】中，即ibdataX中」</font></strong><font style="color:black;">。X代表从1开始的一个数字</font></p>
+<pre><code>- &lt;font style=&quot;color:black;&quot;&gt;【查看表的存储表空间的存储方式值】&lt;/font&gt;
+</code></pre>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">show variables like &#x27;innodb_file_per_table&#x27;;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717641572822-8b5a0843-fe88-4f83-a7e6-7d530aad04f4.webp"></p>
+<ul>
+<li><font style="color:black;">【修改存储表空间的存储方式值为OFF】</font></li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">set global innodb_file_per_table=off;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「通用表空间」</font></strong><font style="color:black;">（General Tablespaces）</font></li>
+</ul>
+<p><font style="color:black;">通用表空间为通过create tablespace语法创建的共享表空间。通用表空间可以创建于 mysql数据目录外的其他表空间，其可以容纳多张表，且其支持所有的行格式。</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">#创建表空间tablespaces1</span><br><span class="line">CREATE TABLESPACE tablespaces1 ADD DATAFILE tablespaces1.ibd Engine=InnoDB; </span><br><span class="line">#将表添加到test1表空间</span><br><span class="line">CREATE TABLE test1 (c1 INT PRIMARY KEY) TABLESPACE tablespaces1;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「撤销表空间」</font></strong><font style="color:black;">（Undo Tablespaces）</font></li>
+</ul>
+<p><strong><font style="color:rgb(145, 109, 213);">「撤销表空间由一个或多个包含Undo日志文件组成。」</font></strong></p>
+<p><font style="color:black;background-color:rgb(244, 238, 255);">在MySQL 5.7版本之前Undo占用的是System Tablespace共享区，从5.7开始将Undo从System Tablespace分离了出来。</font></p>
+<pre><code>- &lt;font style=&quot;color:black;&quot;&gt;【innodb_undo_tablespaces】&lt;/font&gt;
+</code></pre>
+<p><font style="color:black;">innodb_undo_tablespaces &#x3D; 0 ：默认值，表示使用系统表空间ibdata1</font></p>
+<p><font style="color:black;">innodb_undo_tablespaces &#x3D; 1：大于0表示使用undo表空间undo_001、 undo_002等</font></p>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「临时表空间」</font></strong><font style="color:black;">（Temporary Tablespaces）</font></li>
+</ul>
+<p><strong><font style="color:rgb(145, 109, 213);">「mysql服务器正常关闭或异常终止时，临时表空间将被移除，每次启动时会被重新创建」</font></strong><font style="color:black;">。</font></p>
+<p><font style="color:black;">临时表空间分为两种：</font></p>
+<pre><code>- &lt;font style=&quot;color:black;&quot;&gt;【session temporary tablespaces】&lt;/font&gt;
+</code></pre>
+<p><font style="color:black;">存储的是用户创建的临时表和磁盘内部的临时表</font></p>
+<pre><code>- &lt;font style=&quot;color:black;&quot;&gt;【global temporary tablespace】&lt;/font&gt;
+</code></pre>
+<p><font style="color:black;">储存用户临时表的回滚段（rollback segments ）</font></p>
+<h4 id="3-1-3-系统表空间与独立表空间怎么选择"><a href="#3-1-3-系统表空间与独立表空间怎么选择" class="headerlink" title="3.1.3 系统表空间与独立表空间怎么选择"></a><font style="color:black;">3.1.3 系统表空间与独立表空间怎么选择</font></h4><p><font style="color:black;">系统表空间与独立表空间都是</font><strong><font style="color:rgb(145, 109, 213);">「存储表结构和数据」</font></strong><font style="color:black;">，只是存储位置和方法不同，那么应该怎么选择呢</font></p>
+<ul>
+<li><font style="color:rgb(1, 1, 1);">系统表空间与独立表空间差异</font><ul>
+<li><font style="color:rgb(1, 1, 1);">系统表空间由于所有的数据都放ibdataX文件中，</font><strong><font style="color:rgb(145, 109, 213);">「容易产生IO瓶颈」</font></strong></li>
+<li><font style="color:rgb(1, 1, 1);">独立表空间单表存储，可以同时刷新多个文件数据</font></li>
+</ul>
+</li>
+</ul>
+<p><strong><font style="color:rgb(145, 109, 213);">「基于此，我们一般都是使用独立的表空间进行管理，独立表空间也是默认的配置」</font></strong></p>
+<ul>
+<li><font style="color:black;">如何把系统表空间中的表转移到独立表空间中</font><ul>
+<li><font style="color:black;">使用mysqldump导出所有数据库表的数据(备份)。</font></li>
+<li><font style="color:black;">停止MYSQL服务器，修改my.conf配置，删除原来innodb表空间的相关文件</font></li>
+</ul>
+</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#修改my.conf配置</span><br><span class="line">innodb_file_per_table = ON</span><br></pre></td></tr></table></figure>
+
+<pre><code>- &lt;font style=&quot;color:black;&quot;&gt;重启MYSQL服务,并重建Innodb系统表空间&lt;/font&gt;
+- &lt;font style=&quot;color:black;&quot;&gt;重新导入备份的数据&lt;/font&gt;
+</code></pre>
+<h3 id="3-2数据字典（InnoDB-Data-Dictionary）"><a href="#3-2数据字典（InnoDB-Data-Dictionary）" class="headerlink" title="3.2数据字典（InnoDB Data Dictionary）"></a><font style="color:black;">3.2数据字典（InnoDB Data Dictionary）</font></h3><p><strong><font style="color:rgb(145, 109, 213);">「InnoDB数据字典由内部系统表组成」</font></strong><font style="color:black;">。这些表包含用于查找表、索引和表字段等对象的元数据。</font></p>
+<p><font style="color:black;">元数据物理上位于InnoDB系统表空间中。数据字典元数据在一定程度上 与InnoDB表元数据文件（.frm文件）中存储的信息重叠。</font></p>
+<h3 id="3-3-双写缓冲区（Doublewrite-Buffer）"><a href="#3-3-双写缓冲区（Doublewrite-Buffer）" class="headerlink" title="3.3 双写缓冲区（Doublewrite Buffer）"></a><font style="color:black;">3.3 双写缓冲区（Doublewrite Buffer）</font></h3><p><strong><font style="color:rgb(145, 109, 213);">「位于系统表空间，是一个存储区域」</font></strong><font style="color:black;">。</font></p>
+<p><font style="color:black;background-color:rgb(244, 238, 255);">在BufferPage的page页刷新到磁盘真正的位置前，会先将数据存在Doublewrite 缓冲区。如果在page页写入过程中出现操作系统、存储子系统或 mysqld进程崩溃，InnoDB可以在崩溃恢复期间从Doublewrite缓冲区中找到page页备份。在大多数情况下，默认情况下启用双写缓冲区。</font></p>
+<ul>
+<li><font style="color:black;">innodb_doublewrite &#x3D; 0 ：禁用Doublewrite 缓冲区</font></li>
+<li><font style="color:black;">innodb_flush_method &#x3D; O_DIRECT  ：数据文件写入操作会通知操作系统不要缓存数据，也不要用预读</font></li>
+</ul>
+<p><strong><font style="color:rgb(145, 109, 213);">「innodb_flush_method控制innodb数据文件及redo log的打开、 刷写模式」</font></strong><font style="color:black;">。</font></p>
+<h3 id="3-4-重做日志（Redo-Log）"><a href="#3-4-重做日志（Redo-Log）" class="headerlink" title="3.4 重做日志（Redo Log）"></a><font style="color:black;">3.4 重做日志（Redo Log）</font></h3><ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「重做日志是一种基于磁盘的数据结构，用于在崩溃恢复期间修正不完整事务写入的数据」</font></strong><font style="color:black;">。</font></li>
+<li><font style="color:black;">MySQL以循环方式写入重做日志文件，记录InnoDB中所有对Buffer Pool修改的日志。</font></li>
+</ul>
+<p><font style="color:black;background-color:rgb(244, 238, 255);">当出现实例故障，导致数据未能更新到数据文件，则数据库重启时须redo，重新把数据更新到数据文件。读写事务在执行的过程中，都会不断的产生redo log。默认情况下，重做日志在磁盘上由两个名为ib_logfile0和ib_logfile1的文件物理表示。</font></p>
+<h3 id="3-5-撤销日志（Undo-Logs）"><a href="#3-5-撤销日志（Undo-Logs）" class="headerlink" title="3.5 撤销日志（Undo Logs）"></a><font style="color:black;">3.5 撤销日志（Undo Logs）</font></h3><p><strong><font style="color:rgb(145, 109, 213);">「撤消日志是在事务开始之前保存的被修改数据的备份，用于回滚事务」</font></strong><font style="color:black;">。</font></p>
+<p><font style="color:black;">撤消日志属于逻辑日志，根据每行记录进行记录。</font></p>
+<p><font style="color:black;">撤消日志存在于系统表空间、撤消表空间和临时表空间中。</font></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/mysql/" rel="tag"><i class="fa fa-tag"></i> mysql</a>
+              <a href="/tags/%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E/" rel="tag"><i class="fa fa-tag"></i> 存储引擎</a>
+              <a href="/tags/InnoDb/" rel="tag"><i class="fa fa-tag"></i> InnoDb</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2024/07/15/InnoDB%E6%95%B0%E6%8D%AE%E6%96%87%E4%BB%B6/" rel="prev" title="InnoDB数据文件">
+      <i class="fa fa-chevron-left"></i> InnoDB数据文件
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2024/07/15/InnoDB%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B%E7%9A%84%E7%BB%84%E6%88%90/" rel="next" title="InnoDB线程模型的组成">
+      InnoDB线程模型的组成 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E3%80%81InnoDB%E6%9E%B6%E6%9E%84%E7%BB%84%E6%88%90"><span class="nav-number">1.</span> <span class="nav-text">一、InnoDB架构组成</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%E3%80%81-InnoDB%E5%86%85%E5%AD%98%E7%BB%93%E6%9E%84"><span class="nav-number">2.</span> <span class="nav-text">二、 InnoDB内存结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-Buffer-Pool"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 Buffer Pool</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-Change-Buffer"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 Change Buffer</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-Adaptive-Hash-Index"><span class="nav-number">2.3.</span> <span class="nav-text">2.3 Adaptive Hash Index</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-4-Log-Buffer"><span class="nav-number">2.4.</span> <span class="nav-text">2.4 Log Buffer</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89%E3%80%81-InnoDB%E7%A3%81%E7%9B%98%E7%BB%93%E6%9E%84"><span class="nav-number">3.</span> <span class="nav-text">三、 InnoDB磁盘结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-%E8%A1%A8%E7%A9%BA%E9%97%B4%EF%BC%88Tablespaces%EF%BC%89"><span class="nav-number">3.1.</span> <span class="nav-text">3.1 表空间（Tablespaces）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#3-1-1-%E8%A1%A8%E7%A9%BA%E9%97%B4%E7%BB%84%E6%88%90"><span class="nav-number">3.1.1.</span> <span class="nav-text">3.1.1 表空间组成</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-1-2-%E8%A1%A8%E7%A9%BA%E9%97%B4%E7%9A%84%E4%BA%94%E7%A7%8D%E7%B1%BB%E5%9E%8B"><span class="nav-number">3.1.2.</span> <span class="nav-text">3.1.2 表空间的五种类型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-1-3-%E7%B3%BB%E7%BB%9F%E8%A1%A8%E7%A9%BA%E9%97%B4%E4%B8%8E%E7%8B%AC%E7%AB%8B%E8%A1%A8%E7%A9%BA%E9%97%B4%E6%80%8E%E4%B9%88%E9%80%89%E6%8B%A9"><span class="nav-number">3.1.3.</span> <span class="nav-text">3.1.3 系统表空间与独立表空间怎么选择</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2%E6%95%B0%E6%8D%AE%E5%AD%97%E5%85%B8%EF%BC%88InnoDB-Data-Dictionary%EF%BC%89"><span class="nav-number">3.2.</span> <span class="nav-text">3.2数据字典（InnoDB Data Dictionary）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-%E5%8F%8C%E5%86%99%E7%BC%93%E5%86%B2%E5%8C%BA%EF%BC%88Doublewrite-Buffer%EF%BC%89"><span class="nav-number">3.3.</span> <span class="nav-text">3.3 双写缓冲区（Doublewrite Buffer）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-4-%E9%87%8D%E5%81%9A%E6%97%A5%E5%BF%97%EF%BC%88Redo-Log%EF%BC%89"><span class="nav-number">3.4.</span> <span class="nav-text">3.4 重做日志（Redo Log）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-5-%E6%92%A4%E9%94%80%E6%97%A5%E5%BF%97%EF%BC%88Undo-Logs%EF%BC%89"><span class="nav-number">3.5.</span> <span class="nav-text">3.5 撤销日志（Undo Logs）</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="139"
+      src="/images/custom/avatar.jpg">
+  <p class="site-author-name" itemprop="name">139</p>
+  <div class="site-description" itemprop="description">一个普通的JAVA开发的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">54</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">38</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+  <div class="beian"><a href="https://beian.miit.gov.cn/" rel="noopener" target="_blank">浙ICP备2023004484号-1 </a>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">139</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

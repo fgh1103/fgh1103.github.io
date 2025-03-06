@@ -124,7 +124,7 @@
   </li>
         <li class="menu-item menu-item-tags">
 
-    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">34</span></a>
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">38</span></a>
 
   </li>
         <li class="menu-item menu-item-categories">
@@ -134,7 +134,7 @@
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">40</span></a>
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">54</span></a>
 
   </li>
       <li class="menu-item menu-item-search">
@@ -520,7 +520,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2024/05/03/%E5%8D%95%E4%BD%93%E5%BA%94%E7%94%A8%E5%92%8C%E5%BE%AE%E6%9C%8D%E5%8A%A1%E7%9A%84%E5%8C%BA%E5%88%AB/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/07/15/Change%20Buffer/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/custom/avatar.jpg">
@@ -534,7 +534,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2024/05/03/%E5%8D%95%E4%BD%93%E5%BA%94%E7%94%A8%E5%92%8C%E5%BE%AE%E6%9C%8D%E5%8A%A1%E7%9A%84%E5%8C%BA%E5%88%AB/" class="post-title-link" itemprop="url">分布式事务</a>
+            <a href="/2024/07/15/Change%20Buffer/" class="post-title-link" itemprop="url">Change buffer</a>
         </h2>
 
         <div class="post-meta">
@@ -544,14 +544,14 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2024-05-03 00:00:00" itemprop="dateCreated datePublished" datetime="2024-05-03T00:00:00+08:00">2024-05-03</time>
+              <time title="创建时间：2024-07-15 00:00:00" itemprop="dateCreated datePublished" datetime="2024-07-15T00:00:00+08:00">2024-07-15</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-06 15:12:31" itemprop="dateModified" datetime="2025-03-06T15:12:31+08:00">2025-03-06</time>
+                <time title="修改时间：2025-03-06 17:51:57" itemprop="dateModified" datetime="2025-03-06T17:51:57+08:00">2025-03-06</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -559,7 +559,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" itemprop="url" rel="index"><span itemprop="name">微服务</span></a>
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
                 </span>
             </span>
 
@@ -574,58 +574,12 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <table>
-<thead>
-<tr>
-<th>类型</th>
-<th>单体</th>
-<th>微服务</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>部署速度</td>
-<td>慢</td>
-<td>快</td>
-</tr>
-<tr>
-<td>扩展能力</td>
-<td>低</td>
-<td>高</td>
-</tr>
-<tr>
-<td>复用能力</td>
-<td>低</td>
-<td>高</td>
-</tr>
-<tr>
-<td>复杂度</td>
-<td>高</td>
-<td>低</td>
-</tr>
-<tr>
-<td>耦合度</td>
-<td>高</td>
-<td>低</td>
-</tr>
-<tr>
-<td>调试</td>
-<td>容易</td>
-<td>困难</td>
-</tr>
-<tr>
-<td>问题排查</td>
-<td>容易</td>
-<td>困难</td>
-</tr>
-<tr>
-<td>性能</td>
-<td>高</td>
-<td>差</td>
-</tr>
-</tbody></table>
+          <p><font style="color:black;">在之前的文章</font><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s?__biz=MzIxMDU5OTU1Mw==&mid=2247485666&idx=1&sn=dc06d531d29d8916f53954be63710f9d&scene=21#wechat_redirect">《InnoDB的存储结构》</a><font style="color:black;">介绍的InnoDB的存储结构的组成中，我们知道Change Buffer也是用InnoDB内存结构的组成部分。</font></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717731138693-8900ff09-52fa-4a9f-99b1-bd7fa82c5e18.webp"></p>
+<p><font style="color:black;">Change Buffer主要是为了在写入是减少磁盘IO而存在的，</font></p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2024/05/03/%E5%8D%95%E4%BD%93%E5%BA%94%E7%94%A8%E5%92%8C%E5%BE%AE%E6%9C%8D%E5%8A%A1%E7%9A%84%E5%8C%BA%E5%88%AB/#more" rel="contents">
+              <a class="btn" href="/2024/07/15/Change%20Buffer/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -649,7 +603,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2024/05/01/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/07/15/6%E5%A4%A7%E6%97%A5%E5%BF%97%E4%BB%8B%E7%BB%8D/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/custom/avatar.jpg">
@@ -663,7 +617,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2024/05/01/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/" class="post-title-link" itemprop="url">分布式事务</a>
+            <a href="/2024/07/15/6%E5%A4%A7%E6%97%A5%E5%BF%97%E4%BB%8B%E7%BB%8D/" class="post-title-link" itemprop="url">6大日志介绍</a>
         </h2>
 
         <div class="post-meta">
@@ -673,14 +627,14 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2024-05-01 00:00:00" itemprop="dateCreated datePublished" datetime="2024-05-01T00:00:00+08:00">2024-05-01</time>
+              <time title="创建时间：2024-07-15 00:00:00" itemprop="dateCreated datePublished" datetime="2024-07-15T00:00:00+08:00">2024-07-15</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-06 15:34:20" itemprop="dateModified" datetime="2025-03-06T15:34:20+08:00">2025-03-06</time>
+                <time title="修改时间：2025-03-06 17:51:04" itemprop="dateModified" datetime="2025-03-06T17:51:04+08:00">2025-03-06</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -688,7 +642,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">分布式</span></a>
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
                 </span>
             </span>
 
@@ -703,18 +657,98 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h2 id="CAP理论"><a href="#CAP理论" class="headerlink" title="CAP理论"></a>CAP理论</h2><p><font style="color:rgb(77, 77, 77);">1998年，加州大学的计算机科学家 Eric Brewer 提出，分布式系统有三个指标。</font></p>
-<p>:::info</p>
-<ul>
-<li><font style="color:rgba(0, 0, 0, 0.5);">Consistency（一致性）</font></li>
-<li><font style="color:rgba(0, 0, 0, 0.5);">Availability（可用性）</font></li>
-<li><font style="color:rgba(0, 0, 0, 0.5);">Partition tolerance （分区容错性）</font></li>
+          <h2 id="物理日志和逻辑日志"><a href="#物理日志和逻辑日志" class="headerlink" title="物理日志和逻辑日志"></a>物理日志和逻辑日志</h2><p><font style="color:rgb(0, 0, 0);">日志一般分为逻辑日志与物理日志两类</font></p>
+<p><strong><font style="color:rgb(145, 109, 213);">「逻辑日志」</font></strong><font style="color:rgb(1, 1, 1);">：即执行过的事务中的sql语句，执行的sql语句（增删改）</font><strong><font style="color:rgb(145, 109, 213);">「反向」</font></strong><font style="color:rgb(1, 1, 1);">的信息</font></p>
+<p><strong><font style="color:rgb(145, 109, 213);">「物理日志」</font></strong><font style="color:rgb(1, 1, 1);">：</font><strong><font style="color:rgb(145, 109, 213);">mysql</font></strong><font style="color:rgb(1, 1, 1);"> 数据最终是保存在数据页中的，物理日志记录的就是数据页变更 </font></p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2024/07/15/6%E5%A4%A7%E6%97%A5%E5%BF%97%E4%BB%8B%E7%BB%8D/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/07/15/Buffer%20Pool/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2024/07/15/Buffer%20Pool/" class="post-title-link" itemprop="url">buffer pool</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-07-15 00:00:00" itemprop="dateCreated datePublished" datetime="2024-07-15T00:00:00+08:00">2024-07-15</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-06 17:51:25" itemprop="dateModified" datetime="2025-03-06T17:51:25+08:00">2025-03-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <ul>
+<li><font style="color:rgb(1, 1, 1);">在应用系统中，我们为加速数据访问，会把高频的数据放在</font><strong><font style="color:rgb(145, 109, 213);">「缓存」</font></strong><font style="color:rgb(1, 1, 1);">(Redis、MongoDB)里，减轻数据库的压力。</font></li>
+<li><font style="color:rgb(1, 1, 1);">在操作系统中，为了减少磁盘IO，引入了</font><strong><font style="color:rgb(145, 109, 213);">「缓冲池」</font></strong><font style="color:rgb(1, 1, 1);">(buffer pool)机制。</font></li>
+<li><font style="color:rgb(1, 1, 1);">MySQL作为一个存储系统，为提高性能，减少磁盘IO，同样具有</font><strong><font style="color:rgb(145, 109, 213);">「缓冲池」</font></strong><font style="color:rgb(1, 1, 1);">(buffer pool)机制。</font></li>
 </ul>
-<p>:::</p>
-<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1727676127141-2d6e2681-9b7a-40cc-a38f-71676129af12.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717656410928-52fce218-aa63-4b49-b4d5-45e9ad4d7248.webp"></p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2024/05/01/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/#more" rel="contents">
+              <a class="btn" href="/2024/07/15/Buffer%20Pool/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -738,7 +772,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2024/04/11/%E5%88%86%E5%B8%83%E5%BC%8FID/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/07/15/InnoDB%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B%E7%9A%84%E7%BB%84%E6%88%90/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/custom/avatar.jpg">
@@ -752,7 +786,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2024/04/11/%E5%88%86%E5%B8%83%E5%BC%8FID/" class="post-title-link" itemprop="url">分布式ID总结</a>
+            <a href="/2024/07/15/InnoDB%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B%E7%9A%84%E7%BB%84%E6%88%90/" class="post-title-link" itemprop="url">InnoDB线程模型的组成</a>
         </h2>
 
         <div class="post-meta">
@@ -762,14 +796,14 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2024-04-11 00:00:00" itemprop="dateCreated datePublished" datetime="2024-04-11T00:00:00+08:00">2024-04-11</time>
+              <time title="创建时间：2024-07-15 00:00:00" itemprop="dateCreated datePublished" datetime="2024-07-15T00:00:00+08:00">2024-07-15</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-05 17:46:18" itemprop="dateModified" datetime="2025-03-05T17:46:18+08:00">2025-03-05</time>
+                <time title="修改时间：2025-03-06 17:53:09" itemprop="dateModified" datetime="2025-03-06T17:53:09+08:00">2025-03-06</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -777,7 +811,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">分布式</span></a>
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
                 </span>
             </span>
 
@@ -792,10 +826,11 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h2 id="分布式系统中，我们经常需要对数据、消息等进行唯一标识，这个唯一标识就是分布式-ID，那么我们如何设计它呢？本文将详细讲述分布式-ID-及其生成方案。"><a href="#分布式系统中，我们经常需要对数据、消息等进行唯一标识，这个唯一标识就是分布式-ID，那么我们如何设计它呢？本文将详细讲述分布式-ID-及其生成方案。" class="headerlink" title="分布式系统中，我们经常需要对数据、消息等进行唯一标识，这个唯一标识就是分布式 ID，那么我们如何设计它呢？本文将详细讲述分布式 ID 及其生成方案。"></a>分布式系统中，我们经常需要对数据、消息等进行唯一标识，这个唯一标识就是分布式 ID，那么我们如何设计它呢？本文将详细讲述分布式 ID 及其生成方案。</h2><h1 id="为什么需要分布式-ID"><a href="#为什么需要分布式-ID" class="headerlink" title="为什么需要分布式 ID"></a>为什么需要分布式 ID</h1><p>目前大部分的系统都已是分布式系统，所以在这种场景的业务开发中，经常会需要唯一 ID 对数据进行标识，比如用户身份标识、消息标识等等。</p>
+          <p><font style="color:black;">在Innodb存储引擎中，后台线程的主要作用是</font><strong><font style="color:rgb(145, 109, 213);">「负责刷新内存池中的数据，保证缓冲池中的内存缓存的是最近的数据」</font></strong><font style="color:black;">。此外它会将已经修改的数据文件刷新到磁盘文件中，保证在发生异常的情况下，Innodb能够恢复到正常的运行状态。</font></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717641606756-d474dbda-3cd1-4bc3-b52f-b39a3a81999e.webp"></p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2024/04/11/%E5%88%86%E5%B8%83%E5%BC%8FID/#more" rel="contents">
+              <a class="btn" href="/2024/07/15/InnoDB%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B%E7%9A%84%E7%BB%84%E6%88%90/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -819,7 +854,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2024/03/28/%E4%BD%8E%E4%BE%B5%E5%85%A5%E7%9A%84%E7%81%B0%E5%BA%A6%E5%B9%B3%E5%8F%B0%E7%9A%84%E6%9E%84%E5%BB%BA/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/07/15/InnoDB%E7%9A%84%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/custom/avatar.jpg">
@@ -833,7 +868,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2024/03/28/%E4%BD%8E%E4%BE%B5%E5%85%A5%E7%9A%84%E7%81%B0%E5%BA%A6%E5%B9%B3%E5%8F%B0%E7%9A%84%E6%9E%84%E5%BB%BA/" class="post-title-link" itemprop="url">springcloud项目使用nacos</a>
+            <a href="/2024/07/15/InnoDB%E7%9A%84%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84/" class="post-title-link" itemprop="url">InnoDB的存储结构</a>
         </h2>
 
         <div class="post-meta">
@@ -843,14 +878,14 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2024-03-28 00:00:00" itemprop="dateCreated datePublished" datetime="2024-03-28T00:00:00+08:00">2024-03-28</time>
+              <time title="创建时间：2024-07-15 00:00:00" itemprop="dateCreated datePublished" datetime="2024-07-15T00:00:00+08:00">2024-07-15</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-05 17:46:21" itemprop="dateModified" datetime="2025-03-05T17:46:21+08:00">2025-03-05</time>
+                <time title="修改时间：2025-03-06 17:52:38" itemprop="dateModified" datetime="2025-03-06T17:52:38+08:00">2025-03-06</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -858,7 +893,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E7%81%B0%E5%BA%A6%E5%B9%B3%E5%8F%B0/" itemprop="url" rel="index"><span itemprop="name">灰度平台</span></a>
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
                 </span>
             </span>
 
@@ -873,11 +908,13 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h3 id="设计简介："><a href="#设计简介：" class="headerlink" title="设计简介："></a>设计简介：</h3><p>灰度平台配置的主键是以域名来做主键配置，以域名来关联规则，依托这些规则来判断哪些哪些请求需要走灰度</p>
-<p><img src="https://cdn.fbbizyy.com/yuque/0/2023/jpeg/25873401/1701237832373-b55015c3-0ea5-468c-bb8f-f849cbc5daba.jpeg" alt="画板"></p>
+          <p><strong><font style="color:rgb(145, 109, 213);">「MySQL存储引擎最大的特点就是【插件化】，可以根据自己的需求使用不同的存储引擎，innodb存储引擎支持行级锁以及事务特性，也是多种场合使用较多的存储引擎。」</font></strong></p>
+<p><font style="color:black;background-color:rgb(244, 238, 255);">当官方的存储引擎不足以满足时，我们通过抽象的API接口实现自己的存储引擎。</font></p>
+<p><font style="color:black;background-color:rgb(244, 238, 255);">抽象存储引擎API接口是通过抽象类handler来实现，handler类提供诸如打开&#x2F;关闭table、扫表、查询Key数据、写记录、删除记录等基础操作方法。</font></p>
+<p><font style="color:black;background-color:rgb(244, 238, 255);">每一个存储引擎通过继承handler类，实现以上提到的方法，在方法里面实现对底层存储引擎的读写接口的转调。</font></p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2024/03/28/%E4%BD%8E%E4%BE%B5%E5%85%A5%E7%9A%84%E7%81%B0%E5%BA%A6%E5%B9%B3%E5%8F%B0%E7%9A%84%E6%9E%84%E5%BB%BA/#more" rel="contents">
+              <a class="btn" href="/2024/07/15/InnoDB%E7%9A%84%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -901,7 +938,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2024/03/27/springcloud%E9%A1%B9%E7%9B%AE%E4%BD%BF%E7%94%A8nacos/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/07/15/InnoDB%E6%95%B0%E6%8D%AE%E6%96%87%E4%BB%B6/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/custom/avatar.jpg">
@@ -915,7 +952,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2024/03/27/springcloud%E9%A1%B9%E7%9B%AE%E4%BD%BF%E7%94%A8nacos/" class="post-title-link" itemprop="url">springcloud项目使用nacos</a>
+            <a href="/2024/07/15/InnoDB%E6%95%B0%E6%8D%AE%E6%96%87%E4%BB%B6/" class="post-title-link" itemprop="url">InnoDB数据文件</a>
         </h2>
 
         <div class="post-meta">
@@ -925,14 +962,14 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2024-03-27 00:00:00" itemprop="dateCreated datePublished" datetime="2024-03-27T00:00:00+08:00">2024-03-27</time>
+              <time title="创建时间：2024-07-15 00:00:00" itemprop="dateCreated datePublished" datetime="2024-07-15T00:00:00+08:00">2024-07-15</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-05 17:46:10" itemprop="dateModified" datetime="2025-03-05T17:46:10+08:00">2025-03-05</time>
+                <time title="修改时间：2025-03-06 17:53:41" itemprop="dateModified" datetime="2025-03-06T17:53:41+08:00">2025-03-06</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -940,7 +977,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" itemprop="url" rel="index"><span itemprop="name">微服务</span></a>
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
                 </span>
             </span>
 
@@ -955,92 +992,33 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="参考资料："><a href="#参考资料：" class="headerlink" title="参考资料："></a>参考资料：</h1><h2 id="Nacos-融合-Spring-Cloud："><a href="#Nacos-融合-Spring-Cloud：" class="headerlink" title="Nacos 融合 Spring Cloud："></a><font style="color:rgb(36, 41, 46);">Nacos 融合 Spring Cloud：</font></h2><p><a target="_blank" rel="noopener" href="https://nacos.io/zh-cn/docs/v2/ecology/use-nacos-with-spring-cloud.html">https://nacos.io/zh-cn/docs/v2/ecology/use-nacos-with-spring-cloud.html</a></p>
+          <h2 id="一、数据文件的组成"><a href="#一、数据文件的组成" class="headerlink" title="一、数据文件的组成"></a><font style="color:rgb(89, 89, 89);">一、数据文件的组成</font></h2><p><strong><font style="color:rgb(71, 193, 168);">innodb数据逻辑存储形式为表空间,而每一个独立表空间都会有一个.ibd数据文件</font></strong><font style="color:rgb(89, 89, 89);">,ibd文件从大到小组成：</font></p>
+<p><font style="color:rgb(89, 89, 89);">一个ibd数据文件–&gt;Segment（段）–&gt;Extent（区）–&gt;Page（页）–&gt;Row（行）</font><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717641653671-10c7d3b2-4693-4b4f-91a1-aa161d781eec.webp"></p>
+<ul>
+<li><strong><font style="color:rgb(71, 193, 168);">表空间(Tablesapce)</font></strong></li>
+</ul>
+<p><strong><font style="color:rgb(71, 193, 168);">表空间，用于存储多个ibd数据文件，用于存储表的记录和索引，一个文件包含多个段。</font></strong></p>
+<ul>
+<li><strong><font style="color:rgb(71, 193, 168);">段(Segment)</font></strong></li>
+</ul>
+<p><strong><font style="color:rgb(71, 193, 168);">段由数据段、索引段、回滚段组成，innodb存储引擎索引与数据共同存储，数据段即是B+树叶节点，索引段则存储非叶节点</font>****<font style="color:rgb(89, 89, 89);">。</font></strong></p>
+<ul>
+<li><strong><font style="color:rgb(71, 193, 168);">区(Extent)</font></strong></li>
+</ul>
+<p><strong><font style="color:rgb(71, 193, 168);">区则是由连续页组成，每个区的大小为1M，一个区中一共有64个连续的页</font>****<font style="color:rgb(89, 89, 89);">。</font></strong></p>
+<p><strong><font style="color:rgb(71, 193, 168);">页(Page)</font></strong></p>
+<p><strong><font style="color:rgb(71, 193, 168);">页是innodb存储引擎磁盘管理的最小单位，页的大小为16KB，即每次数据的读取与写入都是以页为单位</font>****<font style="color:rgb(89, 89, 89);">。</font></strong></p>
+<ul>
+<li><strong><font style="color:rgb(85, 85, 85);">“</font></strong></li>
+</ul>
+<p><strong><font style="color:black;">包含很多种页类型，比如数据页，undo页，系统页，事务数据页，大的BLOB对象页</font></strong></p>
+<ul>
+<li><strong><font style="color:rgb(71, 193, 168);">行(Row)</font></strong></li>
+</ul>
+<p><strong><font style="color:rgb(71, 193, 168);">行包含记录的字段值，事务ID（Trx id）、滚动指针（Roll pointer）、字段指针（Field pointers）等信息。</font></strong><img src="https://cdn.fbbizyy.com/yuque/0/2024/gif/25873401/1717641653706-70fed344-a55d-44b8-8325-2540b65a9103.gif"></p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2024/03/27/springcloud%E9%A1%B9%E7%9B%AE%E4%BD%BF%E7%94%A8nacos/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2024/03/26/springboot%E9%A1%B9%E7%9B%AE%E4%B8%AD%E5%BC%95%E7%94%A8SpringCloudGateway/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/custom/avatar.jpg">
-      <meta itemprop="name" content="139">
-      <meta itemprop="description" content="一个普通的JAVA开发的博客">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="进学阁">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2024/03/26/springboot%E9%A1%B9%E7%9B%AE%E4%B8%AD%E5%BC%95%E7%94%A8SpringCloudGateway/" class="post-title-link" itemprop="url">springboot项目中引用SpringCloudGateway</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2024-03-26 00:00:00" itemprop="dateCreated datePublished" datetime="2024-03-26T00:00:00+08:00">2024-03-26</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-05 17:46:05" itemprop="dateModified" datetime="2025-03-05T17:46:05+08:00">2025-03-05</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" itemprop="url" rel="index"><span itemprop="name">微服务</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="什么是网关"><a href="#什么是网关" class="headerlink" title="什么是网关"></a>什么是网关</h1><p>首先我们打开官网可以看到如下的描述：</p>
-<p><img src="https://cdn.fbbizyy.com/yuque/0/2023/png/25873401/1672730319068-d939400c-0dc9-466e-ae30-1cff4d5c6783.png"></p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2024/03/26/springboot%E9%A1%B9%E7%9B%AE%E4%B8%AD%E5%BC%95%E7%94%A8SpringCloudGateway/#more" rel="contents">
+              <a class="btn" href="/2024/07/15/InnoDB%E6%95%B0%E6%8D%AE%E6%96%87%E4%BB%B6/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -1063,7 +1041,7 @@
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/3/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
+    <a class="extend prev" rel="prev" href="/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><span class="space">&hellip;</span><a class="page-number" href="/page/6/">6</a><a class="extend next" rel="next" href="/page/3/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
   </nav>
 
 
@@ -1131,7 +1109,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">40</span>
+          <span class="site-state-item-count">54</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1144,7 +1122,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">34</span>
+        <span class="site-state-item-count">38</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>

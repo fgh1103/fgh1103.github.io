@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="物理日志和逻辑日志日志一般分为逻辑日志与物理日志两类 「逻辑日志」：即执行过的事务中的sql语句，执行的sql语句（增删改）「反向」的信息 「物理日志」：mysql 数据最终是保存在数据页中的，物理日志记录的就是数据页变更">
+<meta property="og:type" content="article">
+<meta property="og:title" content="6大日志介绍">
+<meta property="og:url" content="http://example.com/2024/07/15/6%E5%A4%A7%E6%97%A5%E5%BF%97%E4%BB%8B%E7%BB%8D/index.html">
+<meta property="og:site_name" content="进学阁">
+<meta property="og:description" content="物理日志和逻辑日志日志一般分为逻辑日志与物理日志两类 「逻辑日志」：即执行过的事务中的sql语句，执行的sql语句（增删改）「反向」的信息 「物理日志」：mysql 数据最终是保存在数据页中的，物理日志记录的就是数据页变更">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717557424972-957b86ed-fd92-421b-84f8-62318c1ae4c4.webp">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717557455008-e48cb91c-723c-4073-b8b7-bc70ec5a1df7.webp">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717557804160-e7ffc4f2-e064-4204-bcdb-340fa33eb5ce.webp">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1717571952239-697cac80-69f0-401a-9c26-cc04e839d18c.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717572150360-39c5e28d-93c3-43ef-bdd8-2e794566123e.webp">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717572150361-d4b542ce-dd94-4252-b1ec-1c2503940d50.webp">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717572177159-fcac7c69-f05d-4470-bcc7-7dc09fde4b6e.webp">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717575120869-055b093a-cc5e-4a3b-b3f7-90ac90fac7f5.webp">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717575254013-180b3541-a69b-4c87-aa8e-965c6121a98e.webp">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717575395829-a665fba8-286b-4a4f-be0a-378f3d89c616.webp">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717575395829-0dfab655-3400-48f6-b7de-b2a5deff681c.webp">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717575429450-d168858b-936d-47b2-b83e-42689aca17be.webp">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717575453864-636fa078-ba3e-4f0c-a829-398c26b3f5e4.webp">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717575499651-60f7355b-2b72-4929-9d8d-b553a2d424f1.webp">
+<meta property="article:published_time" content="2024-07-14T16:00:00.000Z">
+<meta property="article:modified_time" content="2025-03-06T09:51:04.371Z">
+<meta property="article:author" content="139">
+<meta property="article:tag" content="mysql">
+<meta property="article:tag" content="日志">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717557424972-957b86ed-fd92-421b-84f8-62318c1ae4c4.webp">
+
+<link rel="canonical" href="http://example.com/2024/07/15/6%E5%A4%A7%E6%97%A5%E5%BF%97%E4%BB%8B%E7%BB%8D/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>6大日志介绍 | 进学阁</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">进学阁</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">业精于勤荒于嬉，行成于思毁于随</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">38</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">8</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">54</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/07/15/6%E5%A4%A7%E6%97%A5%E5%BF%97%E4%BB%8B%E7%BB%8D/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          6大日志介绍
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-07-15 00:00:00" itemprop="dateCreated datePublished" datetime="2024-07-15T00:00:00+08:00">2024-07-15</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-06 17:51:04" itemprop="dateModified" datetime="2025-03-06T17:51:04+08:00">2025-03-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="物理日志和逻辑日志"><a href="#物理日志和逻辑日志" class="headerlink" title="物理日志和逻辑日志"></a>物理日志和逻辑日志</h2><p><font style="color:rgb(0, 0, 0);">日志一般分为逻辑日志与物理日志两类</font></p>
+<p><strong><font style="color:rgb(145, 109, 213);">「逻辑日志」</font></strong><font style="color:rgb(1, 1, 1);">：即执行过的事务中的sql语句，执行的sql语句（增删改）</font><strong><font style="color:rgb(145, 109, 213);">「反向」</font></strong><font style="color:rgb(1, 1, 1);">的信息</font></p>
+<p><strong><font style="color:rgb(145, 109, 213);">「物理日志」</font></strong><font style="color:rgb(1, 1, 1);">：</font><strong><font style="color:rgb(145, 109, 213);">mysql</font></strong><font style="color:rgb(1, 1, 1);"> 数据最终是保存在数据页中的，物理日志记录的就是数据页变更 </font></p>
+<span id="more"></span>
+<p><strong><font style="color:rgb(145, 109, 213);">「</font><strong><strong><font style="color:rgb(145, 109, 213);">mysql</font></strong></strong><font style="color:rgb(145, 109, 213);">数据库中日志是重要组成部分，记录着数据库运行期间各种状态信息」</font></strong><font style="color:black;">。主要有6类：</font></p>
+<ul>
+<li><strong><font style="color:rgb(1, 1, 1);">二进制日志</font></strong></li>
+<li><strong><font style="color:rgb(1, 1, 1);">重做日志</font></strong></li>
+<li><strong><font style="color:rgb(1, 1, 1);">撤销日志</font></strong></li>
+<li><strong><font style="color:rgb(1, 1, 1);">错误日志</font></strong></li>
+<li><strong><font style="color:rgb(1, 1, 1);">查询日志</font></strong></li>
+<li><strong><font style="color:rgb(1, 1, 1);">中继日志</font></strong></li>
+</ul>
+<p><strong><font style="color:rgb(145, 109, 213);">「而我们一般比较关注的是二进制日志( binlog )和事务日志(包括重做日志redo log 和撤销日志 undo log )」</font></strong><font style="color:black;">。</font></p>
+<h3 id="物理日志"><a href="#物理日志" class="headerlink" title="物理日志"></a><font style="color:rgb(145, 109, 213);">物理日志</font></h3><h4 id="重做日志（Redo-Log）"><a href="#重做日志（Redo-Log）" class="headerlink" title="重做日志（Redo Log）"></a><font style="color:black;">重做日志（Redo Log）</font></h4><p><strong><font style="color:rgb(145, 109, 213);">「重做日志（Redo Log）是InnoDB存储引擎所特有的日志」</font></strong><font style="color:black;">。</font></p>
+<h5 id="Redo-log基本概念"><a href="#Redo-log基本概念" class="headerlink" title="Redo log基本概念"></a><font style="color:black;">Redo log基本概念</font></h5><ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「重做日志是一种基于磁盘的数据结构，用于在崩溃恢复期间修正不完整事务写入的数据」</font></strong><font style="color:black;">。</font></li>
+<li><font style="color:black;">MySQL以循环方式写入重做日志文件，记录InnoDB中所有对Buffer Pool修改的日志。</font></li>
+</ul>
+<p>:::tips<br><font style="color:rgb(0, 0, 0);background-color:rgb(244, 238, 255);">当出现实例故障，导致数据未能更新到数据文件，则数据库重启时须redo，重新把数据更新到数据文件。读写事务在执行的过程中，都会不断的产生redo log。默认情况下，重做日志在磁盘上由两个名为ib_logfile0和ib_logfile1的文件物理表示。</font></p>
+<p>:::</p>
+<p><strong><font style="color:rgb(145, 109, 213);">redo log</font></strong><font style="color:black;"> </font><font style="color:black;">包括两部分</font></p>
+<ul>
+<li><font style="color:rgb(1, 1, 1);">一个是内存中的日志缓冲(</font><font style="color:rgb(1, 1, 1);"> </font><strong><font style="color:rgb(145, 109, 213);">redo log buffer</font></strong><font style="color:rgb(1, 1, 1);"> </font><font style="color:rgb(1, 1, 1);">)，临时性</font></li>
+<li><font style="color:rgb(1, 1, 1);">一个是磁盘上的日志文件( </font><strong><font style="color:rgb(145, 109, 213);">redo log file</font></strong><font style="color:rgb(1, 1, 1);">)，永久性。</font></li>
+</ul>
+<h5 id="Redo-Log解决了什么问题"><a href="#Redo-Log解决了什么问题" class="headerlink" title="Redo Log解决了什么问题"></a><font style="color:rgb(1, 1, 1);">Redo Log解决了什么问题</font></h5><p><strong><font style="color:rgb(145, 109, 213);">「InnoDB作为MySQL的存储引擎，数据是存放在磁盘中的，如果每次读写数据都需要磁盘I&#x2F;O，效率会很低。」</font></strong></p>
+<p><font style="color:black;">为提高读写效率，InnoDB添加了缓存池（Buffer Pool）作为访问数据库的缓冲，其包含了磁盘中部分数据页的映射。</font></p>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「当从数据库读取数据时，会首先从Buffer Pool中读取，如果Buffer Pool中没有，则需要从磁盘中读取然后放入 Buffer Pool；」</font></strong></li>
+<li><strong><font style="color:rgb(145, 109, 213);">「当向数据库写入数据时，会首先写入Buffer Pool，Buffer Pool中修改的数据会定期刷新到磁盘中（即：刷脏）」</font></strong><font style="color:rgb(1, 1, 1);">。</font></li>
+</ul>
+<p><em><font style="color:rgb(145, 109, 213);">Buffer Pool的使用大大提高了读写数据的效率，但是也带了新的问题：如果MySQL宕机，而此时Buffer Pool中修改的数据还没有刷新到磁盘，就会导致数据的丢失，事务的持久性无法保证</font></em><font style="color:rgb(0, 0, 0);">。而Redo Log 解决了这个问题。</font></p>
+<h5 id="为什么需要Redo-log"><a href="#为什么需要Redo-log" class="headerlink" title="为什么需要Redo log"></a><font style="color:rgb(1, 1, 1);">为什么需要Redo log</font></h5><ul>
+<li><font style="color:black;">事务的四大特性ACID中有一个是</font><font style="color:black;"> </font><strong><font style="color:rgb(145, 109, 213);">「持久性」</font></strong></li>
+</ul>
+<p><strong><font style="color:rgb(145, 109, 213);">「只要事务提交成功，那么对数据库做的修改就被永久保存下来了，不可能因为任何原因再回到原来的状态」</font></strong><font style="color:black;"> </font><font style="color:black;">。</font></p>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「</font><strong><strong><font style="color:rgb(145, 109, 213);">mysql</font></strong></strong><font style="color:rgb(145, 109, 213);">是如何保证一致性」</font></strong></li>
+</ul>
+<p><font style="color:black;">最简单的做法是在每次事务提交的时候，将该事务涉及修改的数据页全部刷新到磁盘中。但是这么做会有性能瓶颈，主要体现在两个方面：</font></p>
+<ul>
+<li><font style="color:black;">因为</font><font style="color:black;"> </font><strong><font style="color:rgb(145, 109, 213);">Innodb</font></strong><font style="color:black;"> </font><font style="color:black;">是以</font><font style="color:black;"> </font><strong><font style="color:rgb(145, 109, 213);">页</font></strong><font style="color:black;"> </font><font style="color:black;">为单位进行磁盘交互的，而一个事务很可能只修改一个数据页里面的几个字节，这个时候将完整的数据页刷到磁盘的话，太浪费资源了！</font></li>
+<li><font style="color:black;">一个事务可能涉及修改多个数据页，并且这些数据页在物理上并不连续，使用随机I&#x2F;O写入性能太差！</font></li>
+</ul>
+<p><font style="color:black;">因此 </font><strong><font style="color:rgb(145, 109, 213);">mysql</font></strong><font style="color:black;"> 设计了 </font><strong><font style="color:rgb(145, 109, 213);">redo log</font></strong><font style="color:black;"> ， </font><strong><font style="color:rgb(145, 109, 213);">「redo log是物理日志，只记录事务对数据页做了哪些修改，而不是某一行或某几行修改成什么样，它用来恢复提交后的物理数据页(恢复数据页，且只能恢复到最后一次提交的位置)，相对而言文件更小并且是顺序IO」</font></strong><font style="color:black;">。</font></p>
+<h5 id="Redo-log效率为什么快"><a href="#Redo-log效率为什么快" class="headerlink" title="Redo log效率为什么快"></a><font style="color:rgb(1, 1, 1);">Redo log效率为什么快</font></h5><p><font style="color:black;">Redo Log 默认是在事务提交的时候将日志写入磁盘，为什么它比直接将 Buffer Pool中修改的数据写入磁盘要快呢？</font></p>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「磁盘刷脏操作是随机I&#x2F;O，因为每次修改的数据的位置都是随机的，但是写redo log是追加操作，顺序I&#x2F;O」</font></strong><font style="color:rgb(1, 1, 1);">。</font></li>
+<li><strong><font style="color:rgb(145, 109, 213);">「磁盘刷脏是以数据页为单位的（Page），MySQL默认页的大小是16KB，一个page上一个小修改都要整页写入；而 redo log中只包含真正修改的部分，不会有无效I&#x2F;O」</font></strong><font style="color:rgb(1, 1, 1);">。</font></li>
+</ul>
+<h5 id="Redo-log写磁盘的方式"><a href="#Redo-log写磁盘的方式" class="headerlink" title="Redo log写磁盘的方式"></a><font style="color:black;">Redo log写磁盘的方式</font></h5><p><strong><font style="color:rgb(145, 109, 213);">mysql</font></strong><font style="color:black;"> </font><font style="color:black;">每执行一条</font><font style="color:black;"> </font><strong><font style="color:rgb(145, 109, 213);">DML</font></strong><font style="color:black;"> </font><font style="color:black;">语句，先将记录写入</font><font style="color:black;"> </font><strong><font style="color:rgb(145, 109, 213);">redo log buffer</font></strong><font style="color:black;">，后续</font><strong><font style="color:rgb(145, 109, 213);">「某个时间点再一次性将多个操作记录写到</font><strong><strong><font style="color:rgb(145, 109, 213);"> </font></strong></strong><font style="color:rgb(145, 109, 213);">redo log file</font>****<font style="color:rgb(145, 109, 213);">」</font></strong><font style="color:black;">。这种</font><font style="color:black;"> </font><strong><font style="color:rgb(145, 109, 213);">「先写日志，再写磁盘」</font></strong><font style="color:black;"> </font><font style="color:black;">的技术就是</font><font style="color:black;"> </font><strong><font style="color:rgb(145, 109, 213);">「「预写式日志」」</font></strong><font style="color:black;">（</font><strong><font style="color:rgb(145, 109, 213);">Write-Ahead Logging</font></strong><font style="color:black;"> </font><font style="color:black;">，缩写 WAL）。</font></p>
+<p><strong><font style="color:rgb(145, 109, 213);">「在计算机操作系统中，用户空间(</font><strong><strong><font style="color:rgb(145, 109, 213);"> </font></strong></strong><font style="color:rgb(145, 109, 213);">user space</font><strong><strong><font style="color:rgb(145, 109, 213);"> </font></strong></strong><font style="color:rgb(145, 109, 213);">)下的缓冲区数据是无法直接写入磁盘的，中间必须经过操作系统内核空间(</font><strong><strong><font style="color:rgb(145, 109, 213);"> </font></strong></strong><font style="color:rgb(145, 109, 213);">kernel space</font><strong><strong><font style="color:rgb(145, 109, 213);"> </font></strong></strong><font style="color:rgb(145, 109, 213);">)的缓冲区(</font><strong><strong><font style="color:rgb(145, 109, 213);"> </font></strong></strong><font style="color:rgb(145, 109, 213);">OS Buffer</font><strong><strong><font style="color:rgb(145, 109, 213);"> </font></strong></strong><font style="color:rgb(145, 109, 213);">)」</font></strong><font style="color:black;">。因此，</font><font style="color:black;"> </font><strong><font style="color:rgb(145, 109, 213);">redo log buffer</font></strong><font style="color:black;"> </font><font style="color:black;">写入</font><font style="color:black;"> </font><strong><font style="color:rgb(145, 109, 213);">redo log file</font></strong><font style="color:black;"> </font><font style="color:black;">实际上是</font><strong><font style="color:rgb(145, 109, 213);">「先写入</font><strong><strong><font style="color:rgb(145, 109, 213);"> </font></strong></strong><font style="color:rgb(145, 109, 213);">OS Buffer</font><strong><strong><font style="color:rgb(145, 109, 213);"> </font></strong></strong><font style="color:rgb(145, 109, 213);">，然后再通过系统调用</font><strong><strong><font style="color:rgb(145, 109, 213);"> </font></strong></strong><font style="color:rgb(145, 109, 213);">fsync()</font><strong><strong><font style="color:rgb(145, 109, 213);"> </font></strong></strong><font style="color:rgb(145, 109, 213);">将其刷到</font><strong><strong><font style="color:rgb(145, 109, 213);"> </font></strong></strong><font style="color:rgb(145, 109, 213);">redo log file</font>****<font style="color:rgb(145, 109, 213);">中」</font></strong><font style="color:black;">。</font></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717557424972-957b86ed-fd92-421b-84f8-62318c1ae4c4.webp"></p>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「redo log file刷盘时机」</font></strong></li>
+</ul>
+<p><strong><font style="color:rgb(145, 109, 213);">「mysql 支持三种将 redo log buffer 写入 redo log file 的时机」</font></strong><font style="color:black;">，可以通过 </font><strong><font style="color:rgb(145, 109, 213);">innodb_flush_log_at_trx_commit</font></strong><font style="color:black;"> 参数配置：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; show variables like &#x27;%innodb_flush_log_at_trx_commit%&#x27;;</span><br><span class="line">+--------------------------------+-------+</span><br><span class="line">| Variable_name                  | Value |</span><br><span class="line">+--------------------------------+-------+</span><br><span class="line">| innodb_flush_log_at_trx_commit | 1     |</span><br><span class="line">+--------------------------------+-------+</span><br><span class="line">1 row in set, 1 warning (0.01 sec)</span><br></pre></td></tr></table></figure>
+
+<pre><code>- &lt;font style=&quot;color:rgb(1, 1, 1);&quot;&gt;速度较快，比0安全，只有在&lt;/font&gt;**&lt;font style=&quot;color:rgb(145, 109, 213);&quot;&gt;「操作系统崩溃或者系统断电」&lt;/font&gt;**&lt;font style=&quot;color:rgb(1, 1, 1);&quot;&gt;的情况下，上一秒钟所有事务数据才可能丢失。&lt;/font&gt;
+- &lt;font style=&quot;color:rgb(1, 1, 1);&quot;&gt;最安全，但也是最慢，即使mysql挂掉也不会丢失数据，但是IO频繁，性能下降。&lt;/font&gt;
+- &lt;font style=&quot;color:rgb(1, 1, 1);&quot;&gt;速度最快，不太安全，在mysql挂掉的时候，会丢失一秒钟的数据。&lt;/font&gt;
+- &lt;font style=&quot;color:black;&quot;&gt;当&lt;/font&gt;**&lt;font style=&quot;color:rgb(145, 109, 213);&quot;&gt;innodb_flush_log_at_trx_commit&lt;/font&gt;**&lt;font style=&quot;color:black;&quot;&gt; &lt;/font&gt;&lt;font style=&quot;color:black;&quot;&gt; = 0&lt;/font&gt;
+</code></pre>
+<p><font style="color:black;">【</font><strong><font style="color:rgb(145, 109, 213);">「延迟写」</font></strong><font style="color:black;">】：</font><strong><font style="color:rgb(145, 109, 213);">「提交事务时不会立即将数据</font><strong><strong><font style="color:rgb(145, 109, 213);">redo log buffer</font></strong></strong><font style="color:rgb(145, 109, 213);"> </font><strong><strong><font style="color:rgb(145, 109, 213);">写入到</font></strong></strong><font style="color:rgb(145, 109, 213);"> </font><strong><strong><font style="color:rgb(145, 109, 213);">OS Buffer</font></strong></strong><font style="color:rgb(145, 109, 213);"> </font><strong><strong><font style="color:rgb(145, 109, 213);">，而是通过 InnoDB 的主线程每秒写入</font></strong></strong><font style="color:rgb(145, 109, 213);"> </font><strong><strong><font style="color:rgb(145, 109, 213);">OS Buffer</font></strong></strong><font style="color:rgb(145, 109, 213);">并调用</font><strong><strong><font style="color:rgb(145, 109, 213);"> </font></strong></strong><font style="color:rgb(145, 109, 213);">fsync()</font><strong><strong><font style="color:rgb(145, 109, 213);"> </font></strong></strong><font style="color:rgb(145, 109, 213);">将其刷到</font><strong><strong><font style="color:rgb(145, 109, 213);"> </font></strong></strong><font style="color:rgb(145, 109, 213);">redo log file</font>****<font style="color:rgb(145, 109, 213);">中」</font></strong><font style="color:black;">。</font></p>
+<pre><code>- &lt;font style=&quot;color:black;&quot;&gt;当&lt;/font&gt;**&lt;font style=&quot;color:rgb(145, 109, 213);&quot;&gt;innodb_flush_log_at_trx_commit&lt;/font&gt;**&lt;font style=&quot;color:black;&quot;&gt; &lt;/font&gt;&lt;font style=&quot;color:black;&quot;&gt; = 1&lt;/font&gt;
+</code></pre>
+<p><font style="color:black;">【</font><strong><font style="color:rgb(145, 109, 213);">「实时写实时刷」</font></strong><font style="color:black;">】：</font><strong><font style="color:rgb(145, 109, 213);">「每次提交事务时都会将数据</font><strong><strong><font style="color:rgb(145, 109, 213);">redo log buffer</font></strong></strong><font style="color:rgb(145, 109, 213);"> </font><strong><strong><font style="color:rgb(145, 109, 213);">写入到</font></strong></strong><font style="color:rgb(145, 109, 213);"> </font><strong><strong><font style="color:rgb(145, 109, 213);">OS Buffer</font></strong></strong><font style="color:rgb(145, 109, 213);"> </font><strong><strong><font style="color:rgb(145, 109, 213);">并立即调用</font></strong></strong><font style="color:rgb(145, 109, 213);"> </font><strong><strong><font style="color:rgb(145, 109, 213);">fsync()</font></strong></strong><font style="color:rgb(145, 109, 213);"> </font><strong><strong><font style="color:rgb(145, 109, 213);">将其刷到</font></strong></strong><font style="color:rgb(145, 109, 213);"> </font><strong><strong><font style="color:rgb(145, 109, 213);">redo log file</font></strong></strong><font style="color:rgb(145, 109, 213);">中」</font></strong><font style="color:black;">。</font></p>
+<pre><code>- &lt;font style=&quot;color:black;&quot;&gt;当&lt;/font&gt;**&lt;font style=&quot;color:rgb(145, 109, 213);&quot;&gt;innodb_flush_log_at_trx_commit&lt;/font&gt;**&lt;font style=&quot;color:black;&quot;&gt; &lt;/font&gt;&lt;font style=&quot;color:black;&quot;&gt; = 2&lt;/font&gt;
+</code></pre>
+<p><font style="color:black;">【</font><strong><font style="color:rgb(145, 109, 213);">「实时写延迟刷」</font></strong><font style="color:black;">】：</font><strong><font style="color:rgb(145, 109, 213);">「每次提交事务时都会将数据</font><strong><strong><font style="color:rgb(145, 109, 213);">redo log buffer</font></strong></strong><font style="color:rgb(145, 109, 213);"> </font><strong><strong><font style="color:rgb(145, 109, 213);">写入到</font></strong></strong><font style="color:rgb(145, 109, 213);"> </font><strong><strong><font style="color:rgb(145, 109, 213);">OS Buffer</font></strong></strong><font style="color:rgb(145, 109, 213);"> </font><strong><strong><font style="color:rgb(145, 109, 213);"> 中，然后每间隔一秒调用</font></strong></strong><font style="color:rgb(145, 109, 213);"> </font><strong><strong><font style="color:rgb(145, 109, 213);">fsync()</font></strong></strong><font style="color:rgb(145, 109, 213);"> </font><strong><strong><font style="color:rgb(145, 109, 213);">将其刷到</font></strong></strong><font style="color:rgb(145, 109, 213);"> </font><strong><strong><font style="color:rgb(145, 109, 213);">redo log file</font></strong></strong><font style="color:rgb(145, 109, 213);">中」</font></strong></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717557455008-e48cb91c-723c-4073-b8b7-bc70ec5a1df7.webp"></p>
+<h5 id="Redo-log写入形式"><a href="#Redo-log写入形式" class="headerlink" title="Redo log写入形式"></a><font style="color:black;">Redo log写入形式</font></h5><p><strong><font style="color:rgb(145, 109, 213);">「在innodb中，既有</font><strong><strong><font style="color:rgb(145, 109, 213);">redo log</font></strong></strong><font style="color:rgb(145, 109, 213);"> </font><strong><strong><font style="color:rgb(145, 109, 213);">需要刷盘，还有</font></strong></strong><font style="color:rgb(145, 109, 213);"> </font><strong><strong><font style="color:rgb(145, 109, 213);">数据页</font></strong></strong><font style="color:rgb(145, 109, 213);"> </font><strong><strong><font style="color:rgb(145, 109, 213);">也需要刷盘，</font></strong></strong><font style="color:rgb(145, 109, 213);"> </font><strong><strong><font style="color:rgb(145, 109, 213);">redo log</font></strong></strong><font style="color:rgb(145, 109, 213);">存在的意义主要就是降低对</font><strong><strong><font style="color:rgb(145, 109, 213);"> </font></strong></strong><font style="color:rgb(145, 109, 213);">数据页</font><strong><strong><font style="color:rgb(145, 109, 213);"> </font></strong></strong><font style="color:rgb(145, 109, 213);">刷盘的要求」</font></strong><font style="color:black;"> </font><font style="color:black;"> 。</font></p>
+<p><strong><font style="color:rgb(145, 109, 213);">「</font><strong><strong><font style="color:rgb(145, 109, 213);">redo log</font></strong></strong><font style="color:rgb(145, 109, 213);"> </font><strong><strong><font style="color:rgb(145, 109, 213);">实际上记录数据页的变更，而这种变更记录是没必要全部保存，因此</font></strong></strong><font style="color:rgb(145, 109, 213);"> </font><strong><strong><font style="color:rgb(145, 109, 213);">redo log</font></strong></strong><font style="color:rgb(145, 109, 213);">实现上采用了【大小固定，循环写入】的方式，当写到结尾时，会回到开头循环写日志」</font></strong><font style="color:black;">。如下图：</font></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717557804160-e7ffc4f2-e064-4204-bcdb-340fa33eb5ce.webp"></p>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">write pos</font></strong><font style="color:black;"> </font><font style="color:black;">：表示</font><font style="color:black;"> </font><strong><font style="color:rgb(145, 109, 213);">redo log</font></strong><font style="color:black;"> </font><font style="color:black;">当前记录的</font><font style="color:black;"> </font><strong><font style="color:rgb(145, 109, 213);">LSN</font></strong><font style="color:black;"> </font><font style="color:black;">(逻辑序列号)位置</font></li>
+<li><strong><font style="color:rgb(145, 109, 213);">check point</font></strong><font style="color:black;"> </font><font style="color:black;">：表示</font><font style="color:black;"> </font><strong><font style="color:rgb(145, 109, 213);">「数据页更改记录」</font></strong><font style="color:black;"> </font><font style="color:black;">刷盘后对应</font><font style="color:black;"> </font><strong><font style="color:rgb(145, 109, 213);">redo log</font></strong><font style="color:black;"> </font><font style="color:black;">所处的</font><font style="color:black;"> </font><strong><font style="color:rgb(145, 109, 213);">LSN</font></strong><font style="color:black;">(逻辑序列号)位置。</font></li>
+</ul>
+<p><strong><font style="color:rgb(145, 109, 213);">write pos</font></strong><font style="color:black;"> </font><font style="color:black;">到</font><font style="color:black;"> </font><strong><font style="color:rgb(145, 109, 213);">check point</font></strong><font style="color:black;"> </font><font style="color:black;">之间的部分是</font><font style="color:black;"> </font><strong><font style="color:rgb(145, 109, 213);">redo log</font></strong><font style="color:black;"> </font><font style="color:black;">空着的部分，用于记录新的记录；</font></p>
+<p><strong><font style="color:rgb(145, 109, 213);">check point</font></strong><font style="color:black;"> </font><font style="color:black;">到</font><font style="color:black;"> </font><strong><font style="color:rgb(145, 109, 213);">write pos</font></strong><font style="color:black;"> </font><font style="color:black;">之间是</font><font style="color:black;"> </font><strong><font style="color:rgb(145, 109, 213);">redo log</font></strong><font style="color:black;"> </font><font style="color:black;">待落盘的数据页更改记录。</font></p>
+<p><font style="color:black;">当 </font><strong><font style="color:rgb(145, 109, 213);">write pos</font></strong><font style="color:black;">追上</font><strong><font style="color:rgb(145, 109, 213);">check point</font></strong><font style="color:black;"> 时，会先推动 </font><strong><font style="color:rgb(145, 109, 213);">check point</font></strong><font style="color:black;"> 向前移动，空出位置再记录新的日志。</font></p>
+<p>:::tips<br><font style="color:black;">启动</font><font style="color:black;"> </font><strong><font style="color:rgb(145, 109, 213);">innodb</font></strong><font style="color:black;"> </font><font style="color:black;">的时候，无论上次是正常关闭或异常关闭，都会进行恢复操作。</font></p>
+<p><font style="color:black;">重启</font><strong><font style="color:rgb(145, 109, 213);">innodb</font></strong><font style="color:black;"> </font><font style="color:black;">时，首先会检查磁盘中数据页的</font><font style="color:black;"> </font><strong><font style="color:rgb(145, 109, 213);">LSN</font></strong><font style="color:black;"> </font><font style="color:black;">，如果数据页的</font><strong><font style="color:rgb(145, 109, 213);">LSN</font></strong><font style="color:black;"> </font><font style="color:black;">小于日志中的</font><font style="color:black;"> </font><strong><font style="color:rgb(145, 109, 213);">LSN</font></strong><font style="color:black;"> </font><font style="color:black;">，则会从</font><font style="color:black;"> </font><strong><font style="color:rgb(145, 109, 213);">checkpoint</font></strong><font style="color:black;"> </font><font style="color:black;">开始恢复。</font></p>
+<p><font style="color:black;">如果在宕机前正处于</font><strong><font style="color:rgb(145, 109, 213);">check point</font></strong><font style="color:black;"> 的刷盘过程，且</font><strong><font style="color:rgb(145, 109, 213);">「数据页的刷盘进度超过了日志页的刷盘进度」</font></strong><font style="color:black;">，此时会出现数据页中记录的 </font><strong><font style="color:rgb(145, 109, 213);">LSN</font></strong><font style="color:black;"> 大于日志中的 </font><strong><font style="color:rgb(145, 109, 213);">LSN</font></strong><font style="color:black;">，这时超出日志进度的部分将不会重做，因为这本身就表示已经做过的事情，无需再重做。</font></p>
+<p>:::</p>
+<h5 id="Redo-Log和BinLog的比较"><a href="#Redo-Log和BinLog的比较" class="headerlink" title="Redo Log和BinLog的比较"></a><font style="color:rgb(1, 1, 1);">Redo Log和BinLog的比较</font></h5><p><font style="color:black;">redo log 主要用来。binlog是用来进行归档的。</font></p>
+<p><strong><font style="color:rgb(145, 109, 213);">「一个更新的sql先执行到redo log内为预提交状态，binlog写入，写入之后通知redo log改提交状态」</font></strong></p>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「作用不同」</font></strong><ul>
+<li><font style="color:black;">redo log是用于【崩溃恢复】的，保证MySQL宕机也不会影响持久性。</font></li>
+</ul>
+</li>
+</ul>
+<p><font style="color:black;background-color:rgb(244, 238, 255);">redo log 主要用来数据库宕机恢复数据的</font></p>
+<pre><code>- &lt;font style=&quot;color:black;&quot;&gt;binlog是【用于时间点恢复】的，保证服务器可以基于时间点恢复数据或者用于主从复制。&lt;/font&gt;
+</code></pre>
+<p><font style="color:black;background-color:rgb(244, 238, 255);">binlog是用来进行归档的</font></p>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「层次不同」</font></strong><ul>
+<li><font style="color:rgb(1, 1, 1);">redo log是InnoDB存储引擎实现的，innodb独享</font></li>
+<li><font style="color:rgb(1, 1, 1);">binlog是MySQL的服务器层实现的服务，全局引擎共享</font></li>
+</ul>
+</li>
+<li><strong><font style="color:rgb(145, 109, 213);">「内容不同」</font></strong><ul>
+<li><font style="color:black;">redo log是物理日志，内容基于磁盘的数据Page，</font><strong><font style="color:rgb(145, 109, 213);">「记录该数据页更新状态内容」</font></strong></li>
+</ul>
+</li>
+</ul>
+<p><font style="color:black;background-color:rgb(244, 238, 255);">比如：「将第6页、第8行、第7个位置改成aaaa」这种</font></p>
+<pre><code>- &lt;font style=&quot;color:black;&quot;&gt;bin log是逻辑日志，内容是二进制的，根据binlog＿format参数的不同，分为不同的模式，可能基于SQL 语句、基于数据本身、或者二者的混合，&lt;/font&gt;**&lt;font style=&quot;color:rgb(145, 109, 213);&quot;&gt;「记录更新过程」&lt;/font&gt;**&lt;font style=&quot;color:black;&quot;&gt;。&lt;/font&gt;
+</code></pre>
+<p><font style="color:black;background-color:rgb(244, 238, 255);">比如：insert into t values (null, 4, ‘2022-03-24’);  也跟bin log日志格式有关</font></p>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「写入时机不同」</font></strong><ul>
+<li><font style="color:rgb(1, 1, 1);">bin log是在事务提交完成后进行一次写入</font></li>
+<li><font style="color:rgb(1, 1, 1);">redo log的写入时机有三种（具体在上文中有介绍）</font></li>
+</ul>
+</li>
+<li><strong><font style="color:rgb(145, 109, 213);">「写入方式不同」</font></strong><ul>
+<li><font style="color:rgb(1, 1, 1);">binlog在写满或者重启之后，会生成新的binlog文件，旧的日志数据会一直保留。</font></li>
+<li><font style="color:rgb(1, 1, 1);">redo log是循环使用，会清理旧的日志数据。</font></li>
+</ul>
+</li>
+</ul>
+<h5 id="两阶段提交"><a href="#两阶段提交" class="headerlink" title="两阶段提交"></a>两阶段提交</h5><h6 id="为什么要两阶段提交"><a href="#为什么要两阶段提交" class="headerlink" title="为什么要两阶段提交"></a>为什么要两阶段提交</h6><p><font style="color:rgb(1, 1, 1);">首先我们要明确一点，redo log是innoDB下的日志记录，binlog是mysql下的二级制文件，他们都可以表示事务的提交状态，</font><font style="color:rgb(68, 68, 68);">而两阶段提交就是让这两个状态保持逻辑上的一致</font></p>
+<h6 id="两段提交的流程"><a href="#两段提交的流程" class="headerlink" title="两段提交的流程"></a><font style="color:rgb(68, 68, 68);">两段提交的流程</font></h6><p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1717571952239-697cac80-69f0-401a-9c26-cc04e839d18c.png"></p>
+<ol>
+<li>执行器先找引擎取 ID&#x3D;2 这一行。ID 是主键，引擎直接用树搜索找到这一行。如果 ID&#x3D;2 这一行所在的数据页本来就在内存中，就直接返回给执行器；否则，需要先从磁盘读入内存，然后再返回。</li>
+<li>执行器拿到引擎给的行数据，把这个值加上 1，比如原来是 N，现在就是 N+1，得到新的一行数据，再调用引擎接口写入这行新数据。</li>
+<li>引擎将这行新数据更新到内存中，同时将这个更新操作记录到 redo log 里面，此时 redo log 处于 prepare 状态。然后告知执行器执行完成了，随时可以提交事务。</li>
+<li>执行器生成这个操作的 binlog，并把 binlog 写入磁盘。</li>
+<li>执行器调用引擎的提交事务接口，引擎把刚刚写入的 redo log 改成提交（commit）状态，更新完成。</li>
+</ol>
+<h3 id="逻辑日志"><a href="#逻辑日志" class="headerlink" title="逻辑日志"></a><font style="color:rgb(145, 109, 213);">逻辑日志</font></h3><h4 id="二进制日志-binlog"><a href="#二进制日志-binlog" class="headerlink" title="二进制日志(binlog)"></a><font style="color:black;">二进制日志(binlog)</font></h4><h5 id="什么是binlog"><a href="#什么是binlog" class="headerlink" title="什么是binlog"></a><font style="color:black;">什么是binlog</font></h5><p><strong><font style="color:rgb(145, 109, 213);">「记录对MySQL数据库执行的更改操作，包括语句的发生时间、执行时长，主要用于数据库恢复和主从复制」</font></strong><font style="color:black;">。但不记录select、show等不修改数据库的SQL。</font></p>
+<p><strong><font style="color:rgb(145, 109, 213);">「</font><strong><strong><font style="color:rgb(145, 109, 213);">binlog</font></strong></strong><font style="color:rgb(145, 109, 213);">是逻辑日志，在</font><strong><strong><font style="color:rgb(145, 109, 213);"> </font></strong></strong><font style="color:rgb(145, 109, 213);">mysql Server</font><strong><strong><font style="color:rgb(145, 109, 213);"> </font></strong></strong><font style="color:rgb(145, 109, 213);">层进行记录，属于</font><strong><strong><font style="color:rgb(145, 109, 213);">mysql</font></strong></strong><font style="color:rgb(145, 109, 213);">全局日志，无论使用什么存储引擎都会记录</font><strong><strong><font style="color:rgb(145, 109, 213);"> </font></strong></strong><font style="color:rgb(145, 109, 213);">binlog</font><strong><strong><font style="color:rgb(145, 109, 213);"> </font></strong></strong><font style="color:rgb(145, 109, 213);">日志」</font></strong><font style="color:black;">。</font></p>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「binlog产生的时机」</font></strong></li>
+</ul>
+<p><strong><font style="color:rgb(145, 109, 213);">「事务提交的时候，一次性将事务中的sql语句（一个事物可能对应多个sql语句）按照一定的格式记录到binlog中」</font></strong><font style="color:black;">。</font></p>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「binlog记录方式」</font></strong></li>
+</ul>
+<p><strong><font style="color:rgb(145, 109, 213);">「</font><strong><strong><font style="color:rgb(145, 109, 213);">binlog</font></strong></strong><font style="color:rgb(145, 109, 213);"> </font>****<font style="color:rgb(145, 109, 213);">是通过追加的方式记录数据库执行的写操作(不包括读操作)信息，以二进制保存在磁盘中。」</font></strong></p>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「开启binlog」</font></strong></li>
+</ul>
+<p><font style="color:black;">在my.inf主配置文件中添加如下配置</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">#打开binlog日志 默认是OFF</span><br><span class="line">log_bin=ON</span><br><span class="line">#binlog日志的基本文件名，后面会追加标识来表示每一个文件 例如：mysql-bin.000094</span><br><span class="line">log_bin_basename=/var/lib/mysql/mysql-bin</span><br><span class="line">#指定的是binlog文件的索引文件  管理所有的binlog文件的目录 记录有多少个binlog文件等</span><br><span class="line">log_bin_index=/var/lib/mysql/mysql-bin.index</span><br><span class="line"></span><br><span class="line">#或者将以上三个配置合二为一</span><br><span class="line">log-bin=/var/lib/mysql/mysql-bin</span><br><span class="line">#mysql会根据这个配置自动设置log_bin为on状态，自动设置log_bin_index文件为指定文件名后跟.index</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717572150360-39c5e28d-93c3-43ef-bdd8-2e794566123e.webp"></p>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「binlog大小设置与过期时间」</font></strong></li>
+</ul>
+<p><strong><font style="color:rgb(145, 109, 213);">「</font><strong><strong><font style="color:rgb(145, 109, 213);">binlog</font></strong></strong><font style="color:rgb(145, 109, 213);"> </font>****<font style="color:rgb(145, 109, 213);">是通过追加的方式进行写入的，有两个参数需要控制binlog大小设置与过期时间」</font></strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">[mysqld]</span><br><span class="line">expire_logs_days = 7</span><br><span class="line">max_binlog_size = 104857600</span><br><span class="line"></span><br><span class="line">set global max_binlog_size=104857600;#100M</span><br><span class="line">show variables like &#x27;%max_binlog_size%&#x27;;</span><br><span class="line">show variables like &#x27;%expire_logs_days%&#x27;;</span><br><span class="line">expire_logs_days</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">set global max_binlog_size=104857600;#100M</span><br><span class="line">set global expire_logs_days = 7;</span><br><span class="line">show variables like &#x27;%max_binlog_size%&#x27;;</span><br><span class="line">show variables like &#x27;%expire_logs_days%&#x27;;</span><br></pre></td></tr></table></figure>
+
+<pre><code>- **&lt;font style=&quot;color:rgb(145, 109, 213);&quot;&gt;「查看配置」&lt;/font&gt;**
+</code></pre>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">show variables like &#x27;%max_binlog_size%&#x27;;</span><br><span class="line">show variables like &#x27;%expire_logs_days%&#x27;;</span><br></pre></td></tr></table></figure>
+
+<pre><code>- **&lt;font style=&quot;color:rgb(145, 109, 213);&quot;&gt;「命令配置」&lt;/font&gt;**
+</code></pre>
+<p><font style="color:black;">及时生效，重启失效，</font></p>
+<pre><code>- **&lt;font style=&quot;color:rgb(145, 109, 213);&quot;&gt;「max_binlog_size」&lt;/font&gt;**
+</code></pre>
+<p><strong><font style="color:rgb(145, 109, 213);">「</font><strong><strong><font style="color:rgb(145, 109, 213);">max_binlog_size</font></strong></strong><font style="color:rgb(145, 109, 213);"> </font><strong><strong><font style="color:rgb(145, 109, 213);">代表每个</font></strong></strong><font style="color:rgb(145, 109, 213);"> </font><strong><strong><font style="color:rgb(145, 109, 213);">binlog</font></strong></strong><font style="color:rgb(145, 109, 213);">文件的大小，当文件大小达到给定值之后，会生成新的文件来保存日志，默认值是1GB」</font></strong><font style="color:black;">。</font></p>
+<pre><code>- **&lt;font style=&quot;color:rgb(145, 109, 213);&quot;&gt;「expire_logs_days」&lt;/font&gt;**
+</code></pre>
+<p><strong><font style="color:rgb(145, 109, 213);">「mysql自动清除过期binlog日志的天数。默认值为0,表示没有自动删除」</font></strong><font style="color:black;">。</font></p>
+<pre><code>- **&lt;font style=&quot;color:rgb(145, 109, 213);&quot;&gt;「配置文件配置」&lt;/font&gt;**
+</code></pre>
+<p><font style="color:black;">永久性，需要重启，修改my.conf：</font></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717572150361-d4b542ce-dd94-4252-b1ec-1c2503940d50.webp"></p>
+<h5 id="binlog使用场景"><a href="#binlog使用场景" class="headerlink" title="binlog使用场景"></a><font style="color:black;">binlog使用场景</font></h5><p><font style="color:black;">在实际应用中，</font><font style="color:black;"> </font><strong><font style="color:rgb(145, 109, 213);">binlog</font></strong><font style="color:black;"> </font><font style="color:black;">的主要使用场景有两个，分别是</font><font style="color:black;"> </font><strong><font style="color:rgb(145, 109, 213);">「主从复制」</font></strong><font style="color:black;"> </font><font style="color:black;">和</font><font style="color:black;"> </font><strong><font style="color:rgb(145, 109, 213);">「数据恢复」</font></strong><font style="color:black;"> </font><font style="color:black;">。</font></p>
+<ol>
+<li><strong><font style="color:rgb(145, 109, 213);">「数据复制」</font></strong><font style="color:black;"> </font><font style="color:black;">：</font></li>
+</ol>
+<p><font style="color:black;">在</font><font style="color:black;"> </font><strong><font style="color:rgb(145, 109, 213);">Master</font></strong><font style="color:black;"> </font><font style="color:black;">端开启</font><font style="color:black;"> </font><strong><font style="color:rgb(145, 109, 213);">binlog</font></strong><font style="color:black;"> </font><font style="color:black;">，然后将</font><font style="color:black;"> </font><strong><font style="color:rgb(145, 109, 213);">binlog</font></strong><font style="color:black;">发送到各个</font><font style="color:black;"> </font><strong><font style="color:rgb(145, 109, 213);">Slave</font></strong><font style="color:black;"> </font><font style="color:black;">端，</font><font style="color:black;"> </font><strong><font style="color:rgb(145, 109, 213);">Slave</font></strong><font style="color:black;"> </font><font style="color:black;">端执行</font><font style="color:black;"> </font><strong><font style="color:rgb(145, 109, 213);">binlog</font></strong><font style="color:black;"> </font><font style="color:black;">从而达到主从数据一致。</font></p>
+<ol start="2">
+<li><strong><font style="color:rgb(145, 109, 213);">「数据恢复」</font></strong></li>
+</ol>
+<p><font style="color:black;">通过使用 </font><strong><font style="color:rgb(145, 109, 213);">mysqlbinlog</font></strong><font style="color:black;"> 工具来恢复数据。</font></p>
+<h5 id="binlog刷盘时机"><a href="#binlog刷盘时机" class="headerlink" title="binlog刷盘时机"></a><font style="color:black;">binlog刷盘时机</font></h5><p><strong><font style="color:rgb(145, 109, 213);">「对于</font><strong><strong><font style="color:rgb(145, 109, 213);"> </font></strong></strong><font style="color:rgb(145, 109, 213);">InnoDB</font><strong><strong><font style="color:rgb(145, 109, 213);"> </font></strong></strong><font style="color:rgb(145, 109, 213);">存储引擎而言，只有在事务提交时才会记录</font><strong><strong><font style="color:rgb(145, 109, 213);">biglog</font></strong></strong><font style="color:rgb(145, 109, 213);"> </font>****<font style="color:rgb(145, 109, 213);">日志」</font></strong><font style="color:black;">，此时记录还在内存中，那么</font><font style="color:black;"> </font><strong><font style="color:rgb(145, 109, 213);">biglog</font></strong><font style="color:black;">是什么时候刷到磁盘中的呢？</font></p>
+<p><strong><font style="color:rgb(145, 109, 213);">「</font><strong><strong><font style="color:rgb(145, 109, 213);">mysql</font></strong></strong><font style="color:rgb(145, 109, 213);"> </font><strong><strong><font style="color:rgb(145, 109, 213);">通过</font></strong></strong><font style="color:rgb(145, 109, 213);"> </font><strong><strong><font style="color:rgb(145, 109, 213);">sync_binlog</font></strong></strong><font style="color:rgb(145, 109, 213);"> </font><strong><strong><font style="color:rgb(145, 109, 213);">参数控制</font></strong></strong><font style="color:rgb(145, 109, 213);"> </font><strong><strong><font style="color:rgb(145, 109, 213);">biglog</font></strong></strong><font style="color:rgb(145, 109, 213);"> </font><strong><strong><font style="color:rgb(145, 109, 213);">的刷盘时机，取值范围是</font></strong></strong><font style="color:rgb(145, 109, 213);"> </font><strong><strong><font style="color:rgb(145, 109, 213);">0-N</font></strong></strong><font style="color:rgb(145, 109, 213);">：」</font></strong></p>
+<ul>
+<li><font style="color:rgb(1, 1, 1);">0：不去强制要求，由系统自行判断何时写入磁盘；</font></li>
+<li><font style="color:rgb(1, 1, 1);">1：每次</font><font style="color:rgb(1, 1, 1);"> </font><strong><font style="color:rgb(145, 109, 213);">commit</font></strong><font style="color:rgb(1, 1, 1);"> </font><font style="color:rgb(1, 1, 1);">的时候都要将</font><font style="color:rgb(1, 1, 1);"> </font><strong><font style="color:rgb(145, 109, 213);">binlog</font></strong><font style="color:rgb(1, 1, 1);"> </font><font style="color:rgb(1, 1, 1);">写入磁盘；</font></li>
+<li><font style="color:rgb(1, 1, 1);">N：每N个事务，才会将</font><font style="color:rgb(1, 1, 1);"> </font><strong><font style="color:rgb(145, 109, 213);">binlog</font></strong><font style="color:rgb(1, 1, 1);"> </font><font style="color:rgb(1, 1, 1);">写入磁盘。</font></li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">show variables like &#x27;%sync_binlog%&#x27;;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717572177159-fcac7c69-f05d-4470-bcc7-7dc09fde4b6e.webp"></p>
+<p><strong><font style="color:rgb(145, 109, 213);">「MySQL 5.7.7之后版本的 sync_binlog 默认值是 1 ，配置为1也是数据最不容易丢失的，但是设置一个大一些的值可以提升数据库性能，因此实际情况下也可以将值适当调大，牺牲一定的一致性来获取更好的性能。」</font></strong></p>
+<h5 id="binlog日志格式"><a href="#binlog日志格式" class="headerlink" title="binlog日志格式"></a><font style="color:black;">binlog日志格式</font></h5><p><strong><font style="color:rgb(145, 109, 213);">binlog</font></strong><font style="color:rgb(0, 0, 0);"> 日志格式通过 </font><strong><font style="color:rgb(145, 109, 213);">binlog_format</font></strong><font style="color:rgb(0, 0, 0);"> 指定，有三种格式，分别为 </font><strong><font style="color:rgb(145, 109, 213);">STATMENT</font></strong><font style="color:rgb(0, 0, 0);"> 、 </font><strong><font style="color:rgb(145, 109, 213);">ROW</font></strong><font style="color:rgb(0, 0, 0);"> 和 </font><strong><font style="color:rgb(145, 109, 213);">MIXED</font></strong><font style="color:rgb(0, 0, 0);">。日志。</font></p>
+<p>:::tips<br><font style="color:rgb(0, 0, 0);background-color:rgb(244, 238, 255);">在 </font><strong><font style="color:rgb(145, 109, 213);">MySQL 5.7.7</font></strong><font style="color:rgb(0, 0, 0);background-color:rgb(244, 238, 255);"> 之前，默认的格式是 </font><strong><font style="color:rgb(145, 109, 213);">STATEMENT</font></strong><font style="color:rgb(0, 0, 0);background-color:rgb(244, 238, 255);"> ， </font><strong><font style="color:rgb(145, 109, 213);">MySQL 5.7.7</font></strong><font style="color:rgb(0, 0, 0);background-color:rgb(244, 238, 255);"> 之后，默认值是 </font><strong><font style="color:rgb(145, 109, 213);">ROW</font></strong><font style="color:rgb(0, 0, 0);background-color:rgb(244, 238, 255);">。</font></p>
+<p>:::</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; show variables like &#x27;%binlog_format%&#x27;;</span><br><span class="line">+---------------+-------+</span><br><span class="line">| Variable_name | Value |</span><br><span class="line">+---------------+-------+</span><br><span class="line">| binlog_format | ROW   |</span><br><span class="line">+---------------+-------+</span><br><span class="line">1 row in set, 1 warning (0.00 sec)</span><br></pre></td></tr></table></figure>
+
+<p><strong><font style="color:rgb(145, 109, 213);">「STATMENT」</font></strong></p>
+<p><font style="color:black;">基于</font><strong><font style="color:rgb(145, 109, 213);">SQL</font></strong><font style="color:black;"> </font><font style="color:black;">语句的复制(</font><font style="color:black;"> </font><strong><font style="color:rgb(145, 109, 213);">statement-based replication, SBR</font></strong><font style="color:black;"> </font><font style="color:black;">)，每一条修改数据的sql语句会记录到</font><strong><font style="color:rgb(145, 109, 213);">binlog</font></strong><font style="color:black;"> </font><font style="color:black;">中  。</font></p>
+<ul>
+<li><font style="color:rgb(1, 1, 1);">缺点：在某些情况下会导致主从数据不一致，比如执行sysdate() 、  slepp()  等 。</font></li>
+<li><font style="color:rgb(1, 1, 1);">优点：不需要记录每一行数据的变化，减少了 binlog 日志量，节约 IO  , 从而提高了性能；</font></li>
+</ul>
+<p><strong><font style="color:rgb(145, 109, 213);">「ROW」</font></strong></p>
+<p><font style="color:black;">基于行的复制(</font><strong><font style="color:rgb(145, 109, 213);">row-based replication, RBR</font></strong><font style="color:black;"> )，不记录每条sql语句的上下文信息，仅需记录哪条数据被修改了 。</font></p>
+<ul>
+<li><font style="color:rgb(1, 1, 1);">缺点：会产生大量的日志，尤其是</font><strong><font style="color:rgb(145, 109, 213);">alter table</font></strong><font style="color:rgb(1, 1, 1);"> 的时候会让日志暴涨</font></li>
+<li><font style="color:rgb(1, 1, 1);">优点：能清楚记录每一个行数据的修改细节，能完全实现主从数据同步和数据的恢复；</font></li>
+</ul>
+<p><strong><font style="color:rgb(145, 109, 213);">「MIXED」</font></strong></p>
+<p><font style="color:rgb(0, 0, 0);">基于</font><strong><font style="color:rgb(145, 109, 213);">STATMENT</font></strong><font style="color:rgb(0, 0, 0);"> 和 </font><strong><font style="color:rgb(145, 109, 213);">ROW</font></strong><font style="color:rgb(0, 0, 0);"> 两种模式的混合复制(</font><strong><font style="color:rgb(145, 109, 213);">mixed-based replication, MBR</font></strong><font style="color:rgb(0, 0, 0);"> )，一般的复制使用</font><strong><font style="color:rgb(145, 109, 213);">STATEMENT</font></strong><font style="color:rgb(0, 0, 0);"> 模式保存 </font><strong><font style="color:rgb(145, 109, 213);">binlog</font></strong><font style="color:rgb(0, 0, 0);"> ，对于 </font><strong><font style="color:rgb(145, 109, 213);">STATEMENT</font></strong><font style="color:rgb(0, 0, 0);"> 模式无法复制的操作使用 </font><strong><font style="color:rgb(145, 109, 213);">ROW</font></strong><font style="color:rgb(0, 0, 0);"> 模式保存 </font><strong><font style="color:rgb(145, 109, 213);">binlog</font></strong></p>
+<h4 id="撤销日志（Undo-Logs）"><a href="#撤销日志（Undo-Logs）" class="headerlink" title="撤销日志（Undo Logs）"></a><font style="color:black;">撤销日志（Undo Logs）</font></h4><p>:::tips<br><font style="color:rgb(0, 0, 0);background-color:rgb(244, 238, 255);">世间没有后悔药，但是在MySQL中实现了重头开始，撤销日志（Undo Logs）就是MySQL的后悔药。</font></p>
+<p>:::</p>
+<p><strong><font style="color:rgb(145, 109, 213);">「撤消日志是在事务开始之前保存的被修改数据的备份，用于回滚事务」</font></strong><font style="color:black;">。</font></p>
+<p><font style="color:black;">撤消日志属于逻辑日志，根据每行记录进行记录。</font></p>
+<p><font style="color:black;">撤消日志存在于系统表空间、撤消表空间和临时表空间中。</font></p>
+<h4 id="什么是Undo-log"><a href="#什么是Undo-log" class="headerlink" title="什么是Undo log"></a><font style="color:black;">什么是Undo log</font></h4><p><font style="color:black;">Undo：意为撤销或取消，undo即返回指定某个状态的操作</font></p>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「undo log」</font></strong></li>
+</ul>
+<p><strong><font style="color:rgb(145, 109, 213);">「一种用于撤销回退的日志，在事务开始之前，会先记录存放到 Undo 日志文件里，备份起来，当事务回滚时或者数据库崩溃时用于回滚事务」</font></strong><font style="color:black;">。</font></p>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「undo log记录的是什么」</font></strong></li>
+</ul>
+<p><strong><font style="color:rgb(145, 109, 213);">「undo log中记录的是当前事务操作中的相反操作」</font></strong><font style="color:black;">。</font></p>
+<p><font style="color:black;">undo日志属于逻辑日志，记录的是一个操作过程，sql执行delete或者update操作都会记录一条undo日志</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">一条insert语句在undo log中会对应一条delete语句，</span><br><span class="line">  一条delete语句在undo log中会对应一条insert语句，</span><br><span class="line">  update语句会在undo log中对应相反的update语句，</span><br></pre></td></tr></table></figure>
+
+<h4 id="Undo-log存储方式"><a href="#Undo-log存储方式" class="headerlink" title="Undo log存储方式"></a><font style="color:black;">Undo log存储方式</font></h4><p><strong><font style="color:rgb(145, 109, 213);">「Undo log的存储由InnoDB存储引擎实现」</font></strong><font style="color:black;">，数据保存在InnoDB的数据文件中，innodb存储引擎对undo的管理采用回滚段（rollback segment）的数据结构。</font></p>
+<p><font style="color:black;">回滚段（rollback segment）中有1024个undo log segment，</font></p>
+<ul>
+<li><font style="color:black;">MySQL5.5版本之前</font></li>
+</ul>
+<p><font style="color:black;">只支持1个rollback segment，即只能存储1024个undo log segment</font></p>
+<ul>
+<li><font style="color:black;">MySQL5.5版本之后</font></li>
+</ul>
+<p><font style="color:black;">支持128个rollback segment（innodb_undo_logs配置项），即能存储128*1024个undo log segment</font></p>
+<h4 id="Undo-log相关的变量"><a href="#Undo-log相关的变量" class="headerlink" title="Undo log相关的变量"></a><font style="color:black;">Undo log相关的变量</font></h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; show variables like &#x27;%innodb_undo%&#x27;;</span><br><span class="line">+--------------------------+-------+</span><br><span class="line">| Variable_name            | Value |</span><br><span class="line">+--------------------------+-------+</span><br><span class="line">| innodb_undo_directory    | .\    |</span><br><span class="line">| innodb_undo_log_truncate | OFF   |</span><br><span class="line">| innodb_undo_logs         | 128   |</span><br><span class="line">| innodb_undo_tablespaces  | 0     |</span><br><span class="line">+--------------------------+-------+</span><br><span class="line">4 rows in set, 1 warning (0.03 sec)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><font style="color:black;">innodb_undo_directory</font></li>
+</ul>
+<p><font style="color:black;">定义存储的目录路径，默认值.\，表示datadir，</font></p>
+<p><font style="color:black;">datadir参数在my.in中配置</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[mysql]</span><br><span class="line"># 设置mysql数据库的数据的存放目录</span><br><span class="line">datadir=&quot;D:\mysql-8.0.13-winx64\data&quot;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><font style="color:black;">innodb_undo_log_truncate</font></li>
+</ul>
+<p><font style="color:black;">开启1(ON)&#x2F;关闭0(OFF)在线回收（收缩）undo log日志文件，支持动态设置，默认关闭</font></p>
+<ul>
+<li><font style="color:black;">innodb_undo_logs</font></li>
+</ul>
+<p><font style="color:black;">回滚段rollback segment的数量，Mysql5.5版本后默认设置为128</font></p>
+<ul>
+<li><font style="color:black;">innodb_undo_tablespaces</font></li>
+</ul>
+<p><font style="color:black;">默认值为0，表示undo log全部写入一个表空间文件，可以设置这个变量，平均分配到多少个文件中。</font></p>
+<h4 id="Undo-log的工作原理"><a href="#Undo-log的工作原理" class="headerlink" title="Undo log的工作原理"></a><font style="color:black;">Undo log的工作原理</font></h4><p><strong><font style="color:rgb(145, 109, 213);">「undo log在事务开启之前产生，当事务提交后，InnoDB会将事务对应的undo日志保存在删除list中，后台通过清除线程进行回收处理」</font></strong><font style="color:black;">。</font></p>
+<p><font style="color:black;">以一条sql执行update、select过程，如图：</font></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717575120869-055b093a-cc5e-4a3b-b3f7-90ac90fac7f5.webp"></p>
+<ul>
+<li><font style="color:rgb(1, 1, 1);">执行update操作，事务A提交时候（事务还没提交），会将数据进行备份，备份到对应的undo buffer，</font></li>
+<li><font style="color:rgb(1, 1, 1);">Undo Log保存了未提交之前的操作日志，User表数据肯定就是持久保存到InnoDB的数据文件IBD，默认情况。</font></li>
+<li><font style="color:rgb(1, 1, 1);">此时事务B进行查询操作，直接读undo buffer缓存，事务A还没提交事务，如需要回滚，不读磁盘，先直接从undo buffer缓存读取</font></li>
+</ul>
+<h4 id="Undo-log作用说明"><a href="#Undo-log作用说明" class="headerlink" title="Undo log作用说明"></a><font style="color:black;">Undo log作用说明</font></h4><ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「实现事务的原子性」</font></strong><font style="color:black;">undo log可以用于实现事务的原子性， 如果事务处理过程中要执行回滚（rollback）操作，可以利用undo log将数据恢复到事务开始之前</font></li>
+<li><strong><font style="color:rgb(145, 109, 213);">「实现多版本并发控制（MVCC）」</font></strong><font style="color:black;">Undo Log 在 MySQL InnoDB 存储引擎中用来实现多版本并发控制，事务没提交之前，undo日志可以作为高并发情况下其它并发事务进行快照读。</font></li>
+</ul>
+<h4 id="Undo-log的清理"><a href="#Undo-log的清理" class="headerlink" title="Undo log的清理"></a><font style="color:black;">Undo log的清理</font></h4><h5 id="Undo-log类型"><a href="#Undo-log类型" class="headerlink" title="Undo log类型"></a><font style="color:black;">Undo log类型</font></h5><p><strong><font style="color:rgb(145, 109, 213);">「在回滚段中，每个 undo log 段都有一个类型字段，共有两种类型」</font></strong><font style="color:black;">：</font></p>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「insert undo log」</font><strong><strong><font style="color:rgb(145, 109, 213);">「代表事务在</font></strong></strong><font style="color:rgb(145, 109, 213);">insert</font><strong><strong><font style="color:rgb(145, 109, 213);">新记录时产生的</font></strong></strong><font style="color:rgb(145, 109, 213);">undo log</font>****<font style="color:rgb(145, 109, 213);">, 其回滚段类型为 insert undo logs，仅用于事务回滚，并且在事务提交后可以被立即丢弃」</font></strong><font style="color:rgb(1, 1, 1);">。</font></li>
+<li><strong><font style="color:rgb(145, 109, 213);">「update undo log」「事务在进行update或delete时产生的undo log，其回滚段类型为 update undo logs; 不仅在事务回滚时需要，在实现MVCC快照读时也需要」</font></strong></li>
+</ul>
+<h5 id="Undo-log清理类型"><a href="#Undo-log清理类型" class="headerlink" title="Undo log清理类型"></a><font style="color:black;">Undo log清理类型</font></h5><p><font style="color:black;">Undo log的清理也分为两种情况</font></p>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「事务 rollback」</font></strong></li>
+</ul>
+<p><font style="color:black;">如果事务rollback，innodb 通过执行 undo log中的所有反向操作，实现事务回滚，随后就会删除该事务关联的所有 undo log 段。</font></p>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「事务 commit」</font></strong><ul>
+<li><font style="color:rgb(1, 1, 1);">对于 insert undo logs，事务回滚后，innodb会直接清除该事务关联的所有 undo log 段。</font></li>
+<li><font style="color:rgb(1, 1, 1);">对于 update undo logs，只有当前没有任何活跃事务存在时，innodb 的 purge 线程才会清理这些 undo log 段</font></li>
+</ul>
+</li>
+</ul>
+<h5 id="purge-线程"><a href="#purge-线程" class="headerlink" title="purge 线程"></a><font style="color:black;">purge 线程</font></h5><p><font style="color:black;">上述提到的</font><font style="color:black;"> </font><strong><font style="color:rgb(145, 109, 213);">「purge 线程，是一个周期运行的垃圾收集线程，主要用来收集 undo log 段」</font></strong><font style="color:black;">。</font></p>
+<p><strong><font style="color:rgb(145, 109, 213);">「innodb 会将所有需要清理的任务添加到 purge 队列中，」</font></strong></p>
+<p>:::tips<br><font style="color:rgb(0, 0, 0);background-color:rgb(244, 238, 255);">可以通过 innodb_max_purge_lag 配置项设定 purge 队列的大小</font></p>
+<p>:::</p>
+<p><strong><font style="color:rgb(145, 109, 213);">「purge 线程会在周期执行时，对 purge 队列中的任务进行清理，」</font></strong></p>
+<p>:::tips<br><font style="color:rgb(0, 0, 0);background-color:rgb(244, 238, 255);">可以通过innodb_max_purge_lag_delay 配置项设定 purge 线程的执行周期间隔</font></p>
+<p>:::</p>
+<p><strong><font style="color:rgb(145, 109, 213);">「尽量缩短使用中每个事务的持续时间，可以让 purge 线程有更大概率回收已经没有存在必要的 undo log 段，从而尽量释放磁盘空间的占用」</font></strong></p>
+<h4 id="错误日志-error-log"><a href="#错误日志-error-log" class="headerlink" title="错误日志(error log)"></a><font style="color:black;">错误日志(error log)</font></h4><p><strong><font style="color:rgb(145, 109, 213);">「错误日志(error log)：记录mysql服务的启停时正确和错误的信息，还记录启动、停止、运行过程中的错误信息。」</font></strong></p>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「指定错误日志文件」</font></strong></li>
+</ul>
+<p><strong><font style="color:rgb(145, 109, 213);">「在my.ini的[mysqld]下：添加代码：log-error&#x3D;file_name.txt。」</font></strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">log-error=E:\log-error.txt。</span><br></pre></td></tr></table></figure>
+
+<p><strong><font style="color:rgb(145, 109, 213);">「如果没有指定file_name，则默认的错误日志文件为datadir目录下的</font><strong><strong><font style="color:rgb(145, 109, 213);"> </font></strong></strong><font style="color:rgb(145, 109, 213);">hostname</font>****<font style="color:rgb(145, 109, 213);">.err ，hostname表示当前的主机名。」</font></strong></p>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「查看错误日志位置」</font></strong></li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">show variables like &#x27;log_error&#x27;;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717575254013-180b3541-a69b-4c87-aa8e-965c6121a98e.webp"></p>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「错误日志的产生」</font></strong><ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「MySQL 5.5.7之前」</font></strong></li>
+</ul>
+</li>
+</ul>
+<p><font style="color:black;">刷新日志操作(如flush logs)会备份旧的错误日志(以_old结尾)，并创建一个新的错误日志文件并打开。</font></p>
+<pre><code>- **&lt;font style=&quot;color:rgb(145, 109, 213);&quot;&gt;「在MySQL 5.5.7之后」&lt;/font&gt;**
+</code></pre>
+<p><font style="color:black;">执行刷新日志的操作时，错误日志</font><strong><font style="color:rgb(145, 109, 213);">「会关闭并重新打开」</font></strong><font style="color:black;">，如果错误日志不存在，则会先创建。</font></p>
+<pre><code>- **&lt;font style=&quot;color:rgb(145, 109, 213);&quot;&gt;「MySQL正在运行状态下」&lt;/font&gt;**
+</code></pre>
+<p><strong><font style="color:rgb(145, 109, 213);">「在运行状态下删除错误日志后，不会自动创建错误日志，只有在刷新日志的时候才会创建一个新的错误日志文件」</font></strong></p>
+<h4 id="查询日志"><a href="#查询日志" class="headerlink" title="查询日志"></a><font style="color:black;">查询日志</font></h4><p><strong><font style="color:rgb(145, 109, 213);">「查询日志分为一般查询日志和慢查询日志」</font></strong><font style="color:black;">。通过查询是否超出变量</font><strong><font style="color:rgb(145, 109, 213);">「long_query_time」</font></strong><font style="color:black;">指定时间的值来判定的。</font></p>
+<p><strong><font style="color:rgb(145, 109, 213);">「在超时时间内完成的查询是一般查询，可以将其记录到一般查询日志中，超出时间的查询是慢查询，可以将其记录到慢查询日志中。」</font></strong></p>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「long_query_time」</font></strong></li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"># 指定慢查询超时时长，超出此时长的属于慢查询，会记录到慢查询日志中</span><br><span class="line">long_query_time = 10 </span><br><span class="line"># 定义一般查询日志和慢查询日志的输出格式，不指定时默认为file</span><br><span class="line">log_output=&#123;TABLE|FILE|NONE&#125;</span><br></pre></td></tr></table></figure>
+
+<pre><code>- **&lt;font style=&quot;color:rgb(145, 109, 213);&quot;&gt;「TABLE：表示记录日志到表中」&lt;/font&gt;**
+- **&lt;font style=&quot;color:rgb(145, 109, 213);&quot;&gt;「FILE：表示记录日志到文件中」&lt;/font&gt;**
+- **&lt;font style=&quot;color:rgb(145, 109, 213);&quot;&gt;「NONE：表示不记录日志」&lt;/font&gt;**
+</code></pre>
+<h5 id="一般查询日志-general-log"><a href="#一般查询日志-general-log" class="headerlink" title="一般查询日志(general log)"></a><font style="color:black;">一般查询日志(general log)</font></h5><p><strong><font style="color:rgb(145, 109, 213);">「记录了服务器接收到的每一个查询或是命令」</font></strong><font style="color:black;">，无论这些查询或是命令是否正确甚至是否包含语法错误，general log 都会将其记录下来 。</font></p>
+<p><font style="color:black;">开启General logmysql服务器需要不断地记录日志，会产生一定的系统开销。 所有Mysql默认关闭一般查询日志。</font></p>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「开启general log」</font></strong></li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">set global general_log=on;#为全局变量</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「开启general log」</font></strong></li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">set global general_log=off;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「查看general log是否开启」</font></strong></li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">show global variables like &#x27;general_log&#x27;;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717575395829-a665fba8-286b-4a4f-be0a-378f3d89c616.webp"></p>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「设置日志文件路径」</font></strong></li>
+</ul>
+<p><font style="color:black;">默认是库文件路径下主机名加上.log</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">set global general_log_file=&#x27;/tmp/general.log&#x27;;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「查看日志输出格式」</font></strong></li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">show variables like &#x27;log_output&#x27;;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717575395829-0dfab655-3400-48f6-b7de-b2a5deff681c.webp"></p>
+<h5 id="慢查询日志-slow-log"><a href="#慢查询日志-slow-log" class="headerlink" title="慢查询日志(slow log)"></a><font style="color:black;">慢查询日志(slow log)</font></h5><p><strong><font style="color:rgb(145, 109, 213);">「慢查询日志记录执行时间超过long_query_time和没有使用索引的查询语句，并且只会记录执行成功的语句。」</font></strong></p>
+<p><strong><font style="color:rgb(145, 109, 213);">「查询超出变量 long_query_time 指定时间值的为慢查询。不包含查询获取锁(包括锁等待)的时间」</font></strong><font style="color:black;">。</font></p>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「查看慢查询指定时间」</font></strong></li>
+</ul>
+<p><strong><font style="color:rgb(145, 109, 213);">「默认10s」</font></strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; show variables like  &#x27;long_query_time&#x27;;</span><br><span class="line">+-----------------+-----------+</span><br><span class="line">| Variable_name   | Value     |</span><br><span class="line">+-----------------+-----------+</span><br><span class="line">| long_query_time | 10.000000 |</span><br><span class="line">+-----------------+-----------+</span><br><span class="line">1 row in set, 1 warning (0.00 sec)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「查看慢查询的条数」</font></strong></li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; show status like &quot;%slow_queries%&quot;;</span><br><span class="line">+---------------+-------+</span><br><span class="line">| Variable_name | Value |</span><br><span class="line">+---------------+-------+</span><br><span class="line">| Slow_queries  | 4     |</span><br><span class="line">+---------------+-------+</span><br><span class="line">1 row in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+
+<p>:::tips<br><font style="color:rgb(0, 0, 0);background-color:rgb(244, 238, 255);">以上Slow_queries &#x3D; 4 说明查询超过10秒的查询有4个</font></p>
+<p>:::</p>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「启用慢查询日志」</font></strong></li>
+</ul>
+<p><font style="color:black;">1与ON等价，0与OFF等价。</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; set @@global.slow_query_log=on;</span><br><span class="line">#或者  </span><br><span class="line">mysql&gt; set @@global.slow_query_log=1;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「查看是否启用慢查询日志」</font></strong></li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">show variables like &#x27;slow_query%&#x27;;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717575429450-d168858b-936d-47b2-b83e-42689aca17be.webp"></p>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「slow_query_log」</font></strong></li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">slow_query_log=&#123;1|ON|0|OFF&#125; 与  log_slow_queries=&#123;``yes``|no&#125; 都是表示是否启用慢查询日志，两个同时变化。</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「slow_query_log_file」</font></strong></li>
+</ul>
+<p><font style="color:black;">日志文件位置，默认路径为库文件目录下主机名加上-slow.log</font></p>
+<p><strong><font style="color:rgb(145, 109, 213);">「【MySQL记录慢查询日志是在查询执行完毕且已经完全释放锁之后记录的】，因此慢查询日志记录的顺序和执行的SQL查询语句顺序可能会不一致（先执行完先记录）」</font></strong><font style="color:black;">。</font></p>
+<h4 id="中继日志-relay-log"><a href="#中继日志-relay-log" class="headerlink" title="中继日志(relay log)"></a><font style="color:black;">中继日志(relay log)</font></h4><p><strong><font style="color:rgb(145, 109, 213);">「主要作用：主从复制」</font></strong></p>
+<p><strong><font style="color:rgb(145, 109, 213);">「【从服务器I&#x2F;O线程】将主服务器的【二进制日志】读取过来记录到从服务器本地文件，然后【从服务器SQL线程】会读取relay-log日志的内容并应用到从服务器，从而使从服务器和主服务器的数据保持一致」</font></strong></p>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「查看relay log配置」</font></strong></li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">show variables like &#x27;%relay%&#x27;;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717575453864-636fa078-ba3e-4f0c-a829-398c26b3f5e4.webp"></p>
+<h4 id="Bin-log、redo-log、Undo-如何协同"><a href="#Bin-log、redo-log、Undo-如何协同" class="headerlink" title="Bin log、redo log、Undo 如何协同"></a><font style="color:black;">Bin log、redo log、Undo 如何协同</font></h4><p><strong><font style="color:rgb(145, 109, 213);">「先来回顾一下几个日志的主要作用」</font></strong></p>
+<ul>
+<li><font style="color:rgb(1, 1, 1);">Buffer Pool 是MySQL的一个非常重要的组件，因为针对数据库的增删改操作都是在Buffer Pool完成的</font></li>
+<li><font style="color:rgb(1, 1, 1);">Undo log 记录的是数据操作前的样子</font></li>
+<li><font style="color:rgb(1, 1, 1);">Redo log 记录的是数据被操作后的样子</font></li>
+<li><font style="color:rgb(1, 1, 1);">Bin log 记录的是整个操作记录</font></li>
+</ul>
+<p><strong><font style="color:rgb(145, 109, 213);">「准备更新一条数据到事务的提交的流程描述：」</font></strong></p>
+<ul>
+<li><font style="color:rgb(1, 1, 1);">首先执行器根据MySQL的执行计划来查询数据，先是从缓存池(Buffer Pool)中查询数据，如果没有就会去 数据库中查询，如果查询到了就将其放到缓存池中。</font></li>
+<li><font style="color:rgb(1, 1, 1);">在数据被缓存到缓存池的同时，会写入 undo log 日志文件</font></li>
+<li><font style="color:rgb(1, 1, 1);">更新的动作是在BufferPool中完成的，同时会将更新后的数据添加到redo log buffer中</font></li>
+<li><font style="color:rgb(1, 1, 1);">完成以后就可以提交事务，在提交的同时会做以下三件事</font><ul>
+<li><font style="color:rgb(1, 1, 1);">将redo log buffer中的数据刷入到redo log 文件中</font></li>
+<li><font style="color:rgb(1, 1, 1);">将本次操作记录写入到bin log文件中</font></li>
+<li><font style="color:rgb(1, 1, 1);">将bin log 文件名字和更新内容在bin log中的位置记录到redo log中，同时在redo log 最后添加 commit 标记</font></li>
+</ul>
+</li>
+</ul>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717575499651-60f7355b-2b72-4929-9d8d-b553a2d424f1.webp"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/mysql/" rel="tag"><i class="fa fa-tag"></i> mysql</a>
+              <a href="/tags/%E6%97%A5%E5%BF%97/" rel="tag"><i class="fa fa-tag"></i> 日志</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2024/07/15/Buffer%20Pool/" rel="prev" title="buffer pool">
+      <i class="fa fa-chevron-left"></i> buffer pool
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2024/07/15/Change%20Buffer/" rel="next" title="Change buffer">
+      Change buffer <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%89%A9%E7%90%86%E6%97%A5%E5%BF%97%E5%92%8C%E9%80%BB%E8%BE%91%E6%97%A5%E5%BF%97"><span class="nav-number">1.</span> <span class="nav-text">物理日志和逻辑日志</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%89%A9%E7%90%86%E6%97%A5%E5%BF%97"><span class="nav-number">1.1.</span> <span class="nav-text">物理日志</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%87%8D%E5%81%9A%E6%97%A5%E5%BF%97%EF%BC%88Redo-Log%EF%BC%89"><span class="nav-number">1.1.1.</span> <span class="nav-text">重做日志（Redo Log）</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Redo-log%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5"><span class="nav-number">1.1.1.1.</span> <span class="nav-text">Redo log基本概念</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Redo-Log%E8%A7%A3%E5%86%B3%E4%BA%86%E4%BB%80%E4%B9%88%E9%97%AE%E9%A2%98"><span class="nav-number">1.1.1.2.</span> <span class="nav-text">Redo Log解决了什么问题</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81Redo-log"><span class="nav-number">1.1.1.3.</span> <span class="nav-text">为什么需要Redo log</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Redo-log%E6%95%88%E7%8E%87%E4%B8%BA%E4%BB%80%E4%B9%88%E5%BF%AB"><span class="nav-number">1.1.1.4.</span> <span class="nav-text">Redo log效率为什么快</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Redo-log%E5%86%99%E7%A3%81%E7%9B%98%E7%9A%84%E6%96%B9%E5%BC%8F"><span class="nav-number">1.1.1.5.</span> <span class="nav-text">Redo log写磁盘的方式</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Redo-log%E5%86%99%E5%85%A5%E5%BD%A2%E5%BC%8F"><span class="nav-number">1.1.1.6.</span> <span class="nav-text">Redo log写入形式</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Redo-Log%E5%92%8CBinLog%E7%9A%84%E6%AF%94%E8%BE%83"><span class="nav-number">1.1.1.7.</span> <span class="nav-text">Redo Log和BinLog的比较</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%B8%A4%E9%98%B6%E6%AE%B5%E6%8F%90%E4%BA%A4"><span class="nav-number">1.1.1.8.</span> <span class="nav-text">两阶段提交</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E4%B8%A4%E9%98%B6%E6%AE%B5%E6%8F%90%E4%BA%A4"><span class="nav-number">1.1.1.8.1.</span> <span class="nav-text">为什么要两阶段提交</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E4%B8%A4%E6%AE%B5%E6%8F%90%E4%BA%A4%E7%9A%84%E6%B5%81%E7%A8%8B"><span class="nav-number">1.1.1.8.2.</span> <span class="nav-text">两段提交的流程</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%BB%E8%BE%91%E6%97%A5%E5%BF%97"><span class="nav-number">1.2.</span> <span class="nav-text">逻辑日志</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%8C%E8%BF%9B%E5%88%B6%E6%97%A5%E5%BF%97-binlog"><span class="nav-number">1.2.1.</span> <span class="nav-text">二进制日志(binlog)</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AFbinlog"><span class="nav-number">1.2.1.1.</span> <span class="nav-text">什么是binlog</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#binlog%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="nav-number">1.2.1.2.</span> <span class="nav-text">binlog使用场景</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#binlog%E5%88%B7%E7%9B%98%E6%97%B6%E6%9C%BA"><span class="nav-number">1.2.1.3.</span> <span class="nav-text">binlog刷盘时机</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#binlog%E6%97%A5%E5%BF%97%E6%A0%BC%E5%BC%8F"><span class="nav-number">1.2.1.4.</span> <span class="nav-text">binlog日志格式</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%92%A4%E9%94%80%E6%97%A5%E5%BF%97%EF%BC%88Undo-Logs%EF%BC%89"><span class="nav-number">1.2.2.</span> <span class="nav-text">撤销日志（Undo Logs）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AFUndo-log"><span class="nav-number">1.2.3.</span> <span class="nav-text">什么是Undo log</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Undo-log%E5%AD%98%E5%82%A8%E6%96%B9%E5%BC%8F"><span class="nav-number">1.2.4.</span> <span class="nav-text">Undo log存储方式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Undo-log%E7%9B%B8%E5%85%B3%E7%9A%84%E5%8F%98%E9%87%8F"><span class="nav-number">1.2.5.</span> <span class="nav-text">Undo log相关的变量</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Undo-log%E7%9A%84%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86"><span class="nav-number">1.2.6.</span> <span class="nav-text">Undo log的工作原理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Undo-log%E4%BD%9C%E7%94%A8%E8%AF%B4%E6%98%8E"><span class="nav-number">1.2.7.</span> <span class="nav-text">Undo log作用说明</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Undo-log%E7%9A%84%E6%B8%85%E7%90%86"><span class="nav-number">1.2.8.</span> <span class="nav-text">Undo log的清理</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Undo-log%E7%B1%BB%E5%9E%8B"><span class="nav-number">1.2.8.1.</span> <span class="nav-text">Undo log类型</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Undo-log%E6%B8%85%E7%90%86%E7%B1%BB%E5%9E%8B"><span class="nav-number">1.2.8.2.</span> <span class="nav-text">Undo log清理类型</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#purge-%E7%BA%BF%E7%A8%8B"><span class="nav-number">1.2.8.3.</span> <span class="nav-text">purge 线程</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%94%99%E8%AF%AF%E6%97%A5%E5%BF%97-error-log"><span class="nav-number">1.2.9.</span> <span class="nav-text">错误日志(error log)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9F%A5%E8%AF%A2%E6%97%A5%E5%BF%97"><span class="nav-number">1.2.10.</span> <span class="nav-text">查询日志</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%B8%80%E8%88%AC%E6%9F%A5%E8%AF%A2%E6%97%A5%E5%BF%97-general-log"><span class="nav-number">1.2.10.1.</span> <span class="nav-text">一般查询日志(general log)</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%85%A2%E6%9F%A5%E8%AF%A2%E6%97%A5%E5%BF%97-slow-log"><span class="nav-number">1.2.10.2.</span> <span class="nav-text">慢查询日志(slow log)</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%AD%E7%BB%A7%E6%97%A5%E5%BF%97-relay-log"><span class="nav-number">1.2.11.</span> <span class="nav-text">中继日志(relay log)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Bin-log%E3%80%81redo-log%E3%80%81Undo-%E5%A6%82%E4%BD%95%E5%8D%8F%E5%90%8C"><span class="nav-number">1.2.12.</span> <span class="nav-text">Bin log、redo log、Undo 如何协同</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="139"
+      src="/images/custom/avatar.jpg">
+  <p class="site-author-name" itemprop="name">139</p>
+  <div class="site-description" itemprop="description">一个普通的JAVA开发的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">54</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">38</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+  <div class="beian"><a href="https://beian.miit.gov.cn/" rel="noopener" target="_blank">浙ICP备2023004484号-1 </a>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">139</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

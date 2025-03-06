@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="在之前的文章《InnoDB的存储结构》介绍的InnoDB的存储结构的组成中，我们知道Change Buffer也是用InnoDB内存结构的组成部分。  Change Buffer主要是为了在写入是减少磁盘IO而存在的，">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Change buffer">
+<meta property="og:url" content="http://example.com/2024/07/15/Change%20Buffer/index.html">
+<meta property="og:site_name" content="进学阁">
+<meta property="og:description" content="在之前的文章《InnoDB的存储结构》介绍的InnoDB的存储结构的组成中，我们知道Change Buffer也是用InnoDB内存结构的组成部分。  Change Buffer主要是为了在写入是减少磁盘IO而存在的，">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717731138693-8900ff09-52fa-4a9f-99b1-bd7fa82c5e18.webp">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717731138683-85db925a-008d-4cc6-9cc0-89ce4bc2a619.webp">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717731138699-76962f40-0371-4185-82d4-f35d5e2cf6c1.webp">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717731138694-f9807fa8-4ddd-4186-bf14-ddd91abe9771.webp">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717731138685-640c1bcf-716c-446b-8a11-531c87bbae3f.webp">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717731139052-e32dbcae-7a8e-48d1-ab9f-ca806bb5c100.webp">
+<meta property="article:published_time" content="2024-07-14T16:00:00.000Z">
+<meta property="article:modified_time" content="2025-03-06T09:51:57.443Z">
+<meta property="article:author" content="139">
+<meta property="article:tag" content="mysql">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717731138693-8900ff09-52fa-4a9f-99b1-bd7fa82c5e18.webp">
+
+<link rel="canonical" href="http://example.com/2024/07/15/Change%20Buffer/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Change buffer | 进学阁</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">进学阁</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">业精于勤荒于嬉，行成于思毁于随</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">38</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">8</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">54</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/07/15/Change%20Buffer/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Change buffer
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-07-15 00:00:00" itemprop="dateCreated datePublished" datetime="2024-07-15T00:00:00+08:00">2024-07-15</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-06 17:51:57" itemprop="dateModified" datetime="2025-03-06T17:51:57+08:00">2025-03-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><font style="color:black;">在之前的文章</font><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s?__biz=MzIxMDU5OTU1Mw==&mid=2247485666&idx=1&sn=dc06d531d29d8916f53954be63710f9d&scene=21#wechat_redirect">《InnoDB的存储结构》</a><font style="color:black;">介绍的InnoDB的存储结构的组成中，我们知道Change Buffer也是用InnoDB内存结构的组成部分。</font></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717731138693-8900ff09-52fa-4a9f-99b1-bd7fa82c5e18.webp"></p>
+<p><font style="color:black;">Change Buffer主要是为了在写入是减少磁盘IO而存在的，</font></p>
+<span id="more"></span>
+<h2 id="一、什么是什么是Change-Buffer"><a href="#一、什么是什么是Change-Buffer" class="headerlink" title="一、什么是什么是Change Buffer"></a><strong><font style="color:black;">一、什么是什么是Change Buffer</font></strong></h2><p><strong><font style="color:rgb(145, 109, 213);">「在</font></strong><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s?__biz=MzIxMDU5OTU1Mw==&mid=2247486351&idx=1&sn=bcafc8b2862545396401fc7c7e75c907&scene=21#wechat_redirect">《Buffer Pool》</a><strong><font style="color:rgb(145, 109, 213);">中介绍了buffer pool会缓存热的数据页和索引页，减少磁盘读操作，而对于磁盘的写操作，innoDB同样也有类似的策略，即通过change buffer缓解磁盘写操作产生的磁盘IO」</font></strong><font style="color:black;">。</font></p>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「Change Buffer是在【非唯一普通索引页】不在buffer pool中时，当对页进行了写操作时，在不影响数据一致性的前提下。InnoDB会将数据先写入Change Buffer中，等未来数据被读取时，再将 change buffer 中的操作merge到原数据页中」</font></strong><font style="color:black;">。</font></li>
+<li><font style="color:black;">在MySQL5.5之前，只针对insert做了优化，叫插入缓冲(insert buffer)，后面进行了优化，对delete和update也有效，叫做写缓冲(change buffer)。</font></li>
+</ul>
+<h2 id="二、Change-buffer-执行过程"><a href="#二、Change-buffer-执行过程" class="headerlink" title="二、Change buffer 执行过程"></a><strong><font style="color:black;">二、Change buffer 执行过程</font></strong></h2><p><strong><font style="color:rgb(145, 109, 213);">「我们知道当执行写操作时，数据页存在于Buffer Pool中时，会直接修改数据页。那如果数据页不存在于Buffer Pool中时，过程会有一些不一样，这种情况会将写操作缓存到Change Buffer中，等未来在特定条件下其合并到Buffer Pool中」</font></strong><font style="color:black;">。因此当需要执行一个写入操作时，一般分为走Change buffer和不走Change buffer两种情况。</font></p>
+<h3 id="2-1-写入的数据页在内存中"><a href="#2-1-写入的数据页在内存中" class="headerlink" title="2.1 写入的数据页在内存中"></a><font style="color:black;">2.1 写入的数据页在内存中</font></h3><p><font style="color:black;background-color:rgb(244, 238, 255);">这种情况在在</font><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s?__biz=MzIxMDU5OTU1Mw==&mid=2247486351&idx=1&sn=bcafc8b2862545396401fc7c7e75c907&scene=21#wechat_redirect">《Buffer Pool》</a><font style="color:black;background-color:rgb(244, 238, 255);">的第4.3.2节 Flush链表写入过程中已经提过了，感兴趣的可以去看看，不看也没关系，这里在写一遍，凑一下字数~~</font></p>
+<p><font style="color:black;">当我们在写入数据的时候，写入的数据页在内存中，MySQL不会直接更新直接更新磁盘，而是经过以下两个步骤：</font></p>
+<ul>
+<li><font style="color:rgb(1, 1, 1);">第一步：更新Buffer Pool中的数据页，一次内存操作；</font></li>
+<li><font style="color:rgb(1, 1, 1);">第二步：将更新操作顺序写Redo log，一次磁盘顺序写操作；</font></li>
+</ul>
+<p><font style="color:black;background-color:rgb(244, 238, 255);">这样的效率是最高的。顺序写Redo log，每秒几万次，问题不大。</font></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717731138683-85db925a-008d-4cc6-9cc0-89ce4bc2a619.webp"></p>
+<p><strong><font style="color:rgb(145, 109, 213);">「这种情况是被更新的数据已经别加载到Buffer Pool的前提下」</font></strong><font style="color:black;">。</font></p>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「是否会产生数据一致性问题」</font></strong></li>
+</ul>
+<p><strong><font style="color:rgb(145, 109, 213);">「因此写入的数据页在内存中这中情况不会产生数据一致性问题」</font></strong></p>
+<pre><code>- &lt;font style=&quot;color:rgb(1, 1, 1);&quot;&gt;读取数据，会命中缓冲池的页（已经被修改）。&lt;/font&gt;
+- &lt;font style=&quot;color:rgb(1, 1, 1);&quot;&gt;缓冲池LRU数据淘汰，则会将【脏页】刷回磁盘。&lt;/font&gt;
+- &lt;font style=&quot;color:rgb(1, 1, 1);&quot;&gt;数据库奔溃，redo log可以恢复数据。&lt;/font&gt;
+</code></pre>
+<h3 id="2-2-写入的数据页不在内存中"><a href="#2-2-写入的数据页不在内存中" class="headerlink" title="2.2 写入的数据页不在内存中"></a><font style="color:black;">2.2 写入的数据页不在内存中</font></h3><p><font style="color:black;">当我们修改的数据所在的数据页之前没有别读取过，或者干脆就是一条插入语句，则会经过以下两个步骤：</font></p>
+<ul>
+<li><font style="color:rgb(1, 1, 1);">第一步：在Change buffer中记录这个写入操作，一次内存操作。</font></li>
+<li><font style="color:rgb(1, 1, 1);">第二步：将写入操作顺序写Redo log，一次磁盘顺序写操作；</font></li>
+</ul>
+<p><font style="color:black;background-color:rgb(244, 238, 255);">可以看到，这种方式跟上面的方式</font><strong><font style="color:rgb(145, 109, 213);background-color:rgb(244, 238, 255);">「仅仅只是第一步写入的位置不一样而已，而且都是内存操作」</font></strong><font style="color:black;background-color:rgb(244, 238, 255);">。</font></p>
+<p><font style="color:black;background-color:rgb(244, 238, 255);">如果没有Change buffer，那更新可能会变成</font></p>
+<ul>
+<li><font style="color:rgb(1, 1, 1);background-color:rgb(244, 238, 255);">第一步：先从磁盘读取所在数据页加载到缓冲池，一次磁盘随机读操作；</font></li>
+<li><font style="color:rgb(1, 1, 1);background-color:rgb(244, 238, 255);">第二步：更新Buffer Pool中的数据页，一次内存操作；</font></li>
+<li><font style="color:rgb(1, 1, 1);background-color:rgb(244, 238, 255);">第三步：将更新操作顺序写Redo log，一次磁盘顺序写操作；</font></li>
+</ul>
+<p><font style="color:black;background-color:rgb(244, 238, 255);">也就是会多一次磁盘IO，磁盘IO相比较内存操作时很慢的，并发下性能就会急剧下降。</font></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717731138699-76962f40-0371-4185-82d4-f35d5e2cf6c1.webp"></p>
+<p><font style="color:black;background-color:rgb(244, 238, 255);">这种方式的效率跟第一次差不多，写缓冲是降低磁盘IO，提升数据库写性能的一种机制。</font></p>
+<p><strong><font style="color:rgb(145, 109, 213);">「是否会产生数据一致性问题」</font></strong></p>
+<ul>
+<li><font style="color:rgb(1, 1, 1);">读取数据，会将Change Buffer中的数据合并到Buffer Pool中。</font></li>
+<li><font style="color:rgb(1, 1, 1);">如果没有读取，Change也会被被定期刷盘到写缓冲系统表空间。</font></li>
+<li><font style="color:rgb(1, 1, 1);">数据库奔溃，redo log可以恢复数据。</font></li>
+</ul>
+<p><strong><font style="color:rgb(145, 109, 213);">「因此写入的数据页不在内存中这中情况也不会产生数据一致性问题」</font></strong><font style="color:black;">。</font></p>
+<h2 id="三、Change-Buffer大小配置"><a href="#三、Change-Buffer大小配置" class="headerlink" title="三、Change Buffer大小配置"></a><strong><font style="color:black;">三、Change Buffer大小配置</font></strong></h2><p><strong><font style="color:rgb(145, 109, 213);">「从下图中可以看出，Change Buffer被包含在了Buffer Pool中的，change buffer用的是buffer pool里的内存，由于Buffer Pool的内存大小是有限制的，所以change buffer大小也是有限制的，可通过参数innodb_change_buffer_max_size设置」</font></strong><font style="color:black;">。</font></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717731138694-f9807fa8-4ddd-4186-bf14-ddd91abe9771.webp"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">show variables like &#x27;%innodb_change_buffer_max_size%&#x27;;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717731138685-640c1bcf-716c-446b-8a11-531c87bbae3f.webp"></p>
+<ul>
+<li><font style="color:rgb(1, 1, 1);">innodb_change_buffer_max_size表示允许change_buffer占Buffer Pool总大小的百分比，默认值为25%，最大可设置为50%。</font><ul>
+<li><font style="color:rgb(1, 1, 1);">当在系统中有大量插入，更新和删除操作时，可以增大innodb_change_buffer_max_size，以提高系统的写入性能。</font></li>
+<li><font style="color:rgb(1, 1, 1);">当在系统中有大量查询操作时，可以减小innodb_change_buffer_max_size，以减少Buffer Pool中数据页的淘汰的概率，提高系统的读取性能。</font></li>
+</ul>
+</li>
+<li><font style="color:rgb(1, 1, 1);">innodb_change_buffer_max_size 设置是动态的，它允许修改设置而无需重新启动服务器。</font></li>
+</ul>
+<h2 id="四、配置Change-Buffer的类型"><a href="#四、配置Change-Buffer的类型" class="headerlink" title="四、配置Change Buffer的类型"></a><strong><font style="color:black;">四、配置Change Buffer的类型</font></strong></h2><p><strong><font style="color:rgb(145, 109, 213);">「前面说到Change Buffer在MySQL5.5之后可以支持新增、删除、修改的写入，对于受I&#x2F;O限制的操作（大量DML、如批量插入）有很大的性能提升价值。但是对于一些特定的场景，可以通过修改innodb_change_buffering来变更Change Buffer支持的类型，分别为插入，删除，清除启用或禁用缓冲，更新操作是插入和删除的组合」</font></strong><font style="color:black;">。</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">show variables like &#x27;%innodb_change_buffering%&#x27;;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717731139052-e32dbcae-7a8e-48d1-ab9f-ca806bb5c100.webp"></p>
+<ul>
+<li><font style="color:rgb(1, 1, 1);">all ：默认值，缓冲区插入，删除和清除。</font></li>
+<li><font style="color:rgb(1, 1, 1);">none：不缓存任何操作</font></li>
+<li><font style="color:rgb(1, 1, 1);">inserts：缓冲区插入操作。</font></li>
+<li><font style="color:rgb(1, 1, 1);">deletes：缓冲区删除标记操作。</font></li>
+<li><font style="color:rgb(1, 1, 1);">changes：缓冲区插入和删除标记操作。</font></li>
+<li><font style="color:rgb(1, 1, 1);">purges：缓冲区在后台发生的物理删除操作。</font></li>
+</ul>
+<h2 id="五、Change-buffer被merge的时机"><a href="#五、Change-buffer被merge的时机" class="headerlink" title="五、Change buffer被merge的时机"></a><strong><font style="color:black;">五、Change buffer被merge的时机</font></strong></h2><p><font style="color:black;">既然Change buffer是单独内存中，写入之后会被合并到Buffer Pool中,那么是时候时候会被merge呢？</font></p>
+<p><strong><font style="color:rgb(145, 109, 213);">「Change buffer会被merge触发时机」</font></strong></p>
+<ul>
+<li><font style="color:rgb(1, 1, 1);">读取Change buffer中记录的数据页时，会将Change buffer合并到buffer Pool 中，然后被刷新到磁盘。</font></li>
+<li><font style="color:rgb(1, 1, 1);">当系统空闲或者slow shutdown时，后台master线程发起merge。</font></li>
+<li><font style="color:rgb(1, 1, 1);">change buffer的内存空间用完了，后台master线程会发起merge。</font></li>
+<li><font style="color:rgb(1, 1, 1);">redo log写满了，但是一般不会发生。</font></li>
+</ul>
+<h2 id="六、Change-buffer为什么只对非唯一普通索引页有效"><a href="#六、Change-buffer为什么只对非唯一普通索引页有效" class="headerlink" title="六、Change buffer为什么只对非唯一普通索引页有效"></a><strong><font style="color:black;">六、Change buffer为什么只对非唯一普通索引页有效</font></strong></h2><p><strong><font style="color:rgb(145, 109, 213);">「不知道大家有没有印象，在本文第一节就重点说了一个词【非唯一普通索引页】，Change buffer只有在非唯一普通索引页时才生效，这是为什么呢？」</font></strong></p>
+<p><font style="color:black;">相信大家在日常工作中会经常遇到一个问题：</font><strong><font style="color:rgb(145, 109, 213);">「主键冲突」</font></strong><font style="color:black;">。</font></p>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「主键索引，唯一索引」</font></strong></li>
+</ul>
+<p><font style="color:black;">实际上对于【唯一索引】的更新，插入操作都会</font><strong><font style="color:rgb(145, 109, 213);">「先判断当前操作是否违反唯一性约束」</font></strong><font style="color:black;">，而这个操作就必须要将索引页读取到内存中，此时既然已经读取到内存了，那直接更新即可，没有需要在用Change buffer了。</font></p>
+<ul>
+<li><strong><font style="color:rgb(145, 109, 213);">「非唯一普通索引」</font></strong></li>
+</ul>
+<p><strong><font style="color:rgb(145, 109, 213);">「不需要判断当前操作是否违反唯一性约束」</font></strong><font style="color:black;">，也就不需要将数据页读取到内存，因此可以直接使用 change buffer 更新。</font></p>
+<p><strong><font style="color:rgb(145, 109, 213);">「基于此，Change buffer只有对普通索引可以使用，对唯一索引的更新无法生效」</font></strong><font style="color:black;">。</font></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/mysql/" rel="tag"><i class="fa fa-tag"></i> mysql</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2024/07/15/6%E5%A4%A7%E6%97%A5%E5%BF%97%E4%BB%8B%E7%BB%8D/" rel="prev" title="6大日志介绍">
+      <i class="fa fa-chevron-left"></i> 6大日志介绍
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2024/10/01/%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AA%E9%80%9A%E7%94%A8%E7%9A%84%E6%95%B0%E6%8D%AE%E8%AE%BF%E9%97%AE%E6%A8%A1%E5%9D%97/" rel="next" title="构建一个通用的数据访问模块">
+      构建一个通用的数据访问模块 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E4%BB%80%E4%B9%88%E6%98%AF%E4%BB%80%E4%B9%88%E6%98%AFChange-Buffer"><span class="nav-number">1.</span> <span class="nav-text">一、什么是什么是Change Buffer</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%E3%80%81Change-buffer-%E6%89%A7%E8%A1%8C%E8%BF%87%E7%A8%8B"><span class="nav-number">2.</span> <span class="nav-text">二、Change buffer 执行过程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-%E5%86%99%E5%85%A5%E7%9A%84%E6%95%B0%E6%8D%AE%E9%A1%B5%E5%9C%A8%E5%86%85%E5%AD%98%E4%B8%AD"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 写入的数据页在内存中</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-%E5%86%99%E5%85%A5%E7%9A%84%E6%95%B0%E6%8D%AE%E9%A1%B5%E4%B8%8D%E5%9C%A8%E5%86%85%E5%AD%98%E4%B8%AD"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 写入的数据页不在内存中</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89%E3%80%81Change-Buffer%E5%A4%A7%E5%B0%8F%E9%85%8D%E7%BD%AE"><span class="nav-number">3.</span> <span class="nav-text">三、Change Buffer大小配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B%E3%80%81%E9%85%8D%E7%BD%AEChange-Buffer%E7%9A%84%E7%B1%BB%E5%9E%8B"><span class="nav-number">4.</span> <span class="nav-text">四、配置Change Buffer的类型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%94%E3%80%81Change-buffer%E8%A2%ABmerge%E7%9A%84%E6%97%B6%E6%9C%BA"><span class="nav-number">5.</span> <span class="nav-text">五、Change buffer被merge的时机</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AD%E3%80%81Change-buffer%E4%B8%BA%E4%BB%80%E4%B9%88%E5%8F%AA%E5%AF%B9%E9%9D%9E%E5%94%AF%E4%B8%80%E6%99%AE%E9%80%9A%E7%B4%A2%E5%BC%95%E9%A1%B5%E6%9C%89%E6%95%88"><span class="nav-number">6.</span> <span class="nav-text">六、Change buffer为什么只对非唯一普通索引页有效</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="139"
+      src="/images/custom/avatar.jpg">
+  <p class="site-author-name" itemprop="name">139</p>
+  <div class="site-description" itemprop="description">一个普通的JAVA开发的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">54</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">38</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+  <div class="beian"><a href="https://beian.miit.gov.cn/" rel="noopener" target="_blank">浙ICP备2023004484号-1 </a>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">139</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
