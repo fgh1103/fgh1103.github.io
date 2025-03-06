@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="SQL通用语法 SQL语句可以单行或多行书写，以分号结尾。 可使用空格和缩进来增强语句的可读性。 MySQL数据库的SQL语言不区分大小写，关键字建议使用大写，对所有列和表名使用小写，这样做使代码更容易阅读和调试。 3种注释：">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL语法整理">
+<meta property="og:url" content="http://example.com/2023/06/11/sql%E8%AF%AD%E6%B3%95%E6%95%B4%E7%90%86/index.html">
+<meta property="og:site_name" content="进学阁">
+<meta property="og:description" content="SQL通用语法 SQL语句可以单行或多行书写，以分号结尾。 可使用空格和缩进来增强语句的可读性。 MySQL数据库的SQL语言不区分大小写，关键字建议使用大写，对所有列和表名使用小写，这样做使代码更容易阅读和调试。 3种注释：">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-06-10T16:00:00.000Z">
+<meta property="article:modified_time" content="2025-03-06T09:16:53.729Z">
+<meta property="article:author" content="139">
+<meta property="article:tag" content="mysql">
+<meta property="article:tag" content="sql语句">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2023/06/11/sql%E8%AF%AD%E6%B3%95%E6%95%B4%E7%90%86/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>MySQL语法整理 | 进学阁</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">进学阁</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">业精于勤荒于嬉，行成于思毁于随</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">34</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">8</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">40</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/06/11/sql%E8%AF%AD%E6%B3%95%E6%95%B4%E7%90%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          MySQL语法整理
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-06-11 00:00:00" itemprop="dateCreated datePublished" datetime="2023-06-11T00:00:00+08:00">2023-06-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-06 17:16:53" itemprop="dateModified" datetime="2025-03-06T17:16:53+08:00">2025-03-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="SQL通用语法"><a href="#SQL通用语法" class="headerlink" title="SQL通用语法"></a><font style="color:rgb(79, 79, 79);">SQL通用语法</font></h2><ul>
+<li><font style="color:rgb(77, 77, 77);">SQL语句可以单行或多行书写，以分号结尾。</font></li>
+<li><font style="color:rgb(77, 77, 77);">可使用空格和缩进来增强语句的可读性。</font></li>
+<li><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">MySQL数据库的SQL语言不区分大小写，关键字建议使用大写</font><font style="color:rgb(77, 77, 77);">，对所有列和表名使用小写，这样做使代码更容易阅读和调试。</font></li>
+<li><font style="color:rgb(77, 77, 77);">3种注释：</font><span id="more"></span>
+<font style="color:rgb(85, 86, 102);background-color:rgb(238, 240, 244);">单行注释： – 注释内容<br></font><font style="color:rgb(85, 86, 102);background-color:rgb(238, 240, 244);">单行注释：# 注释内容（mysql特有）<br></font><font style="color:rgb(85, 86, 102);background-color:rgb(238, 240, 244);">多行注释：</font><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">&#x2F;<em>注释</em>&#x2F;</font><!-- more --></li>
+</ul>
+<h2 id="SQL分类"><a href="#SQL分类" class="headerlink" title="SQL分类"></a><font style="color:rgb(79, 79, 79);">SQL分类</font></h2><p>Mysql中SQL语句的分类可以分成：数据定义语言DDL、数据操纵语言DML、数据控制语言DCL、数据查询语言DQL。</p>
+<p>  DDL：数据定义语言，这些语句主要用来创建、修改、删除数据库的逻辑结构，其中包括表结构，视图和索引等。常用的关键字有主要包括create、drop、alter等，truncate也是DDL关键字。</p>
+<p>  DML：数据操纵语言，这些语句用于添加、删除、更新和查询数据库中的数据，并检查数据完整性。常用的关键字有insert、delete、update、select等。</p>
+<p>  DCL：数据控制语言，这些语句主要用来控制数据库的访问权限。常用的关键字有主要包括grant、revoke、commit、rollback等。DCL主要用来控制数据库的权限。</p>
+<p>  DQL：数据查询语言，各种简单查询，连接查询等 都属于DQL。</p>
+<h3 id="DDL"><a href="#DDL" class="headerlink" title="DDL"></a>DDL</h3><p><font style="color:rgb(77, 77, 77);">DDL：Data Define Language数据定义语言，主要用来对数据库、表进行一些管理操作。如：建库、删库、建表、修改表、删除表、对列的增删改等等。</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">#创建数据库</span><br><span class="line">	CREATE DATABASE dbname</span><br><span class="line">	#查看系统中都有哪些数据库</span><br><span class="line">	SHOW DATABASES</span><br><span class="line">	#建库通用的写法</span><br><span class="line">	drop database if exists 旧库名;</span><br><span class="line">	create database 新库名;</span><br><span class="line">	#选择某个数据库</span><br><span class="line">	USE dbname</span><br><span class="line">	#删除数据库</span><br><span class="line">	DROP DATABASE dbname</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">--创建表语法</span><br><span class="line">	create table 表名(</span><br><span class="line">    	字段名1 类型[(宽度)] [约束条件] [comment &#x27;字段说明&#x27;],</span><br><span class="line">    	字段名2 类型[(宽度)] [约束条件] [comment &#x27;字段说明&#x27;],</span><br><span class="line">    	字段名3 类型[(宽度)] [约束条件] [comment &#x27;字段说明&#x27;]</span><br><span class="line">	)[表的一些设置];</span><br><span class="line"></span><br><span class="line">	--建表示例</span><br><span class="line">	create table test2(</span><br><span class="line">  		a int not null comment &#x27;字段a&#x27;,</span><br><span class="line">  		b int not null default 0 comment &#x27;字段b&#x27;</span><br><span class="line">	);</span><br><span class="line"></span><br><span class="line">	#删除表</span><br><span class="line">	DROP TABLE tablename</span><br><span class="line">	#删除表更常见的用法</span><br><span class="line">	DROP TABLE IF EXISTS tablename</span><br><span class="line"></span><br><span class="line">    -- 只复制表结构</span><br><span class="line">    create table 表名 like 被复制的表名;</span><br><span class="line">    -- 复制表结构+数据</span><br><span class="line">   create table 表名 [as] select 字段,... from 被复制的表 [where 条件];</span><br><span class="line"></span><br><span class="line">	#更改表名 </span><br><span class="line">	ALTER TABLE tablename RENAME [TO] new_table</span><br><span class="line">	#示例:将表名由emp改成emp1</span><br><span class="line">	ALTER TABLE emp RENAME emp1</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">#修改字段类型</span><br><span class="line">ALTER TABLE tablename MODIFY [COLUMN] column_definition</span><br><span class="line">#示例：将emp字段类型改成VARCHAR(20)</span><br><span class="line">ALTER TABLE emp MODIFY name VARCHAR(20)</span><br><span class="line">#增加字段</span><br><span class="line">ALTER TABLE tablename ADD [column] column_definition</span><br><span class="line">#示例：增加类型为int(3)的age字段</span><br><span class="line">ALTER TABLE emp ADD COLUMN age INT(3)</span><br><span class="line">#删除字段</span><br><span class="line">ALTER TABLE tablename DROP [column] col_name</span><br><span class="line">#修改字段名</span><br><span class="line">ALTER TABLE tablename CHANGE [column] old_col_name column_definition</span><br><span class="line">#示例：将age改名为age1，并修改字段类型</span><br><span class="line">ALTER TABLE emp CHANGE age age1 INT(4)</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(77, 77, 77);"> 注意：</font><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">modify不能修改列名，change可以修改列名</font><font style="color:rgb(77, 77, 77);">。</font><br><font style="color:rgb(77, 77, 77);"> 使用上面命令增加的字段默认都在表的最后位置，而CHANGE&#x2F;MODIFY不会修改字段的位置。如果要修改字段的位置，要用AFTER&#x2F;FIRST等关键字：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">#将birth字段添加到ename之后</span><br><span class="line">	ALTER TABLE emp ADD birth DATE AFTER ename</span><br><span class="line">	#将age字段放在最前面</span><br><span class="line">	ALTER TABLE emp MODIFY age INT(3) FIRST</span><br></pre></td></tr></table></figure>
+
+<h3 id="DML"><a href="#DML" class="headerlink" title="DML"></a>DML</h3><p><font style="color:rgb(77, 77, 77);">DML(Data Manipulation Language)数据操作语言，以INSERT、UPDATE、DELETE三种指令为核心，分别代表插入、更新与删除，是必须要掌握的指令，DML和SQL中的select俗称CRUD（增删改查）。</font></p>
+<h4 id="新增数据"><a href="#新增数据" class="headerlink" title="新增数据"></a><font style="color:rgb(77, 77, 77);">新增数据</font></h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#可以不指定字段名称，但value后面的顺序应该和字段的排列顺序一致</span><br><span class="line">	INSERT INTO tablename (field1,field2,...,fieldn) VALUES (value1,value2,...valuen)</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(77, 77, 77);">使用INSERT时，可以一次性插入多条数据：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">INSERT INTO tablename (field1,field2,...,fieldn) </span><br><span class="line">	VALUES </span><br><span class="line">	(record1_value1,record1_value2,...record1_valuen)</span><br><span class="line">	(record2_value1,record2_value2,...record2_valuen)	</span><br><span class="line">	...</span><br><span class="line">	(recordn_value1,recordn_value2,...recordn_valuen)	</span><br></pre></td></tr></table></figure>
+
+<p>这里有个变种的写法 INSERT INTO SELECT FROM </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#可以不指定字段名称，但value后面的顺序应该和字段的排列顺序一致</span><br><span class="line">	INSERT INTO tablename (field1,field2,...,fieldn) SELECT value1,value2,...valuen FROM SOURETABLE</span><br></pre></td></tr></table></figure>
+
+<h4 id="更新数据"><a href="#更新数据" class="headerlink" title="更新数据"></a><font style="color:rgba(0, 0, 0, 0.75);">更新数据</font></h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">UPDATE tablename SET field1=value1,field2=value2,...,fieldn=valuen</span><br><span class="line">	#示例</span><br><span class="line">	UPDATE emp SET sal=4000 WHERE ename=&#x27;lisa&#x27;</span><br></pre></td></tr></table></figure>
+
+<p>变种写法UPDATE JOIN  SET ，主要用于两张表的数据同步</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">UPDATE table1</span><br><span class="line">JOIN table2 ON table1.common_column = table2.common_column</span><br><span class="line">SET table1.column_to_update = table2.value</span><br><span class="line">WHERE table1.condition_column = condition_value;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h4 id="删除数据"><a href="#删除数据" class="headerlink" title="删除数据"></a><font style="color:rgba(0, 0, 0, 0.75);">删除数据</font></h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">DELETE FROM tablename [WHERE CONDITION]</span><br><span class="line">#示例</span><br><span class="line">DELETE FROM emp WHERE ename=&#x27;tony&#x27;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">如果使用DELETE关键字时，后面没加条件，就会把整张表的数据删掉</font><font style="color:rgb(77, 77, 77);">。</font></p>
+<h5 id="delete、truncate与drop"><a href="#delete、truncate与drop" class="headerlink" title="delete、truncate与drop*"></a><font style="color:rgb(79, 79, 79);">delete、truncate与drop*</font></h5><p><font style="color:rgb(77, 77, 77);"> 三者都可以删除表中的数据，三者的差别：</font></p>
+<table>
+<thead>
+<tr>
+<th align="center"><strong><font style="color:rgb(79, 79, 79);">   </font></strong></th>
+<th align="center"><strong><font style="color:rgb(79, 79, 79);">delete</font></strong></th>
+<th align="center"><strong><font style="color:rgb(79, 79, 79);">truncate</font></strong></th>
+<th align="center"><strong><font style="color:rgb(79, 79, 79);">drop</font></strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center"><font style="color:rgb(79, 79, 79);">回滚</font></td>
+<td align="center"><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">可回滚</font></td>
+<td align="center"><font style="color:rgb(79, 79, 79);">不可回滚</font></td>
+<td align="center"><font style="color:rgb(79, 79, 79);">不可回滚</font></td>
+</tr>
+<tr>
+<td align="center"><font style="color:rgb(79, 79, 79);">删除内容</font></td>
+<td align="center"><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">表结构还在，删除表的全部或者一部分数据行</font></td>
+<td align="center"><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">表结构还在，删除表中的所有数据</font></td>
+<td align="center"><font style="color:rgb(79, 79, 79);">从数据库中删除表结果和所有的数据行，索引和权限也会被删除</font></td>
+</tr>
+<tr>
+<td align="center"><font style="color:rgb(79, 79, 79);">删除速度</font></td>
+<td align="center"><font style="color:rgb(79, 79, 79);">删除速度慢，需要逐行删除</font></td>
+<td align="center"><font style="color:rgb(79, 79, 79);">删除速度快</font></td>
+<td align="center"><font style="color:rgb(79, 79, 79);">删除速度最快</font></td>
+</tr>
+</tbody></table>
+<p><strong><font style="color:rgb(77, 77, 77);">想删除部分数据，用delete</font></strong><font style="color:rgb(77, 77, 77);">；</font><br><strong><font style="color:rgb(77, 77, 77);">保留表结构而删除所有数据，用truncate</font></strong><font style="color:rgb(77, 77, 77);">；</font><br><strong><font style="color:rgb(77, 77, 77);">不再需要一张表，用drop</font></strong><font style="color:rgb(77, 77, 77);">。</font></p>
+<p><font style="color:rgb(77, 77, 77);"></font></p>
+<ul>
+<li><font style="color:rgb(77, 77, 77);">delete一次删除一行，会将删除操作作为食物记录在日志中保存以便进行回滚操作，</font><font style="color:rgba(0, 0, 0, 0.75);">TRUNCATE TABLE则一次性地从表中删除所有的数据并不把单独的删除操作记录记入日志保存，删除行是不能恢复的。并且在删除的过程中不会激活与表有关的删除触发器。执行速度快。</font></li>
+<li><font style="color:rgba(0, 0, 0, 0.75);">表和索引所占空间。当表被TRUNCATE后，这个表和索引所占用的空间会恢复到初始大小，而DELETE操作不会减少表或索引所占用的空间。DROP语句将表所占用的空间全释放掉。</font></li>
+<li><font style="color:rgba(0, 0, 0, 0.75);">一般而言，</font><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">执行速度：DROP&gt;TRUNCATE&gt;DELETE</font><font style="color:rgba(0, 0, 0, 0.75);">。</font></li>
+<li><font style="color:rgba(0, 0, 0, 0.75);">应用范围。TRUNCATE只能对TABLE；DELETE可以是TABLE和VIEW</font></li>
+<li><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">TRUNCATE和DELETE只删除数据，而DROP则删除整个表（结构和数据）</font><font style="color:rgba(0, 0, 0, 0.75);">。</font></li>
+<li><font style="color:rgba(0, 0, 0, 0.75);">TRUNCATE与不带 WHERE的DELETE：只删除数据，而不删除表的结构（定义）drop 语句将删除表的结构被依赖的约束（constrain),触发器（trigger)索引（index);依赖于该表的存储过程&#x2F;函数将被保留，但其状态会变为：invalid。</font></li>
+<li><font style="color:rgba(0, 0, 0, 0.75);">truncate、drop是ddl，操作立即生效。</font></li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">TRUNCATE TABLE table_name;</span><br><span class="line"></span><br><span class="line">DROP TABLE table_name;</span><br></pre></td></tr></table></figure>
+
+<h4 id="SELECT语句"><a href="#SELECT语句" class="headerlink" title="SELECT语句"></a><font style="color:rgb(79, 79, 79);">SELECT语句</font></h4><h5 id="简单查询"><a href="#简单查询" class="headerlink" title="简单查询"></a><font style="color:rgb(79, 79, 79);">简单查询</font></h5><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">#查询指定列</span><br><span class="line">SELECT 查询的列1,查询的列2 FROM tablename [WHERE CONDITION]</span><br><span class="line">#查询所有列</span><br><span class="line">select * from 表名</span><br></pre></td></tr></table></figure>
+
+<h5 id="列别名"><a href="#列别名" class="headerlink" title="列别名"></a><font style="color:rgb(79, 79, 79);">列别名</font></h5><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">select 列 [as] 别名 from 表;</span><br><span class="line">-- 使用双引号创建别名</span><br><span class="line">select a &quot;列1&quot;,b &quot;列2&quot; from test1;</span><br><span class="line">-- 使用单引号创建别名</span><br><span class="line">select a &#x27;列1&#x27;,b &#x27;列2&#x27; from test1;</span><br><span class="line">-- 不用引号创建别名</span><br><span class="line">select a 列1,b 列2 from test1;</span><br><span class="line">-- 使用as创建别名</span><br><span class="line">select a as 列1,b as 列2 from test1;</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(77, 77, 77);">建议给列起别名时，使用</font><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">as</font><font style="color:rgb(77, 77, 77);">关键字，sql易读。</font></p>
+<h5 id="条件查询"><a href="#条件查询" class="headerlink" title="条件查询"></a><font style="color:rgb(79, 79, 79);">条件查询</font></h5><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select 列名 from 表名 where 列 运算符 值</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(77, 77, 77);"> WHERE后面跟的条件中，除了可以使用&#x3D;，还可以使用&gt;、&lt;、&gt;&#x3D;、&lt;&#x3D;、！&#x3D;等比较运算符，多个条件之间可以用OR、AND等逻辑运算符。</font></p>
+<h5 id="模糊查询"><a href="#模糊查询" class="headerlink" title="模糊查询"></a><font style="color:rgb(79, 79, 79);">模糊查询</font></h5><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">-- ％对应于0个或更多字符,_只是 LIKE 语句中的一个字符</span><br><span class="line">select 列名 from 表名 where 列 like pattern;</span><br></pre></td></tr></table></figure>
+
+<h5 id="区间查询"><a href="#区间查询" class="headerlink" title="区间查询"></a><font style="color:rgb(79, 79, 79);">区间查询</font></h5><p><font style="color:rgb(77, 77, 77);">操作符 BETWEEN … AND 会选取介于两个值之间的数据范围，这些值可以是数值、文本或者日期，属于一个闭区间查询。</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">selec 列名 from 表名 where 列名 between 值1 and 值2;</span><br></pre></td></tr></table></figure>
+
+<h5 id="IN查询"><a href="#IN查询" class="headerlink" title="IN查询"></a><font style="color:rgb(79, 79, 79);">IN查询</font></h5><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select 列名 from 表名 where 字段 in (值1,值2,值3,值4);</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(77, 77, 77);">in后面括号中可以包含多个值，对应记录的字段满足in中任意一个都会被返回。</font><br><font style="color:rgb(77, 77, 77);"> in列表的值类型必须一致或兼容。</font><br><font style="color:rgb(77, 77, 77);"> in列表中不支持通配符。</font></p>
+<h5 id="EXIST"><a href="#EXIST" class="headerlink" title="EXIST"></a><font style="color:rgba(0, 0, 0, 0.75);">EXIST</font></h5><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM a WHERE EXISTS(SELECT 1 FROM b WHERE B.id  = A.id);</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(77, 77, 77);">等价于：</font></p>
+<p><font style="color:#000000;background-color:rgb(238, 240, 244);">1、SELECT * FROM A;<br></font><font style="color:#000000;background-color:rgb(238, 240, 244);">2、SELECT I FROM B WHERE B.id &#x3D; A.id;</font></p>
+<p>:::info<br><font style="color:rgb(77, 77, 77);">EXISTS()查询会执行SELECT * FROM A查询，执行A.length次，并不会将  EXISTS()查询结果结果进行缓存，因为EXISTS()查询返回一个布尔值true或flase，它只在乎EXISTS()的查询中是否有记录，与具体的结果集无关。</font></p>
+<p><font style="color:rgb(77, 77, 77);">  EXISTS()查询是将主查询的结果集放到子查询中做验证，根据验证结果是true或false来决定主查询数据结果是否得以保存。</font></p>
+<p><font style="color:rgb(77, 77, 77);">  可以看出，使用EXIST时，子查询中适合放大表（数据量大的表）。</font></p>
+<p>:::</p>
+<h5 id="NOT-IN查询"><a href="#NOT-IN查询" class="headerlink" title="NOT IN查询"></a><font style="color:rgb(79, 79, 79);">NOT IN查询</font></h5><p><font style="color:rgb(77, 77, 77);">not in和in刚好相反，in是列表中被匹配的都会被返回，NOT IN是和列表中都不匹配的会被返回。</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select 列名 from 表名 where 字段 not in (值1,值2,值3,值4);</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(77, 77, 77);">用 not in 的时候，如果 not in 后面的选项中有 null，不会查询出来任何数据。sql 语句本身直接返回 false。所以使用 not in 的时候，要保证 in 中的条件不会出现 null 的情况。</font></p>
+<h5 id="NULL值查询"><a href="#NULL值查询" class="headerlink" title="NULL值查询"></a><font style="color:rgb(79, 79, 79);">NULL值查询</font></h5><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">select 列名 from 表名 where 列 is null;</span><br><span class="line">select 列名 from 表名 where 列 is not null;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h5 id="排序查询"><a href="#排序查询" class="headerlink" title="排序查询"></a><font style="color:rgb(79, 79, 79);">排序查询</font></h5><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM tablename </span><br><span class="line">[WHERE CONDITION] </span><br><span class="line">[ORDER BY field1 [DESC|ASC],field2 [DESC|ASC],...,fieldn [DESC|ASC]]</span><br><span class="line">-- 示例</span><br><span class="line">select * from product order by price desc,order_count asc</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(77, 77, 77);">DESC表示按字段进行降序排列，ASC表示升序排列，</font><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">默认是升序排列</font><font style="color:rgb(77, 77, 77);">。支持多个字段进行排序，多字段排序之间用逗号隔开，order by后越靠前的字段排序优先级越高。</font></p>
+<h5 id="LIMIT语句"><a href="#LIMIT语句" class="headerlink" title="LIMIT语句"></a><font style="color:rgb(79, 79, 79);">LIMIT语句</font></h5><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select 列 from 表 limit [offset,] count;</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(77, 77, 77);">offset：表示偏移量，通俗点讲就是跳过多少行，offset可以省略，默认为0，表示跳过0行；范围：[0,+∞)。</font><br><font style="color:rgb(77, 77, 77);"> count：跳过offset行之后开始取数据，取count行记录；范围：[0,+∞)。</font><br><font style="color:rgb(77, 77, 77);"> limit中offset和count的值不能用表达式。</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">#获取前n行记录</span><br><span class="line">	select 列 from 表 limit 0,n;</span><br><span class="line">	select 列 from 表 limit n;</span><br><span class="line">	#获取排名第n到m的记录</span><br><span class="line">	select 列 from 表 limit n-1,m-n+1;</span><br><span class="line">	#示例：显示从第2条数据开始的3条数据</span><br><span class="line">	SELECT * FROM emp ORDER BY sal LIMIT 1,3</span><br></pre></td></tr></table></figure>
+
+
+
+<h5 id="分页查询"><a href="#分页查询" class="headerlink" title="分页查询"></a><font style="color:rgb(79, 79, 79);">分页查询</font></h5><p>LIMIT经常和ORDER BY一起使用，进行数据的分页显示。</p>
+<p>  开发过程中，分页我们经常使用，分页一般有2个参数：</p>
+<p>  page：表示第几页，从1开始，范围[1,+∞)。</p>
+<p>  pageSize：每页显示多少条记录，范围[1,+∞)。</p>
+<p>  如：page &#x3D; 2，pageSize &#x3D; 10，表示获取第2页10条数据。使用limit分页的语法：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">select 列 from 表名 limit (page - 1) * pageSize,pageSize;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(77, 77, 77);">注意事项：</font></p>
+<ol>
+<li><font style="color:rgba(0, 0, 0, 0.75);">limit中不能使用表达式，只能够跟明确的数字。</font></li>
+<li><font style="color:rgba(0, 0, 0, 0.75);">limit后面的2个数字不能为负数。</font></li>
+</ol>
+<h5 id="分组查询"><a href="#分组查询" class="headerlink" title="分组查询"></a><font style="color:rgb(79, 79, 79);">分组查询</font></h5><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">SELECT [filed1,field2,...,fieldn] fun_name</span><br><span class="line">FROM tablename</span><br><span class="line">[WHERE where_condition]</span><br><span class="line">[GROUP BY field1,field2,...,fieldn]</span><br><span class="line">[HAVING where_condition]</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>fun_name表示聚合函数，常用的有sum、count(*)、avg、max、min等。GROUP BY后面跟的是要进行分类聚合的字段。HAVING表示对分类后的结果在进行条件过滤。</p>
+<p>分组中，select后面只能有两种类型的列：</p>
+<p>1）出现在group by后的列；</p>
+<p>2）或者使用聚合函数的列。</p>
+<p>  Group BY用来创建分组，如果分组中有NULL值，将NULL作为一个分组返回。如果列中有多行NULL值，它们将分为一组。</p>
+<h5 id="UNION语句"><a href="#UNION语句" class="headerlink" title="UNION语句"></a><font style="color:rgb(79, 79, 79);">UNION语句</font></h5><p><font style="color:rgb(77, 77, 77);">将多个查询的数据合并用到的关键字是UNION&#x2F;UNION ALL：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM t1</span><br><span class="line">UNION|UNION ALL</span><br><span class="line">SELECT * FROM t2</span><br><span class="line">...</span><br><span class="line">UNION|UNION ALL</span><br><span class="line">SELECT * FROM tn</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(77, 77, 77);">UNION和UNION ALL的区别：</font></p>
+<ul>
+<li><font style="color:rgba(0, 0, 0, 0.5);">UNION ALL：把结果集直接合并在一起；</font></li>
+<li><font style="color:rgba(0, 0, 0, 0.5);">UNION：将UNION ALL的结果进行去重。</font></li>
+</ul>
+<p><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">因为UNION有个去重的过程，所以UNION ALL的效率较高</font><font style="color:rgb(77, 77, 77);">。</font></p>
+<h5 id="COUNT语句"><a href="#COUNT语句" class="headerlink" title="COUNT语句*"></a><font style="color:rgb(79, 79, 79);">COUNT语句*</font></h5><p><font style="color:rgb(77, 77, 77);">COUNT(*)函数返回表中所有行的数量，包括NULL值行。</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">SELECT COUNT(*) FROM students;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(77, 77, 77);">COUNT(column_name)函数返回指定列非NULL值的数量，忽略NULL值行。</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">SELECT COUNT(age) FROM students;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(77, 77, 77);">COUNT(DISTINCT column_name)返回指定列中不同值的数量，忽略NULL值行。</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">SELECT COUNT(DISTINCT age) FROM students;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(77, 77, 77);">COUNT(DISTINCT expr,[expr…])函数返回指定表达式中不同非NULL值的数量，忽略NULL值行。</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">SELECT COUNT(DISTINCT age, gender) FROM students;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(77, 77, 77);">COUNT(IF(condition, column_name, NULL))函数返回满足指定条件的指定列的非NULL值数量。</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">-- 这个 SQL 语句的含义是统计学生表中性别为 ‘Female’ 的人数。通过 IF 函数，将所有性别</span><br><span class="line">-- 为 ‘Female’ 的行转换成 1，然后 COUNT 函数就会返回这些 1 的数量，即性别为 ‘Female’ </span><br><span class="line">-- 的学生数量</span><br><span class="line">SELECT COUNT(IF(gender=&#x27;Female&#x27;, 1, NULL)) FROM students;</span><br></pre></td></tr></table></figure>
+
+<p>ount(*)、count(1)、count(列名)的选择</p>
+<p>  COUNT(*) 是最常用的方式，它可以统计所有行的数量，包括 NULL 值。</p>
+<p>  COUNT(1) 也可以统计所有行的数量，包括 NULL 值。</p>
+<p>  COUNT(column_name) 只会统计指定列中非 NULL 值的数量，而忽略 NULL 值。因此，如果需要统计指定列的非 NULL 值数量，那么可以使用 COUNT(column_name)。这种方式的性能相对较低，因为需要扫描整个表，对于每一行都要进行判断。</p>
+<h4 id="关联查询"><a href="#关联查询" class="headerlink" title="关联查询"></a><font style="color:rgb(79, 79, 79);">关联查询</font></h4><p><font style="color:rgb(77, 77, 77);">Mysql中常用的关联查询有左外连接、右外连接、全连接、自连接等。</font></p>
+<h5 id="笛卡尔积"><a href="#笛卡尔积" class="headerlink" title="笛卡尔积"></a><font style="color:rgb(79, 79, 79);">笛卡尔积</font></h5><p><font style="color:rgb(77, 77, 77);"> 笛卡尔积简单点理解：有两个集合A和B，笛卡尔积表示A集合中的元素和B集合中的元素任意相互关联产生的所有可能的结果。假如A中有m个元素，B中有n个元素，A、B笛卡尔积产生的结果有m*n个结果，相当于循环遍历两个集合中的元素，任意组合。</font></p>
+<p><font style="color:rgb(85, 86, 102);background-color:rgb(238, 240, 244);">过程：拿A集合中的第1行，去匹配集合B中所有的行，然后再拿集合A中的第2行，去匹配集合B中所有的行，最后结果数量为m*n。</font></p>
+<h5 id="内连接-INNER-JOIN"><a href="#内连接-INNER-JOIN" class="headerlink" title="内连接 (INNER JOIN)"></a><font style="color:rgb(13, 13, 13);">内连接 (INNER JOIN)</font></h5><p><font style="color:rgb(13, 13, 13);">内连接返回两个表中满足连接条件的行。</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">SELECT employees.employee_id, employees.employee_name, departments.department_name</span><br><span class="line">FROM employees</span><br><span class="line">INNER JOIN departments ON employees.department_id = departments.department_id;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h5 id="左连接-LEFT-JOIN"><a href="#左连接-LEFT-JOIN" class="headerlink" title="左连接 (LEFT JOIN)"></a><font style="color:rgb(13, 13, 13);">左连接 (LEFT JOIN)</font></h5><p><font style="color:rgb(13, 13, 13);">左连接返回左表中的所有行以及右表中满足连接条件的行。如果右表中没有匹配的行，结果中包含的右表列将包含NULL。</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">SELECT employees.employee_id, employees.employee_name, departments.department_name</span><br><span class="line">FROM employees</span><br><span class="line">LEFT JOIN departments ON employees.department_id = departments.department_id;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h5 id="右连接-RIGHT-JOIN"><a href="#右连接-RIGHT-JOIN" class="headerlink" title="右连接 (RIGHT JOIN)"></a><font style="color:rgb(13, 13, 13);">右连接 (RIGHT JOIN)</font></h5><p><font style="color:rgb(13, 13, 13);">右连接返回右表中的所有行以及左表中满足连接条件的行。如果左表中没有匹配的行，结果中包含的左表列将包含NULL。</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">SELECT employees.employee_id, employees.employee_name, departments.department_name</span><br><span class="line">FROM employees</span><br><span class="line">RIGHT JOIN departments ON employees.department_id = departments.department_id;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h5 id="全连接-FULL-JOIN"><a href="#全连接-FULL-JOIN" class="headerlink" title="全连接 (FULL JOIN)"></a><font style="color:rgb(13, 13, 13);">全连接 (FULL JOIN)</font></h5><p><font style="color:rgb(13, 13, 13);">MySQL不直接支持FULL JOIN，但可以通过使用UNION来模拟。</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">SELECT employees.employee_id, employees.employee_name, departments.department_name</span><br><span class="line">FROM employees</span><br><span class="line">LEFT JOIN departments ON employees.department_id = departments.department_id</span><br><span class="line">UNION</span><br><span class="line">SELECT employees.employee_id, employees.employee_name, departments.department_name</span><br><span class="line">FROM employees</span><br><span class="line">RIGHT JOIN departments ON employees.department_id = departments.department_id;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h5 id="交叉连接-CROSS-JOIN"><a href="#交叉连接-CROSS-JOIN" class="headerlink" title="交叉连接 (CROSS JOIN)"></a><font style="color:rgb(13, 13, 13);">交叉连接 (CROSS JOIN)</font></h5><p><font style="color:rgb(13, 13, 13);">交叉连接返回两个表的笛卡尔积，即表1中的每一行与表2中的每一行组合。</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">SELECT employees.employee_name, departments.department_name</span><br><span class="line">FROM employees</span><br><span class="line">CROSS JOIN departments;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h5 id="自连接（Self-Join）"><a href="#自连接（Self-Join）" class="headerlink" title="自连接（Self-Join）"></a>自连接（<font style="color:rgb(13, 13, 13);">Self-Join</font>）</h5><p><font style="color:rgb(13, 13, 13);">自连接（Self-Join）是在同一个表中进行的联接查询，用于将表中的一行与另一行相关联。自连接常用于需要比较表中不同行的数据的情况，例如查找员工和他们的经理、产品的父子关系等。</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">SELECT e1.employee_name AS employee, e2.employee_name AS manager</span><br><span class="line">FROM employees e1</span><br><span class="line">LEFT JOIN employees e2 ON e1.manager_id = e2.employee_id;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(13, 13, 13);">在自连接查询中，使用表别名（如 e1 和 e2）是必需的，以区分表的不同实例。</font></p>
+<p><font style="color:rgb(13, 13, 13);">自连接可能对大表进行性能影响，因此在实际应用中需要注意索引和查询优化。</font></p>
+<p><font style="color:rgb(13, 13, 13);">根据需求，可以使用不同的连接类型（INNER JOIN、LEFT JOIN等）来决定是否包括没有匹配关系的行。</font></p>
+<h3 id="DCL"><a href="#DCL" class="headerlink" title="DCL"></a><font style="background-color:rgb(249, 242, 244);">DCL</font></h3><p><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">DCL：数据控制语言，这些语句主要用来控制数据库的访问权限</font><font style="color:rgb(77, 77, 77);">。常用的关键字有主要包括grant、revoke、commit、rollback等。</font><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">DCL主要用来控制数据库的权限</font><font style="color:rgb(77, 77, 77);">。</font></p>
+<h3 id="DQL"><a href="#DQL" class="headerlink" title="DQL"></a>DQL</h3><p><font style="color:rgb(77, 77, 77);">数据查询语言，各种简单查询，连接查询等 都属于DQL。</font></p>
+<h2 id="查询语句的书写和执行顺序"><a href="#查询语句的书写和执行顺序" class="headerlink" title="查询语句的书写和执行顺序"></a><font style="color:rgb(79, 79, 79);">查询语句的书写和执行顺序</font></h2><p><font style="color:rgb(77, 77, 77);">Mysql的一般书写顺写为：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">select  &lt;要返回的数据列&gt;</span><br><span class="line">from   &lt;表名&gt;</span><br><span class="line">&lt;join, left join, right join...&gt; join    &lt;join表&gt;</span><br><span class="line">on   &lt;join条件&gt;</span><br><span class="line">where   &lt;where条件&gt;</span><br><span class="line">group by  &lt;分组条件&gt;</span><br><span class="line">having  &lt;分组后的筛选条件&gt;</span><br><span class="line">order by  &lt;排序条件&gt;</span><br><span class="line">limit  &lt;行数限制&gt;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h5 id="常见执行顺序"><a href="#常见执行顺序" class="headerlink" title="常见执行顺序*"></a><font style="color:rgb(79, 79, 79);">常见执行顺序*</font></h5><ol>
+<li><font style="color:rgb(77, 77, 77);">一个查询语句同时出现了where、group by、having、order by的时候，执行顺序和编写顺序是：</font></li>
+<li><font style="color:rgb(77, 77, 77);">执行where xx对全表数据做筛选，返回第1个结果集。</font></li>
+<li><font style="color:rgb(77, 77, 77);">针对第1个结果集使用group by分组，返回第2个结果集。</font></li>
+<li><font style="color:rgb(77, 77, 77);">针对第2个结果集中的每1组数据执行select xx，有几组就执行几次，返回第3个结果集。</font></li>
+<li><font style="color:rgb(77, 77, 77);">针对第3个结集执行having xx进行筛选，返回第4个结果集。</font></li>
+<li><font style="color:rgb(77, 77, 77);">针对第4个结果集排序。</font></li>
+</ol>
+<p><font style="color:rgb(77, 77, 77);">按照执行顺序的关键词首字母分别是W（where）-&gt;G（Group）-&gt;S（Select）-&gt;H（Having）-&gt;O（Order），对应汉语首字母可以编成容易记忆的顺口溜：我(W)哥(G)是(SH)偶(O)像。</font></p>
+<h5 id="完整执行顺序"><a href="#完整执行顺序" class="headerlink" title="完整执行顺序"></a><font style="color:rgb(79, 79, 79);">完整执行顺序</font></h5><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">from </span><br><span class="line">    &lt;表名&gt;          # 笛卡尔积</span><br><span class="line">on </span><br><span class="line">    &lt;筛选条件&gt;          #对笛卡尔积的虚表进行筛选</span><br><span class="line">&lt;join, left join, right join...&gt; join </span><br><span class="line">    &lt;join表&gt;  #指定join，用于添加数据到on之后的虚表中，例如left join会将左表的剩余数据添加到虚表中</span><br><span class="line">where </span><br><span class="line">    &lt;where条件&gt;     #对上述虚表进行筛选</span><br><span class="line">group by</span><br><span class="line">    &lt;分组条件&gt;      #分组</span><br><span class="line">&lt;sum()等聚合函数&gt;   #用于having子句进行判断，在书写上这类聚合函数是写在having判断里面的</span><br><span class="line">having </span><br><span class="line">    &lt;分组筛选&gt;      #对分组后的结果进行聚合筛选</span><br><span class="line">select </span><br><span class="line">    &lt;返回数据列表&gt;       #返回的单列必须在group by子句中，聚合函数除外</span><br><span class="line">distinct</span><br><span class="line">order by </span><br><span class="line">    &lt;排序条件&gt;      #排序</span><br><span class="line">limit </span><br><span class="line">    &lt;行数限制&gt;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(77, 77, 77);">执行流程：</font></p>
+<ul>
+<li><font style="color:rgb(77, 77, 77);">from：select * from table_1, table_2; 与 select * from table_1 join table_2; 的结果一致，都是表示求笛卡尔积；</font></li>
+<li><font style="color:rgb(77, 77, 77);">  用于直接计算两个表笛卡尔积，得到虚拟表VT1，这是所有select语句最先执行的操作，其他操作时在这个表上进行的，也就是from操作所完成的内容。</font></li>
+<li><font style="color:rgb(77, 77, 77);">on：从VT1表中筛选符合条件的数据，形成VT2表；</font></li>
+<li><font style="color:rgb(77, 77, 77);">join：将该join类型的数据补充到VT2表中，例如left join会将左表的剩余数据添加到虚表VT2中，形成VT3表；若表的数量大于2，则会重复1-3步；</font></li>
+<li><font style="color:rgb(77, 77, 77);">where：执行筛选，（不能使用聚合函数）得到VT4表；</font></li>
+<li><font style="color:rgb(77, 77, 77);">group by：对VT4表进行分组，得到VT5表；其后处理的语句，如select，having，所用到的列必须包含在group by条件中，没有出现的需要用聚合函数；</font></li>
+<li><font style="color:rgb(77, 77, 77);">having：筛选分组后的数据，得到VT6表；</font></li>
+<li><font style="color:rgb(77, 77, 77);">select：返回列得到VT7表；</font></li>
+<li><font style="color:rgb(77, 77, 77);">distinct：用于去重得到VT8表；</font></li>
+<li><font style="color:rgb(77, 77, 77);">order by：用于排序得到VT9表；</font></li>
+<li><font style="color:rgb(77, 77, 77);">limit：返回需要的行数，得到VT10。</font></li>
+</ul>
+<h2 id="三大范式"><a href="#三大范式" class="headerlink" title="三大范式*"></a><font style="color:rgb(79, 79, 79);">三大范式*</font></h2><p><font style="color:rgb(77, 77, 77);">数据库的三大范式的设计目的是</font><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">减少数据冗余</font><font style="color:rgb(77, 77, 77);">。</font></p>
+<h5 id="第一范式"><a href="#第一范式" class="headerlink" title="第一范式"></a><font style="color:rgb(79, 79, 79);">第一范式</font></h5><p>第一范式是最基本的范式。如果数据库表中的所有字段值都不可再分解（列不可再分），就说明该数据库表满足了第一范式，确保数据库表字段的原子性。</p>
+<p>  第一范式的合理遵循需要根据系统的实际需求来定。比如某些数据库系统中需要用到“地址”这个属性，本来直接将“地址”属性设计成一个数据库表的字段就行。但是如果系统经常会访问“地址”属性中的“城市”部分，那么就非要将“地址”这个属性重新拆分为省份、城市、详细地址等多个部分进行存储，这样在对地址中某一部分操作的时候将非常方便。</p>
+<h5 id="第二范式"><a href="#第二范式" class="headerlink" title="第二范式"></a><font style="color:rgb(79, 79, 79);">第二范式</font></h5><p><font style="color:rgb(77, 77, 77);">第二范式：</font><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">表必须有一个主键，非主键列必须完全依赖于主键，而不能只依赖于主键的一部分</font><font style="color:rgb(77, 77, 77);">。</font></p>
+<h5 id="第三范式"><a href="#第三范式" class="headerlink" title="第三范式"></a><font style="color:rgb(79, 79, 79);">第三范式</font></h5><p><font style="color:rgb(77, 77, 77);">满足第三范式（3NF）必须先满足第二范式（2NF）。</font><br><font style="color:rgb(77, 77, 77);"> 第三范式：</font><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">非主键列必须直接依赖于主键，不能存在传递依赖</font><font style="color:rgb(77, 77, 77);">。即不能存在：非主键列A 依赖于非主键列 B，非主键列 B 依赖于主键的情况。</font></p>
+<ul>
+<li><strong><font style="color:rgba(0, 0, 0, 0.75);">2NF和3NF的区别</font></strong><font style="color:rgba(0, 0, 0, 0.75);"><br></font><font style="color:rgba(0, 0, 0, 0.75);">2NF依据是非主键列是否完全依赖于主键，还是依赖于主键的一部分。<br></font><font style="color:rgba(0, 0, 0, 0.75);">3NF依据是非主键列是直接依赖于主键，还是直接依赖于非主键。</font></li>
+</ul>
+<h5 id="简单总结"><a href="#简单总结" class="headerlink" title="简单总结"></a><font style="color:rgb(79, 79, 79);">简单总结</font></h5><ul>
+<li><font style="color:rgba(0, 0, 0, 0.75);">1、第一范式：</font><font style="color:rgba(0, 0, 0, 0.75);"> </font><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">列不可分</font><font style="color:rgba(0, 0, 0, 0.75);">。</font></li>
+<li><font style="color:rgba(0, 0, 0, 0.75);">2、第二范式：</font><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">列必须直接依赖主键</font><font style="color:rgba(0, 0, 0, 0.75);">。</font></li>
+<li><font style="color:rgba(0, 0, 0, 0.75);">3、第三范式： </font><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">表里面的列不能出现其它表的非主键字段</font></li>
+</ul>
+<h5 id="范式化和反范式化设计的优缺点"><a href="#范式化和反范式化设计的优缺点" class="headerlink" title="范式化和反范式化设计的优缺点"></a><font style="color:rgb(79, 79, 79);">范式化和反范式化设计的优缺点</font></h5><ul>
+<li><strong><font style="color:rgba(0, 0, 0, 0.75);">范式化</font></strong><font style="color:rgba(0, 0, 0, 0.75);"><br></font><font style="color:rgba(0, 0, 0, 0.75);">优点：可以尽量得减少数据冗余，使得更新快，体积小。<br></font><font style="color:rgba(0, 0, 0, 0.75);">缺点：对于查询需要多个表进行关联，减少写得效率增加读得效率。</font></li>
+<li><strong><font style="color:rgba(0, 0, 0, 0.75);">反范式化</font></strong><font style="color:rgba(0, 0, 0, 0.75);"><br></font><font style="color:rgba(0, 0, 0, 0.75);">优点：可以减少表得关联，可以更好得进行索引优化。<br></font><font style="color:rgba(0, 0, 0, 0.75);">缺点：数据冗余，数据的修改需要更多的成本。</font></li>
+</ul>
+<h2 id="约束"><a href="#约束" class="headerlink" title="约束"></a><font style="color:rgb(79, 79, 79);">约束</font></h2><p><font style="color:rgb(77, 77, 77);">创建表的时候，同时可以指定所插入数据的一些规则，比如说某个字段不能为空值，某个字段的值（比如年龄）不能小于零等等，这些规则称为约束。</font><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">约束是在表上强制执行的数据校验规则</font><font style="color:rgb(77, 77, 77);">。</font><br><font style="color:rgb(77, 77, 77);"> 数据库中的五大约束：</font></p>
+<ol>
+<li><strong><font style="color:rgba(0, 0, 0, 0.75);">主键约束</font></strong><font style="color:rgba(0, 0, 0, 0.75);">： 唯一，非空【常用】；</font></li>
+<li><strong><font style="color:rgba(0, 0, 0, 0.75);">唯一约束</font></strong><font style="color:rgba(0, 0, 0, 0.75);"> </font><font style="color:rgba(0, 0, 0, 0.75);">：唯一，可以为空，但只能有一个【常用】；</font></li>
+<li><strong><font style="color:rgba(0, 0, 0, 0.75);">非空约束</font></strong><font style="color:rgba(0, 0, 0, 0.75);">：非空【常用】；</font></li>
+<li><strong><font style="color:rgba(0, 0, 0, 0.75);">默认约束</font></strong><font style="color:rgba(0, 0, 0, 0.75);"> </font><font style="color:rgba(0, 0, 0, 0.75);">：该列数据的默认值；</font></li>
+<li><strong><font style="color:rgba(0, 0, 0, 0.75);">外键约束</font></strong><font style="color:rgba(0, 0, 0, 0.75);"> </font><font style="color:rgba(0, 0, 0, 0.75);">： 两表间的关系；</font></li>
+<li><strong><font style="color:rgba(0, 0, 0, 0.75);">检查约束</font></strong><font style="color:rgba(0, 0, 0, 0.75);"> ： 检查字段值是否符合要求。</font></li>
+</ol>
+<p><font style="color:rgb(77, 77, 77);"> 约束示例：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">--添加主键约束</span><br><span class="line">Alter table 表名 add Constraint 主键名 primary key(字段)</span><br><span class="line">--添加唯一约束</span><br><span class="line">Alter table 表名 add Constraint 约束名 unique(字段)</span><br><span class="line">--添加默认约束</span><br><span class="line">Alter table 表名 add Constraint 约束名 default(默认内容) for 字段名</span><br><span class="line">--添加检查约束</span><br><span class="line">Alter table 表名 add Constraint 约束名 check (字段表达)</span><br><span class="line">--添加外键约束</span><br><span class="line">Alter table 表名 add Constraint 约束名 foreign key(字段) references 表名(字段名)</span><br><span class="line">--约束常常在建表时添加，如对某个极端添加非空约束</span><br><span class="line">`account_name` varchar(64) NOT NULL COMMENT &#x27;账户名称&#x27;,</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="SQL相关问题"><a href="#SQL相关问题" class="headerlink" title="SQL相关问题"></a><font style="color:rgb(79, 79, 79);">SQL相关问题</font></h2><h5 id="HAVNG和WHERE的区别"><a href="#HAVNG和WHERE的区别" class="headerlink" title="HAVNG和WHERE的区别*"></a><font style="color:rgb(79, 79, 79);">HAVNG和WHERE的区别*</font></h5><ul>
+<li><p>语法</p>
+<pre><code>   where用表中列名，having用select结果别名；
+</code></pre>
+</li>
+<li><p>是否能使用索引</p>
+<pre><code>    where可以使用索引，having不能使用索引，只能在临时结果集操作；
+</code></pre>
+</li>
+<li><p>是否能使用聚集函数</p>
+</li>
+</ul>
+<p>where 后面不能使用聚集函数，having是专门使用聚集函数的。</p>
+<ul>
+<li>一个聚集函数从多个输入行中计算出一个结果，比如count（数目）， sum（和），avg（ 均值 ）， max（最大值）和min（最小值）。</li>
+<li>HAVING是对聚合(数据分组)后的结果进行条件的过滤，而WHERE是在聚合(数据分组)前就对记录进行过滤。如果逻辑允许，尽可能用WHERE先过滤条件，因为这样结果集减小，聚合的效率将大大提高，最后再根据逻辑看是否用HAVING进行过滤。</li>
+</ul>
+<h5 id="SELECT-和-SELECT-全部字段-的区别1、是否解析数据字典"><a href="#SELECT-和-SELECT-全部字段-的区别1、是否解析数据字典" class="headerlink" title="[SELECT *] 和 [SELECT 全部字段]的区别1、是否解析数据字典"></a><font style="color:rgb(79, 79, 79);">[SELECT *] 和 [SELECT 全部字段]的区别</font><font style="color:rgb(79, 79, 79);">1、是否解析数据字典</font></h5><p><font style="color:rgb(79, 79, 79);">1、前者要解析数据字典（数据字典是指对数据的数据项、数据结构、数据流、数据存储、处理逻辑、外部实体等进行定义和描述，其目的是对数据流程图中的各个元素做出详细的说明），后者不需要数据字典。</font></p>
+<p><font style="color:rgb(79, 79, 79);">2、是否可指定输出顺序</font></p>
+<p><font style="color:rgb(79, 79, 79);">  前者与建表列顺序相同（建表后不增删字段的话），后者可以指定字段顺序。</font></p>
+<p><font style="color:rgb(79, 79, 79);">3、表字段改名，前者不需要修改，后者需要改。</font></p>
+<p><font style="color:rgb(79, 79, 79);">4、是否可优化</font></p>
+<p><font style="color:rgb(79, 79, 79);">  后者可以建立索引进行优化，前者无法优化。</font></p>
+<p><font style="color:rgb(79, 79, 79);">5、可读性</font></p>
+<p><font style="color:rgb(79, 79, 79);">  后者的可读性比前者要高。</font></p>
+<h5 id="Mysql分组中的坑"><a href="#Mysql分组中的坑" class="headerlink" title="Mysql分组中的坑"></a><font style="color:rgb(79, 79, 79);">Mysql分组中的坑</font></h5><p> 分组中select后面的列只能有2种：1）出现在group by后面的列；2）使用聚合函数的列。</p>
+<p>  这是在Mysql后期版本加上的功能，在早期版本中没这个要求。建议：在写分组查询的时候，最好按照标准的规范来写，即：select后面出现的列必须在group by中或者必须使用聚合函数。</p>
+<h2 id="数据库开发规范"><a href="#数据库开发规范" class="headerlink" title="数据库开发规范"></a><font style="color:rgb(79, 79, 79);">数据库开发规范</font></h2><h5 id="基础规范"><a href="#基础规范" class="headerlink" title="基础规范"></a><font style="color:rgb(79, 79, 79);">基础规范</font></h5><p> 1）必须使用InnoDB存储引擎解读：支持事务、行级锁、并发性能更好、CPU及内存缓存页优化使得资源利用率更高。</p>
+<p>  2）必须使用UTF8字符集解读：万国码，无需转码，无乱码风险，节省空间。</p>
+<p>  3）数据表、数据字段必须加入中文注释。</p>
+<p>  4）禁止使用存储过程、视图、触发器、Event解读：高并发大数据的互联网业务，架构设计思路是“解放数据库CPU，将计算转移到服务层”，并发量大的情况下，这些功能很可能将数据库拖死，业务逻辑放到服务层具备更好的扩展性，能够轻易实现“增机器就加性能”。</p>
+<p>  5）禁止存储大文件或者大照片解读：为何要让数据库做它不擅长的事情？大文件和照片存储在文件系统，数据库里存URL。</p>
+<h5 id="命名规范"><a href="#命名规范" class="headerlink" title="命名规范"></a><font style="color:rgb(79, 79, 79);">命名规范</font></h5><p> 1）库名、表名、字段名：小写，下划线风格，不超过32个字符，必须见名知意，禁止拼音英文混用.</p>
+<p>  2）表名t_xxx，非唯一索引名uniq_xxx，唯一索引名idx_xxx.</p>
+<p>  3）单实例表数目必须小于500。</p>
+<p>  4）单表列数目必须小于30。</p>
+<p>  5）表必须有主键，例如自增主键：</p>
+<p><font style="color:rgb(77, 77, 77);">      6）禁止使用外键，如果有外键完整性约束，需要应用程序控制解读：外键会导致表与表之间耦合，update与delete操作都会涉及相关联的表，十分影响sql 的性能，甚至会造成死锁。高并发情况下容易造成数据库性能，大数据高并发业务场景数据库使用以性能优先。</font></p>
+<p>:::tips<br><font style="color:rgb(85, 86, 102);background-color:rgb(238, 240, 244);"> a）主键递增，数据行写入可以提高插入性能，可以避免page分裂，减少表碎片提升空间和内存的使用。</font><br><font style="color:rgb(85, 86, 102);background-color:rgb(238, 240, 244);"> b）主键要选择较短的数据类型， Innodb引擎普通索引都会保存主键的值，较短的数据类型可以有效的减少索引的磁盘空间，提高索引的缓存效率。</font></p>
+<p>:::</p>
+<h5 id="字段设计规范"><a href="#字段设计规范" class="headerlink" title="字段设计规范"></a><font style="color:rgb(79, 79, 79);">字段设计规范</font></h5><p><font style="color:rgb(77, 77, 77);">1）必须把字段定义为NOT NULL并且提供默认值：</font></p>
+<p>:::tips<br> a）null的列使索引&#x2F;索引统计&#x2F;值比较都更加复杂，对MySQL来说更难优化。</p>
+<p>  b）null 这种类型MySQL内部需要进行特殊处理，增加数据库处理记录的复杂性；同等条件下，表中有较多空字段的时候，数据库的处理性能会降低很多。</p>
+<p>  c）null值需要更多的存储空间，无论是表还是索引中每行中的null的列都需要额外的空间来标识。</p>
+<p>  d）对null 的处理时候，只能采用is null或is not null，而不能采用&#x3D;、in、&lt;、&lt;&gt;、!&#x3D;、not in这些操作符号。</p>
+<p>:::</p>
+<p><font style="color:rgb(77, 77, 77);">2）禁止使用TEXT、BLOB类型解读：会浪费更多的磁盘和内存空间，非必要的大量的大字段查询会淘汰掉热数据，导致内存命中率急剧降低，影响数据库性能。</font><br><font style="color:rgb(77, 77, 77);"> 3）禁止使用小数存储货币解读，小数容易导致钱对不上。</font><br><font style="color:rgb(77, 77, 77);"> 4）必须使用varchar(20)存储手机号：</font></p>
+<p>:::tips<br><font style="color:rgb(85, 86, 102);background-color:rgb(238, 240, 244);">a）涉及到区号或者国家代号，可能出现±。</font><br><font style="color:rgb(85, 86, 102);background-color:rgb(238, 240, 244);"> b）varchar可以支持模糊查询，例如：like“138%”。</font></p>
+<p>:::</p>
+<p><font style="color:rgb(77, 77, 77);">5）禁止使用ENUM，可使用TINYINT代替：</font></p>
+<p>:::tips<br><font style="color:rgb(85, 86, 102);background-color:rgb(238, 240, 244);"> a）增加新的ENUM值要做DDL操作。</font><br><font style="color:rgb(85, 86, 102);background-color:rgb(238, 240, 244);"> b）ENUM的内部实际存储就是整数。</font></p>
+<p>:::</p>
+<p><font style="color:rgb(77, 77, 77);">6）单表索引建议控制在5个以内。</font><br><font style="color:rgb(77, 77, 77);"> 7）单索引字段数不允许超过5个。字段超过5个时，实际已经起不到有效过滤数据的作用了。</font><br><font style="color:rgb(77, 77, 77);"> 8）禁止在更新十分频繁、区分度不高的属性上建立索引：</font></p>
+<p>:::tips<br><font style="color:rgb(85, 86, 102);background-color:rgb(238, 240, 244);">a）更新会变更B+树，更新频繁的字段建立索引会大大降低数据库性能。</font><br><font style="color:rgb(85, 86, 102);background-color:rgb(238, 240, 244);"> b）“性别”这种区分度不大的属性，建立索引是没有什么意义的，不能有效过滤数据，性能与全表扫描类似。</font></p>
+<p>:::</p>
+<p><font style="color:rgb(77, 77, 77);">9）建立组合索引，必须把区分度高的字段放在前面解读：能够更加有效的过滤数据。</font><br><font style="color:rgb(77, 77, 77);"> 10）禁止使用SELECT *，只获取必要的字段，需要显示说明列属性：</font></p>
+<p>:::tips<br><font style="color:rgb(85, 86, 102);background-color:rgb(238, 240, 244);">a）读取不需要的列会增加CPU、IO、NET消耗。</font><br><font style="color:rgb(85, 86, 102);background-color:rgb(238, 240, 244);"> b）不能有效的利用覆盖索引。</font><br><font style="color:rgb(85, 86, 102);background-color:rgb(238, 240, 244);"> c）使用SELECT *容易在增加或者删除字段后出现程序BUG。</font></p>
+<p>:::</p>
+<p>11）禁止使用INSERT INTO t_xxx VALUES(xxx)，必须显示指定插入的列属性解读：容易在增加或者删除字段后出现程序BUG。</p>
+<p>  12）禁止使用属性隐式转换解读：SELECT uid FROM t_user WHERE phone&#x3D;13800000000 会导致全表扫描，而不能命中phone索引。</p>
+<p>  13）禁止在WHERE条件的属性上使用函数或者表达式：SELECT uid FROM t_user WHERE from_unixtime(day)&gt;&#x3D;’2017-01-15’会导致全表扫描，正确的写法是：SELECT uid FROM t_user WHERE day&gt;&#x3D;unix_timestamp(‘2017-01-15 00:00:00’)。</p>
+<p>  14）禁止负向查询，以及%开头的模糊查询：</p>
+<p>:::tips<br><font style="color:rgb(85, 86, 102);background-color:rgb(238, 240, 244);">a）负向查询条件：NOT、!&#x3D;、&lt;&gt;、!&lt;、!&gt;、NOT IN、NOT LIKE等，会导致全表扫描。</font><br><font style="color:rgb(85, 86, 102);background-color:rgb(238, 240, 244);"> b）%开头的模糊查询，会导致全表扫描。</font></p>
+<p>:::</p>
+<p>15）禁止使用OR条件，必须改为IN查询解读：旧版本Mysql的OR查询是不能命中索引的，即使能命中索引，为何要让数据库耗费更多的CPU帮助实施查询优化呢？</p>
+<p>  16）应用程序必须捕获SQL异常，并有相应处理.</p>
+<p>  17）同表的增删字段、索引合并一条DDL语句执行，提高执行效率，减少与数据库的交互。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/mysql/" rel="tag"><i class="fa fa-tag"></i> mysql</a>
+              <a href="/tags/sql%E8%AF%AD%E5%8F%A5/" rel="tag"><i class="fa fa-tag"></i> sql语句</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/06/11/%E7%B4%A2%E5%BC%95%E5%A4%B1%E6%95%88%E7%9A%84%E5%9C%BA%E6%99%AF/" rel="prev" title="索引失效场景">
+      <i class="fa fa-chevron-left"></i> 索引失效场景
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/06/13/%E4%BA%8B%E5%8A%A1%E5%A4%84%E7%90%86/" rel="next" title="事务处理">
+      事务处理 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#SQL%E9%80%9A%E7%94%A8%E8%AF%AD%E6%B3%95"><span class="nav-number">1.</span> <span class="nav-text">SQL通用语法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SQL%E5%88%86%E7%B1%BB"><span class="nav-number">2.</span> <span class="nav-text">SQL分类</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#DDL"><span class="nav-number">2.1.</span> <span class="nav-text">DDL</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DML"><span class="nav-number">2.2.</span> <span class="nav-text">DML</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%96%B0%E5%A2%9E%E6%95%B0%E6%8D%AE"><span class="nav-number">2.2.1.</span> <span class="nav-text">新增数据</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9B%B4%E6%96%B0%E6%95%B0%E6%8D%AE"><span class="nav-number">2.2.2.</span> <span class="nav-text">更新数据</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%A0%E9%99%A4%E6%95%B0%E6%8D%AE"><span class="nav-number">2.2.3.</span> <span class="nav-text">删除数据</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#delete%E3%80%81truncate%E4%B8%8Edrop"><span class="nav-number">2.2.3.1.</span> <span class="nav-text">delete、truncate与drop*</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#SELECT%E8%AF%AD%E5%8F%A5"><span class="nav-number">2.2.4.</span> <span class="nav-text">SELECT语句</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%AE%80%E5%8D%95%E6%9F%A5%E8%AF%A2"><span class="nav-number">2.2.4.1.</span> <span class="nav-text">简单查询</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%88%97%E5%88%AB%E5%90%8D"><span class="nav-number">2.2.4.2.</span> <span class="nav-text">列别名</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%9D%A1%E4%BB%B6%E6%9F%A5%E8%AF%A2"><span class="nav-number">2.2.4.3.</span> <span class="nav-text">条件查询</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%A8%A1%E7%B3%8A%E6%9F%A5%E8%AF%A2"><span class="nav-number">2.2.4.4.</span> <span class="nav-text">模糊查询</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%8C%BA%E9%97%B4%E6%9F%A5%E8%AF%A2"><span class="nav-number">2.2.4.5.</span> <span class="nav-text">区间查询</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#IN%E6%9F%A5%E8%AF%A2"><span class="nav-number">2.2.4.6.</span> <span class="nav-text">IN查询</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#EXIST"><span class="nav-number">2.2.4.7.</span> <span class="nav-text">EXIST</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#NOT-IN%E6%9F%A5%E8%AF%A2"><span class="nav-number">2.2.4.8.</span> <span class="nav-text">NOT IN查询</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#NULL%E5%80%BC%E6%9F%A5%E8%AF%A2"><span class="nav-number">2.2.4.9.</span> <span class="nav-text">NULL值查询</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%8E%92%E5%BA%8F%E6%9F%A5%E8%AF%A2"><span class="nav-number">2.2.4.10.</span> <span class="nav-text">排序查询</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#LIMIT%E8%AF%AD%E5%8F%A5"><span class="nav-number">2.2.4.11.</span> <span class="nav-text">LIMIT语句</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%88%86%E9%A1%B5%E6%9F%A5%E8%AF%A2"><span class="nav-number">2.2.4.12.</span> <span class="nav-text">分页查询</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%88%86%E7%BB%84%E6%9F%A5%E8%AF%A2"><span class="nav-number">2.2.4.13.</span> <span class="nav-text">分组查询</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#UNION%E8%AF%AD%E5%8F%A5"><span class="nav-number">2.2.4.14.</span> <span class="nav-text">UNION语句</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#COUNT%E8%AF%AD%E5%8F%A5"><span class="nav-number">2.2.4.15.</span> <span class="nav-text">COUNT语句*</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%85%B3%E8%81%94%E6%9F%A5%E8%AF%A2"><span class="nav-number">2.2.5.</span> <span class="nav-text">关联查询</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%AC%9B%E5%8D%A1%E5%B0%94%E7%A7%AF"><span class="nav-number">2.2.5.1.</span> <span class="nav-text">笛卡尔积</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%86%85%E8%BF%9E%E6%8E%A5-INNER-JOIN"><span class="nav-number">2.2.5.2.</span> <span class="nav-text">内连接 (INNER JOIN)</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%B7%A6%E8%BF%9E%E6%8E%A5-LEFT-JOIN"><span class="nav-number">2.2.5.3.</span> <span class="nav-text">左连接 (LEFT JOIN)</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%8F%B3%E8%BF%9E%E6%8E%A5-RIGHT-JOIN"><span class="nav-number">2.2.5.4.</span> <span class="nav-text">右连接 (RIGHT JOIN)</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%85%A8%E8%BF%9E%E6%8E%A5-FULL-JOIN"><span class="nav-number">2.2.5.5.</span> <span class="nav-text">全连接 (FULL JOIN)</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%BA%A4%E5%8F%89%E8%BF%9E%E6%8E%A5-CROSS-JOIN"><span class="nav-number">2.2.5.6.</span> <span class="nav-text">交叉连接 (CROSS JOIN)</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E8%87%AA%E8%BF%9E%E6%8E%A5%EF%BC%88Self-Join%EF%BC%89"><span class="nav-number">2.2.5.7.</span> <span class="nav-text">自连接（Self-Join）</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DCL"><span class="nav-number">2.3.</span> <span class="nav-text">DCL</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DQL"><span class="nav-number">2.4.</span> <span class="nav-text">DQL</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9F%A5%E8%AF%A2%E8%AF%AD%E5%8F%A5%E7%9A%84%E4%B9%A6%E5%86%99%E5%92%8C%E6%89%A7%E8%A1%8C%E9%A1%BA%E5%BA%8F"><span class="nav-number">3.</span> <span class="nav-text">查询语句的书写和执行顺序</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%B8%B8%E8%A7%81%E6%89%A7%E8%A1%8C%E9%A1%BA%E5%BA%8F"><span class="nav-number">3.0.0.1.</span> <span class="nav-text">常见执行顺序*</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%AE%8C%E6%95%B4%E6%89%A7%E8%A1%8C%E9%A1%BA%E5%BA%8F"><span class="nav-number">3.0.0.2.</span> <span class="nav-text">完整执行顺序</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89%E5%A4%A7%E8%8C%83%E5%BC%8F"><span class="nav-number">4.</span> <span class="nav-text">三大范式*</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E8%8C%83%E5%BC%8F"><span class="nav-number">4.0.0.1.</span> <span class="nav-text">第一范式</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E8%8C%83%E5%BC%8F"><span class="nav-number">4.0.0.2.</span> <span class="nav-text">第二范式</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%AC%AC%E4%B8%89%E8%8C%83%E5%BC%8F"><span class="nav-number">4.0.0.3.</span> <span class="nav-text">第三范式</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%AE%80%E5%8D%95%E6%80%BB%E7%BB%93"><span class="nav-number">4.0.0.4.</span> <span class="nav-text">简单总结</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E8%8C%83%E5%BC%8F%E5%8C%96%E5%92%8C%E5%8F%8D%E8%8C%83%E5%BC%8F%E5%8C%96%E8%AE%BE%E8%AE%A1%E7%9A%84%E4%BC%98%E7%BC%BA%E7%82%B9"><span class="nav-number">4.0.0.5.</span> <span class="nav-text">范式化和反范式化设计的优缺点</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BA%A6%E6%9D%9F"><span class="nav-number">5.</span> <span class="nav-text">约束</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SQL%E7%9B%B8%E5%85%B3%E9%97%AE%E9%A2%98"><span class="nav-number">6.</span> <span class="nav-text">SQL相关问题</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#HAVNG%E5%92%8CWHERE%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="nav-number">6.0.0.1.</span> <span class="nav-text">HAVNG和WHERE的区别*</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#SELECT-%E5%92%8C-SELECT-%E5%85%A8%E9%83%A8%E5%AD%97%E6%AE%B5-%E7%9A%84%E5%8C%BA%E5%88%AB1%E3%80%81%E6%98%AF%E5%90%A6%E8%A7%A3%E6%9E%90%E6%95%B0%E6%8D%AE%E5%AD%97%E5%85%B8"><span class="nav-number">6.0.0.2.</span> <span class="nav-text">[SELECT *] 和 [SELECT 全部字段]的区别1、是否解析数据字典</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Mysql%E5%88%86%E7%BB%84%E4%B8%AD%E7%9A%84%E5%9D%91"><span class="nav-number">6.0.0.3.</span> <span class="nav-text">Mysql分组中的坑</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E5%BA%93%E5%BC%80%E5%8F%91%E8%A7%84%E8%8C%83"><span class="nav-number">7.</span> <span class="nav-text">数据库开发规范</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%9F%BA%E7%A1%80%E8%A7%84%E8%8C%83"><span class="nav-number">7.0.0.1.</span> <span class="nav-text">基础规范</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%91%BD%E5%90%8D%E8%A7%84%E8%8C%83"><span class="nav-number">7.0.0.2.</span> <span class="nav-text">命名规范</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%AD%97%E6%AE%B5%E8%AE%BE%E8%AE%A1%E8%A7%84%E8%8C%83"><span class="nav-number">7.0.0.3.</span> <span class="nav-text">字段设计规范</span></a></li></ol></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="139"
+      src="/images/custom/avatar.jpg">
+  <p class="site-author-name" itemprop="name">139</p>
+  <div class="site-description" itemprop="description">一个普通的JAVA开发的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">40</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">34</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+  <div class="beian"><a href="https://beian.miit.gov.cn/" rel="noopener" target="_blank">浙ICP备2023004484号-1 </a>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">139</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="项目是一个在运营中的项目，在后续新功能开发的时候线上总是出现各种问题，让客户对项目的信任度降低很多，也对公司造成了经济损失。于是就有了一个任务，提高项目的可用性。经过一段时间的实践，总结出来了一个公式 :::info提升系统的稳定性&#x3D;减少故障的数量+提升发现速度+提升恢复速度 ::: 减少故障的数量线上的故障主要分为依赖类故障、变更类故障、容量类故障、固件类故障 依赖类故障在现在分布式架">
+<meta property="og:type" content="article">
+<meta property="og:title" content="项目可用性提升思考">
+<meta property="og:url" content="http://example.com/2024/10/19/%E9%A1%B9%E7%9B%AE%E5%8F%AF%E7%94%A8%E6%80%A7%E6%8F%90%E5%8D%87%E6%80%9D%E8%80%83/index.html">
+<meta property="og:site_name" content="进学阁">
+<meta property="og:description" content="项目是一个在运营中的项目，在后续新功能开发的时候线上总是出现各种问题，让客户对项目的信任度降低很多，也对公司造成了经济损失。于是就有了一个任务，提高项目的可用性。经过一段时间的实践，总结出来了一个公式 :::info提升系统的稳定性&#x3D;减少故障的数量+提升发现速度+提升恢复速度 ::: 减少故障的数量线上的故障主要分为依赖类故障、变更类故障、容量类故障、固件类故障 依赖类故障在现在分布式架">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1718354954470-2c43f0b4-d1c5-4d19-a7bf-ef60171c8ae1.png">
+<meta property="article:published_time" content="2024-10-18T16:00:00.000Z">
+<meta property="article:modified_time" content="2025-03-06T09:16:00.423Z">
+<meta property="article:author" content="139">
+<meta property="article:tag" content="可用性">
+<meta property="article:tag" content="架构">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1718354954470-2c43f0b4-d1c5-4d19-a7bf-ef60171c8ae1.png">
+
+<link rel="canonical" href="http://example.com/2024/10/19/%E9%A1%B9%E7%9B%AE%E5%8F%AF%E7%94%A8%E6%80%A7%E6%8F%90%E5%8D%87%E6%80%9D%E8%80%83/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>项目可用性提升思考 | 进学阁</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">进学阁</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">业精于勤荒于嬉，行成于思毁于随</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">34</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">8</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">40</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/10/19/%E9%A1%B9%E7%9B%AE%E5%8F%AF%E7%94%A8%E6%80%A7%E6%8F%90%E5%8D%87%E6%80%9D%E8%80%83/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          项目可用性提升思考
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-10-19 00:00:00" itemprop="dateCreated datePublished" datetime="2024-10-19T00:00:00+08:00">2024-10-19</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-06 17:16:00" itemprop="dateModified" datetime="2025-03-06T17:16:00+08:00">2025-03-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9E%B6%E6%9E%84%E6%80%9D%E6%83%B3/" itemprop="url" rel="index"><span itemprop="name">架构思想</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>项目是一个在运营中的项目，在后续新功能开发的时候线上总是出现各种问题，让客户对项目的信任度降低很多，也对公司造成了经济损失。于是就有了一个任务，提高项目的可用性。经过一段时间的实践，总结出来了一个公式</p>
+<p>:::info<br><strong>提升系统的稳定性&#x3D;减少故障的数量+提升发现速度+提升恢复速度</strong></p>
+<p>:::</p>
+<h3 id="减少故障的数量"><a href="#减少故障的数量" class="headerlink" title="减少故障的数量"></a>减少故障的数量</h3><p>线上的故障主要分为依赖类故障、变更类故障、容量类故障、固件类故障</p>
+<h4 id="依赖类故障"><a href="#依赖类故障" class="headerlink" title="依赖类故障"></a>依赖类故障</h4><p><font style="color:rgba(0, 0, 0, 0.9);">在现在分布式架构盛行的背景下，一个微服务的直接和间接依赖是非常多的。下游的某个服务、缓存、DB如果挂了，自己就会被“牵连”，无法提供正常服务。</font></p>
+<span id="more"></span>
+<h5 id="下游服务异常"><a href="#下游服务异常" class="headerlink" title="下游服务异常"></a><font style="color:rgba(0, 0, 0, 0.9);">下游服务异常</font></h5><p>下游服务异常的时候会造成服务异常，那我们可以通过降级和流控来处理</p>
+<p>可以使用Sentinel来进行降级和流控，Sentinel是面向分布式服务框架的流量控制组件，主要以流量为切入点，从限流、流量整形、熔断降级、系统负载保护、热点防护等多个维度来帮助开发者保障微服务的稳定性。</p>
+<p>Sentinel具有以下特征：</p>
+<p>（1）丰富的运用场景</p>
+<p>（2）完备的实时监控</p>
+<p>（3）广泛的开源生态</p>
+<p>（4）完善的SPI扩展点</p>
+<h6 id="降级Degrade"><a href="#降级Degrade" class="headerlink" title="降级Degrade"></a>降级Degrade</h6><p><font style="color:rgba(0, 0, 0, 0.9);">所谓【降级】，就是</font><strong><font style="color:rgb(0, 82, 255);">对下游的依赖从强依赖变成弱依赖</font></strong><font style="color:rgba(0, 0, 0, 0.9);">。</font></p>
+<p>熔断策略</p>
+<ul>
+<li>慢调用比例（平均响应时间）：选择以慢调用比例作为阈值，需要设置允许的慢调用RT（即最大的响应时间），请求的响应时间大于该值则统计为慢调用。档单位统计时长（statIntervalMs）内请求数目大于设置的最小请求数目，并且慢调用的比例大于阈值，则接下来的熔断时长内请求会自动被熔断。经过熔断时长后熔断器会进入探测回复状态（HALF-OPEN状态），若接下来的一个请求响应时间小于设置的慢调用RT则结束熔断，若大于设置的慢调用RT则会再次被熔断。</li>
+<li>异常比例（ERROR_RATIO）：当单位统计时长（satIntervalMs）内请求数且大于设置的最小请求数目，并且异常的比例大于阈值，则接下来的熔断时长内请求会自动被熔断。经过熔断时长后熔断器会进入探测恢复状态（HALF-OPEN状态），若接下来的一个请求成功完成（没有错误）则结束熔断，否则会再次被熔断。异常比率的阈值范围是[0.0,1.0]，代表0%-100%。</li>
+<li>异常数（ERROR_COUNT）：当单位统计时长内的异常数目超过阈值之后会自动进行熔断。经过熔断时长后熔断器会进入探测恢复状态（HALF-OPEN状态），若接下来的一个请求成功完成（没有错误）则结束熔断，否则会再次被熔断。</li>
+</ul>
+<h6 id="流控SentinelResource"><a href="#流控SentinelResource" class="headerlink" title="流控SentinelResource"></a>流控SentinelResource</h6><p>流控又分为限流，以及控流。</p>
+<h6 id="隔离"><a href="#隔离" class="headerlink" title="隔离"></a>隔离</h6><h6 id="限流"><a href="#限流" class="headerlink" title="限流"></a>限流</h6><p>限流的定义就是只允许指定的流量通过，举个例子就是有50个苹果，一天只能吃10个，把剩下丢掉就是限流</p>
+<p><font style="color:rgba(0, 0, 0, 0.9);">常见的实现方式包括【令牌桶限流】【计数限流】【线程池控制】等。</font></p>
+<ul>
+<li><font style="color:rgba(0, 0, 0, 0.9);">令牌桶限流 每分钟生成多少个令牌，拿到令牌的请求就继续，没有获得到令牌的直接抛弃掉</font></li>
+<li><font style="color:rgba(0, 0, 0, 0.9);">计数限流  期初设置一个阈值比如5，来一个请求先判断这个值是否大于0，大于0则-1，等于0则抛弃请求，处理完了+1。集群计数就面临着网络开销，就算中间件再快，网络总在那里。作为一个计数服务，可想而知请求量是怎样的。</font></li>
+<li><font style="color:rgba(0, 0, 0, 0.9);">线程池控制 类似计数限流，用的时候取一个，用完还回来。相信大家对线程池都比较了解了，就不再往下细说。</font></li>
+</ul>
+<p><font style="color:rgba(0, 0, 0, 0.9);">【计数限流】和【线程池控制】本质上是控制并发。</font></p>
+<p><font style="color:rgba(0, 0, 0, 0.9);">假设每个请求平均是10ms返回，线程池设置的数量是5。1秒钟&#x3D;100个10ms，每个10ms有5个线程可以处理5个请求，那1秒就可以处理100 * 5 &#x3D; 500个请求，qps&#x3D;500。</font></p>
+<p><font style="color:rgba(0, 0, 0, 0.9);">所以，控制计数和线程池本质上是控制并发，不要和QPS搞混了。</font></p>
+<h6 id="控流"><a href="#控流" class="headerlink" title="控流"></a>控流</h6><p>控流的定义就是允许流量通过一定的速度通过。举个例子就是有50个苹果，一天只能吃10个，把剩下的存起来分5天吃，常见的队列就是这种形式</p>
+<h6 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h6><p>这样就可以很明显的看到限流和控流的差别，限流直接将多余的流量抛弃，而流控是将多余的流量保存起来，慢慢处理。所以使用限流还是控流可以按照业务场景来进行选择，如果业务的请求可以直接抛弃就用限流，如果类似于转账之类的关乎到收入的业务还是选择控流更合适</p>
+<h5 id="缓存异常"><a href="#缓存异常" class="headerlink" title="缓存异常"></a><font style="color:rgba(0, 0, 0, 0.9);">缓存异常</font></h5><p>限流防止穿透，集群防止雪崩。</p>
+<h5 id="DB宕机"><a href="#DB宕机" class="headerlink" title="DB宕机"></a><font style="color:rgba(0, 0, 0, 0.9);">DB宕机</font></h5><p>对DB进行高可用建设，</p>
+<h4 id="变更类故障"><a href="#变更类故障" class="headerlink" title="变更类故障"></a>变更类故障</h4><p><font style="color:rgba(0, 0, 0, 0.9);">变更不只是【代码变更】，还包括【配置变更】和【数据变更】。这些变更，无论是参数改错了，还是DB数据订正错了，都可能导致严重的故障。</font></p>
+<p><font style="color:rgba(0, 0, 0, 0.9);">在各种系统中有大部分是变更类故障，而变更类故障各式各样，解决起来也不能使用同一种方案处理，并且无法根本解决，下面从代码、配置、数据这三个方面讲一下我们要怎么做</font></p>
+<h5 id="代码"><a href="#代码" class="headerlink" title="代码"></a><font style="color:rgba(0, 0, 0, 0.9);">代码</font></h5><p>代码的变更基本上每个需求的更新都会产生，在刚到公司的时候最怕的就是变更，每次总是会出现各种的问题，代码版本问题，发布的代码版本不对，甚至出现过线上跑的版本落后现有版本1年的情况。通过观察发现出现这些情况的原因有手工发布代码，代码提交混乱，代码冲突，新旧版本兼容度问题。于是通过制定代码管理规范、自动发布，加强测试规范，对接口进行兼容性硬性规定来处理这些问题</p>
+<h6 id="代码管理规范"><a href="#代码管理规范" class="headerlink" title="代码管理规范"></a>代码管理规范</h6><p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1718354954470-2c43f0b4-d1c5-4d19-a7bf-ef60171c8ae1.png"></p>
+<p>首先是对代码分支的管理，避免出现线上代码分支不对的情况，也防止测试代码和实际发布代码不一致的问题出现</p>
+<h6 id="自动发布"><a href="#自动发布" class="headerlink" title="自动发布"></a>自动发布</h6><p>在比较常见的问题中有一个手工打包，复制到服务器并启动，每个人理解不一样及时有sh脚本辅助也难免会出现打包打错了，目录放错了等问题出现，为了避免出现类似的问题，引入Jenkins来做自动构建发布部署。</p>
+<p>Jenkins可以最大程度的保证每次打包的环境一致性，以及可以提供快捷的回滚</p>
+<h6 id="加强测试规范"><a href="#加强测试规范" class="headerlink" title="加强测试规范"></a>加强测试规范</h6><p>从测试目的来看，测试的目的有三块【测试新功能是否正常】【测试老功能是否正常】【测试服务的兼容性】，针对目的可以得出测试其实可以分为三大块</p>
+<ul>
+<li>功能测试  <font style="color:rgba(0, 0, 0, 0.9);">针对这次新增或修改的功能。</font></li>
+<li>回归测试 <font style="color:rgba(0, 0, 0, 0.9);">针对老功能的验证</font></li>
+<li>兼容性测试 <font style="color:rgba(0, 0, 0, 0.9);">验证新旧功能同时存在时的正确性。为什么要做兼容性测试，当程序发布出现异常时需要回滚如果没有兼容性那就会在发布时出现异常，还有当程序发布时程序没有兼容性就需要按照固定的顺序来发布如果出现循环依赖那在发布时就会出现异常</font></li>
+</ul>
+<h5 id="代码审核"><a href="#代码审核" class="headerlink" title="代码审核"></a>代码审核</h5><p>代码审核的目的是**<font style="color:rgb(51, 51, 51);">找出安全、性能、依赖和兼容性等测试不易发现的问题。及时识别出代码设计的缺陷，找到需要重构的地方</font>**</p>
+<p><font style="color:rgb(51, 51, 51);">防止出现一些常见的错误写法导致泄漏问题的出现。</font></p>
+<h5 id="配置文件"><a href="#配置文件" class="headerlink" title="配置文件"></a><font style="color:rgba(0, 0, 0, 0.9);">配置文件</font></h5><p>是不是经常听到：测试环境就可以呀，为什么到了线上就不行了。当你听到这句话的时候大概率就是配置文件在作祟了 。</p>
+<p>配置文件的问题在开发周期长的项目中尤其容易出现。在避免出现配置文件出现问题这个到现在也没有找到100%避免的方法，是能通过流程来尽量的避免问题的出现。</p>
+<ol>
+<li>要求开发写需求的上线文档，在文档中标注上线服务的前后顺序，配置文件，需要执行的sql</li>
+<li>在提测时要求测试按照开发写的文档对测试环境的配置文件进行配置</li>
+<li>功能测试完毕后，预发布环境按照文档再次进行配置</li>
+<li>上线的前一天开上线大会对上线文档进行复盘</li>
+</ol>
+<p>通过多次的确认来防止配置异常的问题。</p>
+<h5 id="数据"><a href="#数据" class="headerlink" title="数据"></a><font style="color:rgba(0, 0, 0, 0.9);">数据</font></h5><p>主要是Flyway来做数据库管理，Flyway 是一款开源的数据库版本管理工具，它更倾向于规约优于配置的方式。Flyway 可以独立于应用实现管理并跟踪数据库变更，支持数据库版本自动升级，并且有一套默认的规约，不需要复杂的配置，Migrations 可以写成 SQL 脚本，也可以写在 Java 代码中，不仅支持 Command Line 和 Java API，还支持 Build 构建工具和 Spring Boot 等，同时在分布式环境下能够安全可靠地升级数据库，同时也支持失败恢复。主要步骤为</p>
+<ol>
+<li>开发编写脚本，并分别拷贝到dev，test，prod三个配置文件中指定的文件夹下，并需要根据配置文件中的语句在上线文档中预留回滚脚本</li>
+<li>测试在部署时会验证一次语句的正确性</li>
+<li>在上线大会对prod进行一次确认</li>
+</ol>
+<p>通过工具+人工验证来保证正确性</p>
+<p>具体可以参考</p>
+<p><a target="_blank" rel="noopener" href="https://www.yuque.com/u25495771/leupuu/ki0b7wfp37nm2z35">Flyway</a></p>
+<h4 id="容量类故障"><a href="#容量类故障" class="headerlink" title="容量类故障"></a>容量类故障</h4><p>容量指的是服务器的磁盘  cpu  内存 各种连接池因不同的原因满足不了业务的需求，比如业务流量突然增加，线上队列数据堆积，日志输出增加、图片数量堆积等都可以造成故障，使服务无法提供正常的服务，在主流程的接口或者方法需要修改时一定要注意兼容性的问题.</p>
+<h6 id="业务流量的突然增加："><a href="#业务流量的突然增加：" class="headerlink" title="业务流量的突然增加："></a>业务流量的突然增加：</h6><p>日常中并不是很常见，一般只有做类似于秒杀场景的时候可能会遇到，遇到类似的情况我们需要及时的做好压测，做好容量评估。上线后对服务器进行监控</p>
+<h6 id="线上队列数据堆积："><a href="#线上队列数据堆积：" class="headerlink" title="线上队列数据堆积："></a>线上队列数据堆积：</h6><p>线上数据堆积也可能会出现磁盘被占满的情况，可以调整队列配置，设置合理的磁盘空间，并监控队列的使用情况，并及时的报警。队列的堆积很大的可能是因为下游消费端出现了问题，早日报警由人员的介入可以早日解决问题。</p>
+<h6 id="日志输出增加、图片数量堆积："><a href="#日志输出增加、图片数量堆积：" class="headerlink" title="日志输出增加、图片数量堆积："></a>日志输出增加、图片数量堆积：</h6><p>当我们使用docker的时候如果docker的日志文件并未做限制的时候，经过时间的更迭，docker容器占用的磁盘会越来越多。要解决这个问题需要限制docker容器的日志大小，如果应用需要留存日志等文件，可以通过挂载的形式将文件挂载到宿主机。</p>
+<p>图片或者上传文件的问题，可以通过分布式存储模式把文件分片存储防止出现类似问题</p>
+<h5 id="总结-1"><a href="#总结-1" class="headerlink" title="总结"></a>总结</h5><p>容量类故障可以通过运维手段来进行缓解，但是主体还是需要做好监控告警，并对可以预想到的问题进行充足的压测，并预留好容量</p>
+<h4 id="固件类故障"><a href="#固件类故障" class="headerlink" title="固件类故障"></a>固件类故障</h4><p>在现实社会中总是充满着意外，网络有可能会中断，服务器硬件可能会损坏。多机备份是解决这类问题的办法，经验不多，这里就不深聊此类问题</p>
+<h3 id="提升发现速度"><a href="#提升发现速度" class="headerlink" title="提升发现速度"></a>提升发现速度</h3><p>提升发现速度主要是通过监控，监控又可以分为运维监控和变更监控</p>
+<h4 id="运维监控"><a href="#运维监控" class="headerlink" title="运维监控"></a>运维监控</h4><p>运维监控告警可以通过Prometheus+Grafana来实现，而做好监控要从不同的维度进行</p>
+<h5 id="机器维度："><a href="#机器维度：" class="headerlink" title="机器维度："></a>机器维度：</h5><p>机器维度的监控指标包括CPU、Load、内存、网络、IO、磁盘等相关指标，可以通过设定这些指标的异常值，通过触发来进行告警。</p>
+<h5 id="应用维度："><a href="#应用维度：" class="headerlink" title="应用维度："></a>应用维度：</h5><p>  应用维度的监控指标包括JVM使用情况、线程池使用情况：JVM情况主要包括YGC次数、时间，FullGC次数、时间，新生代老年代占比；线程池情况主要包括的线程池大小、最大线程数、活跃线程数、队列大小等。</p>
+<h5 id="服务维度"><a href="#服务维度" class="headerlink" title="服务维度"></a>服务维度</h5><p>服务维度的监控指标包括error日志报错情况、服务接口调用量、耗时、成功率，调用接口调用量、耗时、成功率，dal层操作调用量、耗时、成功率。</p>
+<h5 id="外部依赖维度"><a href="#外部依赖维度" class="headerlink" title="外部依赖维度"></a>外部依赖维度</h5><p> 外部依赖维度主要指应用系统常见的外部依赖的监控情况，主要包括数据库、缓存、消息队列等，这些一般情况都会独立进行部署，对应的机器监控同上面列举的机器维度监控；另外数据库还需要关注连接数、内存使用、SQL调用量、耗时、成功率，慢SQL等；缓存需要关注调用量、成功率，命中率、内存使用等；消息队列需要关注调用量、成功率，队列积压情况、死信队列等</p>
+<h4 id="变更监控"><a href="#变更监控" class="headerlink" title="变更监控"></a>变更监控</h4><p>变更监控可以更加细分一下分为【对旧：观察异常运行情况】、【对新：观察更新是够生效】</p>
+<h6 id="对旧：观察异常运行情况"><a href="#对旧：观察异常运行情况" class="headerlink" title="对旧：观察异常运行情况"></a>对旧：观察异常运行情况</h6><p>实现观察异常运行情况主要是观察变更之后，没有变更的服务是否有心得异常发生，可以通过日志埋点，关键业务逻辑检测，接口埋点的情况，通过规则判断是否受到影响，如果有影响需要尽快的修复</p>
+<h6 id="对新：观察更新是够生效"><a href="#对新：观察更新是够生效" class="headerlink" title="对新：观察更新是够生效"></a>对新：观察更新是够生效</h6><p>观察更新是否生效可以从检测新接口的各项指标。新接口打点的日志输出情况来确认，因为功能的大小，无法有效的指定详细的规则，一般会通过人工对频率和异常进行分析最后得出结论</p>
+<h4 id="慢查询监控"><a href="#慢查询监控" class="headerlink" title="慢查询监控"></a>慢查询监控</h4><p>在运维监控中其实是包含了慢查询监控的，但是这里还是需要强调一下，服务运行中，当数据慢慢增多出现慢查询的可能性逐步增大，日常中需要进行优化的地方多出现在这里。所以在日常中更需要对慢查询格外的关注，根据不同的数据库有不同的统计方法，mysql可以通过配置开启慢查询监控</p>
+<h4 id="注意"><a href="#注意" class="headerlink" title="注意"></a>注意</h4><p>在监控告警中有一个问题需要特别的注意，就是告警疲劳，狼来了的故事告诉我们只有真正发生了问题才应该告警，而不是频繁的告警当真正的问题出现时无法正确的处理</p>
+<h3 id="提升恢复速度"><a href="#提升恢复速度" class="headerlink" title="提升恢复速度"></a>提升恢复速度</h3><p>借用蚂蚁的<font style="color:rgba(0, 0, 0, 0.9);">变更三板斧【变更可监控】【变更可回滚】【变更可灰度】，其中变更可监控是用来提升发现速度的，而提升恢复速度主要是变更可回滚。</font></p>
+<p><font style="color:rgba(0, 0, 0, 0.9);">提升恢复速度也可以分为运维期恢复，变更期恢复</font></p>
+<h5 id="运维期恢复"><a href="#运维期恢复" class="headerlink" title="运维期恢复"></a><font style="color:rgba(0, 0, 0, 0.9);">运维期恢复</font></h5><h6 id="应急处理"><a href="#应急处理" class="headerlink" title="应急处理"></a>应急处理</h6><p>运维期间的恢复在排除容量类问题，大部分是可以通过对应用进行重启来解决的，所以定时探测+脚本重启服务可以作为一种应急的处理方法，可以自己手写脚本，也可以使用k8s。</p>
+<h6 id="冗余"><a href="#冗余" class="headerlink" title="冗余"></a>冗余</h6><p>也可以启动多份服务，当一个服务因为一场原因宕机后，将流量打入其他存活的服务中</p>
+<h5 id="变更期恢复"><a href="#变更期恢复" class="headerlink" title="变更期恢复"></a><font style="color:rgba(0, 0, 0, 0.9);">变更期恢复</font></h5><h6 id="变更可回滚"><a href="#变更可回滚" class="headerlink" title="变更可回滚"></a>变更可回滚</h6><p><font style="color:rgba(0, 0, 0, 0.9);">大家可能会问：</font><em><font style="color:rgba(0, 0, 0, 0.9);">回滚不就是用原来的代码重新部署一遍就行了吗？</font></em></p>
+<p><font style="color:rgba(0, 0, 0, 0.9);">回顾上面的更新故障解决部分的时候，可以看到很多回滚的字样，整理一下回滚中可能存在的问题，并思考一下怎么解决</font></p>
+<h6 id="发布依赖"><a href="#发布依赖" class="headerlink" title="发布依赖"></a><font style="color:rgba(0, 0, 0, 0.9);">发布依赖</font></h6><p>当我们需要考虑发布顺序的时候，就会遇到发布依赖的问题。当服务A更新完之后才能更新服务B时，回滚就需要服务B回滚完毕然后再回滚服务A，这时服务A就无法快速回滚了。</p>
+<h6 id="数据异常"><a href="#数据异常" class="headerlink" title="数据异常"></a><font style="color:rgba(0, 0, 0, 0.9);">数据异常</font></h6><p>当变更有数据结构变更的时候，这时老的系统如果不兼容现有的数据结构就会阻碍回滚，在更新故障解决部分我们要求更新时提供数据库回滚语句的原因就是这个，但是回滚了数据结构后，在回滚期间还是会产生脏数据，这些脏数据可以处理但是需要时间，这就无法实现快速回滚的诉求了</p>
+<h6 id="解决"><a href="#解决" class="headerlink" title="解决"></a><font style="color:rgba(0, 0, 0, 0.9);">解决</font></h6><p><strong><font style="color:rgba(0, 0, 0, 0.9);">【新数据在旧代码中兼容】</font></strong></p>
+<p><font style="color:rgba(0, 0, 0, 0.9);">更好的兼容性设计，在设计新功能的数据库变更的时候要考虑到旧版本对新版本的数据结构支持，比如新增功能与原来功能关联时新增关联表，需要修改表内容时增加列冗余</font></p>
+<p><strong><font style="color:rgba(0, 0, 0, 0.9);">【使用开关控制回滚】</font></strong></p>
+<p><font style="color:rgba(0, 0, 0, 0.9);">“部署”与“生效”分离。</font><font style="color:rgba(0, 0, 0, 0.9);">相比代码</font><font style="color:rgba(0, 0, 0, 0.9);">回滚，</font><font style="color:rgba(0, 0, 0, 0.9);">使用开关回滚会快很多。</font></p>
+<p><font style="color:rgba(0, 0, 0, 0.9);">此外，使用开关回滚的方案，也可以解决上线代码被多次覆盖后不可回滚的问题。</font></p>
+<h6 id="变更可灰度"><a href="#变更可灰度" class="headerlink" title="变更可灰度"></a>变更可灰度</h6><p>在使用开关控制回滚提到了部署与生效隔离，灰度就是分离很有效的手段。当服务A和服务B上线时我们在灰度环境中部署一套新版本的服务A和服务B，这时我们可以设置公司内部环境为灰度环境，当我们测试有异常时我们可以将灰度关闭，这样流量就不会进入灰度环境，以实现快速回滚。同样的例子我们可以把灰度服务逐步开放，一旦发现服务异常可以直接关闭灰度环境实现快速回滚。</p>
+<p>而且可灰度还可以分开观察新版本和老版本的差异，</p>
+<p>多次修改后的系统也可以回滚，如果单纯的代码回滚如果更新多次的服务可能就无法回滚了</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/%E5%8F%AF%E7%94%A8%E6%80%A7/" rel="tag"><i class="fa fa-tag"></i> 可用性</a>
+              <a href="/tags/%E6%9E%B6%E6%9E%84/" rel="tag"><i class="fa fa-tag"></i> 架构</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2024/10/16/OpenFeign%E8%B0%83%E7%94%A8%E6%97%B6%E5%A6%82%E4%BD%95%E4%BC%A0%E9%80%92%E4%BC%A0%E9%80%92Token%E5%B9%B6%E4%B8%94%E5%A4%9A%E7%BA%BF%E7%A8%8B%E7%8E%AF%E5%A2%83%E4%B9%9F%E8%83%BD%E9%80%82%E7%94%A8%EF%BC%9F/" rel="prev" title="OpenFeign调用时如何传递传递Token并且多线程环境也能适用">
+      <i class="fa fa-chevron-left"></i> OpenFeign调用时如何传递传递Token并且多线程环境也能适用
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2024/10/19/%E8%87%AA%E5%AE%9A%E4%B9%89%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1/" rel="next" title="OpenFeign调用时如何传递传递Token并且多线程环境也能适用">
+      OpenFeign调用时如何传递传递Token并且多线程环境也能适用 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%87%8F%E5%B0%91%E6%95%85%E9%9A%9C%E7%9A%84%E6%95%B0%E9%87%8F"><span class="nav-number">1.</span> <span class="nav-text">减少故障的数量</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BE%9D%E8%B5%96%E7%B1%BB%E6%95%85%E9%9A%9C"><span class="nav-number">1.1.</span> <span class="nav-text">依赖类故障</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%B8%8B%E6%B8%B8%E6%9C%8D%E5%8A%A1%E5%BC%82%E5%B8%B8"><span class="nav-number">1.1.1.</span> <span class="nav-text">下游服务异常</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E9%99%8D%E7%BA%A7Degrade"><span class="nav-number">1.1.1.1.</span> <span class="nav-text">降级Degrade</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E6%B5%81%E6%8E%A7SentinelResource"><span class="nav-number">1.1.1.2.</span> <span class="nav-text">流控SentinelResource</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E9%9A%94%E7%A6%BB"><span class="nav-number">1.1.1.3.</span> <span class="nav-text">隔离</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E9%99%90%E6%B5%81"><span class="nav-number">1.1.1.4.</span> <span class="nav-text">限流</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E6%8E%A7%E6%B5%81"><span class="nav-number">1.1.1.5.</span> <span class="nav-text">控流</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">1.1.1.6.</span> <span class="nav-text">总结</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%BC%93%E5%AD%98%E5%BC%82%E5%B8%B8"><span class="nav-number">1.1.2.</span> <span class="nav-text">缓存异常</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#DB%E5%AE%95%E6%9C%BA"><span class="nav-number">1.1.3.</span> <span class="nav-text">DB宕机</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8F%98%E6%9B%B4%E7%B1%BB%E6%95%85%E9%9A%9C"><span class="nav-number">1.2.</span> <span class="nav-text">变更类故障</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81"><span class="nav-number">1.2.1.</span> <span class="nav-text">代码</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E7%AE%A1%E7%90%86%E8%A7%84%E8%8C%83"><span class="nav-number">1.2.1.1.</span> <span class="nav-text">代码管理规范</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E8%87%AA%E5%8A%A8%E5%8F%91%E5%B8%83"><span class="nav-number">1.2.1.2.</span> <span class="nav-text">自动发布</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E5%8A%A0%E5%BC%BA%E6%B5%8B%E8%AF%95%E8%A7%84%E8%8C%83"><span class="nav-number">1.2.1.3.</span> <span class="nav-text">加强测试规范</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E5%AE%A1%E6%A0%B8"><span class="nav-number">1.2.2.</span> <span class="nav-text">代码审核</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6"><span class="nav-number">1.2.3.</span> <span class="nav-text">配置文件</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE"><span class="nav-number">1.2.4.</span> <span class="nav-text">数据</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%B9%E9%87%8F%E7%B1%BB%E6%95%85%E9%9A%9C"><span class="nav-number">1.3.</span> <span class="nav-text">容量类故障</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E4%B8%9A%E5%8A%A1%E6%B5%81%E9%87%8F%E7%9A%84%E7%AA%81%E7%84%B6%E5%A2%9E%E5%8A%A0%EF%BC%9A"><span class="nav-number">1.3.0.1.</span> <span class="nav-text">业务流量的突然增加：</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E7%BA%BF%E4%B8%8A%E9%98%9F%E5%88%97%E6%95%B0%E6%8D%AE%E5%A0%86%E7%A7%AF%EF%BC%9A"><span class="nav-number">1.3.0.2.</span> <span class="nav-text">线上队列数据堆积：</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E6%97%A5%E5%BF%97%E8%BE%93%E5%87%BA%E5%A2%9E%E5%8A%A0%E3%80%81%E5%9B%BE%E7%89%87%E6%95%B0%E9%87%8F%E5%A0%86%E7%A7%AF%EF%BC%9A"><span class="nav-number">1.3.0.3.</span> <span class="nav-text">日志输出增加、图片数量堆积：</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%80%BB%E7%BB%93-1"><span class="nav-number">1.3.1.</span> <span class="nav-text">总结</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9B%BA%E4%BB%B6%E7%B1%BB%E6%95%85%E9%9A%9C"><span class="nav-number">1.4.</span> <span class="nav-text">固件类故障</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8F%90%E5%8D%87%E5%8F%91%E7%8E%B0%E9%80%9F%E5%BA%A6"><span class="nav-number">2.</span> <span class="nav-text">提升发现速度</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%BF%90%E7%BB%B4%E7%9B%91%E6%8E%A7"><span class="nav-number">2.1.</span> <span class="nav-text">运维监控</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%9C%BA%E5%99%A8%E7%BB%B4%E5%BA%A6%EF%BC%9A"><span class="nav-number">2.1.1.</span> <span class="nav-text">机器维度：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%BA%94%E7%94%A8%E7%BB%B4%E5%BA%A6%EF%BC%9A"><span class="nav-number">2.1.2.</span> <span class="nav-text">应用维度：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E7%BB%B4%E5%BA%A6"><span class="nav-number">2.1.3.</span> <span class="nav-text">服务维度</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%A4%96%E9%83%A8%E4%BE%9D%E8%B5%96%E7%BB%B4%E5%BA%A6"><span class="nav-number">2.1.4.</span> <span class="nav-text">外部依赖维度</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8F%98%E6%9B%B4%E7%9B%91%E6%8E%A7"><span class="nav-number">2.2.</span> <span class="nav-text">变更监控</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E5%AF%B9%E6%97%A7%EF%BC%9A%E8%A7%82%E5%AF%9F%E5%BC%82%E5%B8%B8%E8%BF%90%E8%A1%8C%E6%83%85%E5%86%B5"><span class="nav-number">2.2.0.1.</span> <span class="nav-text">对旧：观察异常运行情况</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E5%AF%B9%E6%96%B0%EF%BC%9A%E8%A7%82%E5%AF%9F%E6%9B%B4%E6%96%B0%E6%98%AF%E5%A4%9F%E7%94%9F%E6%95%88"><span class="nav-number">2.2.0.2.</span> <span class="nav-text">对新：观察更新是够生效</span></a></li></ol></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%85%A2%E6%9F%A5%E8%AF%A2%E7%9B%91%E6%8E%A7"><span class="nav-number">2.3.</span> <span class="nav-text">慢查询监控</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B3%A8%E6%84%8F"><span class="nav-number">2.4.</span> <span class="nav-text">注意</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8F%90%E5%8D%87%E6%81%A2%E5%A4%8D%E9%80%9F%E5%BA%A6"><span class="nav-number">3.</span> <span class="nav-text">提升恢复速度</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E8%BF%90%E7%BB%B4%E6%9C%9F%E6%81%A2%E5%A4%8D"><span class="nav-number">3.0.1.</span> <span class="nav-text">运维期恢复</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E5%BA%94%E6%80%A5%E5%A4%84%E7%90%86"><span class="nav-number">3.0.1.1.</span> <span class="nav-text">应急处理</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E5%86%97%E4%BD%99"><span class="nav-number">3.0.1.2.</span> <span class="nav-text">冗余</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%8F%98%E6%9B%B4%E6%9C%9F%E6%81%A2%E5%A4%8D"><span class="nav-number">3.0.2.</span> <span class="nav-text">变更期恢复</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E5%8F%98%E6%9B%B4%E5%8F%AF%E5%9B%9E%E6%BB%9A"><span class="nav-number">3.0.2.1.</span> <span class="nav-text">变更可回滚</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E5%8F%91%E5%B8%83%E4%BE%9D%E8%B5%96"><span class="nav-number">3.0.2.2.</span> <span class="nav-text">发布依赖</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E5%BC%82%E5%B8%B8"><span class="nav-number">3.0.2.3.</span> <span class="nav-text">数据异常</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3"><span class="nav-number">3.0.2.4.</span> <span class="nav-text">解决</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E5%8F%98%E6%9B%B4%E5%8F%AF%E7%81%B0%E5%BA%A6"><span class="nav-number">3.0.2.5.</span> <span class="nav-text">变更可灰度</span></a></li></ol></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="139"
+      src="/images/custom/avatar.jpg">
+  <p class="site-author-name" itemprop="name">139</p>
+  <div class="site-description" itemprop="description">一个普通的JAVA开发的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">40</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">34</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+  <div class="beian"><a href="https://beian.miit.gov.cn/" rel="noopener" target="_blank">浙ICP备2023004484号-1 </a>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">139</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="字符串函数：   函数 功能    CANCAT(S1,S2,…Sn) 连接 S1,S2,…Sn 为一个字符串   LENGTH(str) 计算字符串长度函数，返回字符串的字节长度   LEFT(s，n) 函数返回字符串 s 最左边的 n 个字符，s&#x3D;1表示第一个字符   RIGHT(s，n) 函数返回字符串 s 最右边的 n 个字符   LOWER(str) 将字符串str中所有字符变">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL常用函数">
+<meta property="og:url" content="http://example.com/2023/06/15/Mysql%E5%B8%B8%E7%94%A8%E5%87%BD%E6%95%B0/index.html">
+<meta property="og:site_name" content="进学阁">
+<meta property="og:description" content="字符串函数：   函数 功能    CANCAT(S1,S2,…Sn) 连接 S1,S2,…Sn 为一个字符串   LENGTH(str) 计算字符串长度函数，返回字符串的字节长度   LEFT(s，n) 函数返回字符串 s 最左边的 n 个字符，s&#x3D;1表示第一个字符   RIGHT(s，n) 函数返回字符串 s 最右边的 n 个字符   LOWER(str) 将字符串str中所有字符变">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-06-14T16:00:00.000Z">
+<meta property="article:modified_time" content="2025-03-06T09:36:18.923Z">
+<meta property="article:author" content="139">
+<meta property="article:tag" content="mysql">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2023/06/15/Mysql%E5%B8%B8%E7%94%A8%E5%87%BD%E6%95%B0/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>MySQL常用函数 | 进学阁</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">进学阁</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">业精于勤荒于嬉，行成于思毁于随</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">34</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">8</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">40</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/06/15/Mysql%E5%B8%B8%E7%94%A8%E5%87%BD%E6%95%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          MySQL常用函数
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-06-15 00:00:00" itemprop="dateCreated datePublished" datetime="2023-06-15T00:00:00+08:00">2023-06-15</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-06 17:36:18" itemprop="dateModified" datetime="2025-03-06T17:36:18+08:00">2025-03-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h4 id="字符串函数："><a href="#字符串函数：" class="headerlink" title="字符串函数："></a><font style="color:rgb(77, 77, 77);">字符串函数：</font></h4><table>
+<thead>
+<tr>
+<th><strong><font style="color:rgb(79, 79, 79);background-color:rgb(239, 243, 245);">函数</font></strong></th>
+<th><strong><font style="color:rgb(79, 79, 79);background-color:rgb(239, 243, 245);">功能</font></strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><font style="color:rgb(79, 79, 79);">CANCAT(S1,S2,…Sn)</font></td>
+<td><font style="color:rgb(79, 79, 79);">连接 S1,S2,…Sn 为一个字符串</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">LENGTH(str)</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">计算字符串长度函数，返回字符串的字节长度</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);">LEFT(s，n)</font></td>
+<td><font style="color:rgb(79, 79, 79);">函数返回字符串 s 最左边的 n 个字符，s&#x3D;1表示第一个字符</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">RIGHT(s，n)</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">函数返回字符串 s 最右边的 n 个字符</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);">LOWER(str)</font></td>
+<td><font style="color:rgb(79, 79, 79);">将字符串str中所有字符变为小写</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">UPPER(str)</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">将字符串str中所有字符变为大写</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);">LTRIM(str)</font></td>
+<td><font style="color:rgb(79, 79, 79);">去掉字符串str左侧的空格</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">RTRIM(str)</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">去掉字符串str行尾的空格</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);">REPLACE(str,a,b)</font></td>
+<td><font style="color:rgb(79, 79, 79);">用字符串b替换字符串str中所有出现的字符串a</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">TRIM(str)</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">去掉字符串行尾和行头的空格</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);">substr&#x2F;substring</font></td>
+<td><font style="color:rgb(79, 79, 79);">截取字符串，返回从指定位置开始的指定长度的字符换</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">reverse(str)</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">字符串反转（逆序）函数，返回与原始字符串顺序相反的字符串</font></td>
+</tr>
+</tbody></table>
+<span id="more"></span>
+
+<p><font style="color:rgb(77, 77, 77);">substring使用示例：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">-- 12  6</span><br><span class="line">select length(&#x27;javacode2018&#x27;),length(&#x27;路人&#x27;);</span><br><span class="line">-- 路人    路人甲JAVA </span><br><span class="line">select left(&#x27;路人甲JAVA&#x27;,2),left(&#x27;路人甲JAVA&#x27;,10);</span><br><span class="line">/** 第三个字符之后的子字符串：inese **/</span><br><span class="line">SELECT substring(&#x27;chinese&#x27;, 3);</span><br><span class="line">/** 倒数第三个字符之后的子字符串：ese **/</span><br><span class="line">SELECT substring(&#x27;chinese&#x27;, -3);</span><br><span class="line">/** 第三个字符之后的两个字符：in **/</span><br><span class="line">SELECT substring(&#x27;chinese&#x27;, 3, 2);</span><br><span class="line">/** 倒数第三个字符之后的两个字符：es **/</span><br><span class="line">SELECT substring(&#x27;chinese&#x27;, -3, 2);</span><br><span class="line">/** 第三个字符之后的子字符串：inese **/</span><br><span class="line">SELECT substring(&#x27;chinese&#x27; FROM 3);</span><br><span class="line">/** 倒数第三个字符之后的子字符串：ese **/</span><br><span class="line">SELECT substring(&#x27;chinese&#x27; FROM -3);</span><br><span class="line">/** 第三个字符之后的两个字符：in **/</span><br><span class="line">SELECT substring(&#x27;chinese&#x27; FROM 3 FOR 2);</span><br><span class="line">/** 倒数第三个字符之后的两个字符：es **/</span><br><span class="line">SELECT substring(&#x27;chinese&#x27; FROM -3 FOR 2);</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h4 id="数值函数"><a href="#数值函数" class="headerlink" title="数值函数:"></a><font style="color:rgb(79, 79, 79);">数值函数:</font></h4><table>
+<thead>
+<tr>
+<th><strong><font style="color:rgb(79, 79, 79);background-color:rgb(239, 243, 245);">函数</font></strong></th>
+<th><strong><font style="color:rgb(79, 79, 79);background-color:rgb(239, 243, 245);">功能</font></strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><font style="color:rgb(79, 79, 79);">ABS(x)</font></td>
+<td><font style="color:rgb(79, 79, 79);">返回 x 的绝对值</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">SQRT(x)</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">返回 x 的求二次方根</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);">CEIL(x)&#x2F;CEILING(x)</font></td>
+<td><font style="color:rgb(79, 79, 79);">返回大于 x 的最小整数值</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">FLOOR(x)</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">返回小于 x 的最大整数值</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);">MOD(x，y)</font></td>
+<td><font style="color:rgb(79, 79, 79);">返回 x&#x2F;y 的模</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">RAND()</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">返回 0 到 1 内的随机值。传入整数参数时，用来产生重复序列</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);">ROUND(x,y)</font></td>
+<td><font style="color:rgb(79, 79, 79);">返回参数 x 的四舍五入的有 y 位小数的值</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">POW(x,y)&#x2F;POWER(x,y)</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">返回计算x的y次方</font></td>
+</tr>
+</tbody></table>
+<p><font style="color:rgb(77, 77, 77);">使用示例：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">-- 5  NULL</span><br><span class="line">select sqrt(25),sqrt(-9);</span><br><span class="line">-- -2  3</span><br><span class="line">select ceil(-2.5),ceiling(2.5);</span><br><span class="line">-- 5  5  -4  -5</span><br><span class="line">select floor(5),floor(5.66),floor(-4),floor(-4.66);</span><br><span class="line">-- -7   -8   3</span><br><span class="line">select round(-6.6),round(-8.44),round(3.44);</span><br><span class="line">-- 0.04   1000</span><br><span class="line">select pow(5,-2),pow(10,3);</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h4 id="日期时间函数"><a href="#日期时间函数" class="headerlink" title="日期时间函数:"></a><font style="color:rgb(79, 79, 79);">日期时间函数:</font></h4><table>
+<thead>
+<tr>
+<th><strong><font style="color:rgb(79, 79, 79);background-color:rgb(239, 243, 245);">函数</font></strong></th>
+<th><strong><font style="color:rgb(79, 79, 79);background-color:rgb(239, 243, 245);">功能</font></strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">CURDATE()</font><font style="color:rgb(79, 79, 79);"> &#x2F; </font><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">current_date()</font></td>
+<td><font style="color:rgb(79, 79, 79);">当前日期</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">CURTIME()</font><font style="color:rgb(79, 79, 79);"> &#x2F; </font><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">current_time()</font></td>
+<td><font style="color:rgb(79, 79, 79);">当前时间</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">NOW()</font><font style="color:rgb(79, 79, 79);"> &#x2F; </font><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">sysdate()</font></td>
+<td><font style="color:rgb(79, 79, 79);">当前的日期和时间</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">UNIX_TIMESTAMP(date)</font></td>
+<td><font style="color:rgb(79, 79, 79);">获取日期date的UNIX 时间戳</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">FROM_UNIXTIME</font></td>
+<td><font style="color:rgb(79, 79, 79);">将UNIX 时间戳格式化</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);">dayofweek</font></td>
+<td><font style="color:rgb(79, 79, 79);">获取指定日期是一周中是第几天，返回值范围是1~7,1&#x3D;周日</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);">WEEK(date)</font></td>
+<td><font style="color:rgb(79, 79, 79);">日期 date 为一年中的第几周，返回值的范围是否为 0-52 或 1-53</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);">dayofyear</font></td>
+<td><font style="color:rgb(79, 79, 79);">获取指定曰期是一年中的第几天，返回值范围是1~366</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);">YEAR(date)</font></td>
+<td><font style="color:rgb(79, 79, 79);">日期 date 的年份</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);">dayofmonth</font></td>
+<td><font style="color:rgb(79, 79, 79);">获取指定日期是一个月中是第几天，返回值范围是1~31</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);">HOUR(time)</font></td>
+<td><font style="color:rgb(79, 79, 79);">time 的小时值</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);">MINUTE(time)</font></td>
+<td><font style="color:rgb(79, 79, 79);">time 的分钟值</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">DATE_FORMAT</font><font style="color:rgb(79, 79, 79);">(date,fmt)</font></td>
+<td><font style="color:rgb(79, 79, 79);">按字符串 fmt 格式化日期 date 值</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">DATE_ADD</font><font style="color:rgb(79, 79, 79);">(date,INTERVAL expr type)&#x2F;adddate</font></td>
+<td><font style="color:rgb(79, 79, 79);">一个日期或时间值加上一个时间间隔的时间值</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">DATE_SUB</font><font style="color:rgb(79, 79, 79);">&#x2F;subdate</font></td>
+<td><font style="color:rgb(79, 79, 79);">都是向日期减去指定的时间间隔</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">DATEDIFF</font><font style="color:rgb(79, 79, 79);">(expr,expr2)</font></td>
+<td><font style="color:rgb(79, 79, 79);">起始时间 expr 和结束时间 expr2 之间的天数</font></td>
+</tr>
+</tbody></table>
+<p><font style="color:rgb(77, 77, 77);">使用示例：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">-- 2019-09-17 16:13:28   2019-09-17 16:13:28</span><br><span class="line">select now(),sysdate();</span><br><span class="line">-- 12</span><br><span class="line">select month(&#x27;2017-12-15&#x27;);</span><br><span class="line">-- 1</span><br><span class="line">select dayofmonth(&#x27;2019-01-01&#x27;);</span><br><span class="line">-- 2019-01-11</span><br><span class="line">select date_add(&#x27;2019-01-01&#x27;,INTERVAL 10 day);</span><br><span class="line">-- 2018-12-22</span><br><span class="line">select date_sub(&#x27;2019-01-01&#x27;,INTERVAL 10 day);</span><br><span class="line">-- 1</span><br><span class="line">select datediff(&#x27;2017-11-30&#x27;,&#x27;2017-11-29&#x27;);</span><br><span class="line">-- 20171130</span><br><span class="line">select date_format(&#x27;2017-11-30&#x27;,&#x27;%Y%m%d&#x27;);</span><br><span class="line">-- 1</span><br><span class="line">select weekday(now());</span><br><span class="line">-- 1303195194 </span><br><span class="line">select unix_timestamp();</span><br><span class="line">-- 2020-06-19 00:00:00</span><br><span class="line">SELECT FROM_UNIXTIME(1592515200, &#x27;%Y-%m-%d %H:%i:%s&#x27;);</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h4 id="流程函数"><a href="#流程函数" class="headerlink" title="流程函数:"></a><font style="color:rgb(79, 79, 79);">流程函数:</font></h4><p><font style="color:rgb(77, 77, 77);">主要指case…when…函数：</font></p>
+<table>
+<thead>
+<tr>
+<th><strong><font style="color:rgb(79, 79, 79);background-color:rgb(239, 243, 245);">函数</font></strong></th>
+<th><strong><font style="color:rgb(79, 79, 79);background-color:rgb(239, 243, 245);">功能</font></strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><font style="color:rgb(79, 79, 79);">IF(expr,v1,v2)</font></td>
+<td><font style="color:rgb(79, 79, 79);">当 expr 为真是返回 v1 的值，否则返回 v2</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">IFNULL(v1,v2)</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">v1为空返回v2，否则返回v1</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);">case</font></td>
+<td><font style="color:rgb(79, 79, 79);">多条件判断</font></td>
+</tr>
+</tbody></table>
+<p><font style="color:rgb(77, 77, 77);">case语句有2种写法：</font></p>
+<p>:::tips<br>CASE &lt;表达式&gt;</p>
+<p> WHEN &lt;值1&gt; THEN &lt;操作&gt;</p>
+<p> WHEN &lt;值2&gt; THEN &lt;操作&gt;</p>
+<p> …</p>
+<p> ELSE &lt;操作&gt;</p>
+<p>END CASE;</p>
+<p>CASE</p>
+<p> WHEN &lt;条件1&gt; THEN &lt;命令&gt;</p>
+<p> WHEN &lt;条件2&gt; THEN &lt;命令&gt;</p>
+<p> …</p>
+<p> ELSE commands</p>
+<p>END CASE;</p>
+<p>:::</p>
+<p><font style="color:rgb(77, 77, 77);">使用示例：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">-- 1 x yes</span><br><span class="line">select if(1&lt;2,1,0) c1,if(1&gt;5,&#x27;√&#x27;,&#x27;×&#x27;) c2,if(strcmp(&#x27;abc&#x27;,&#x27;ab&#x27;),&#x27;yes&#x27;,&#x27;no&#x27;) c3;</span><br><span class="line">-- 12345  非空</span><br><span class="line">select ifnull(null,&#x27;12345&#x27;),ifnull(&#x27;非空&#x27;,&#x27;为空&#x27;);</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h4 id="聚合函数"><a href="#聚合函数" class="headerlink" title="聚合函数:"></a><font style="color:rgb(79, 79, 79);">聚合函数:</font></h4><p><font style="color:rgb(77, 77, 77);">分组时，可以使用聚合函数。</font></p>
+<table>
+<thead>
+<tr>
+<th><strong><font style="color:rgb(79, 79, 79);background-color:rgb(239, 243, 245);">函数</font></strong></th>
+<th><strong><font style="color:rgb(79, 79, 79);background-color:rgb(239, 243, 245);">功能</font></strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><font style="color:rgb(79, 79, 79);">max</font></td>
+<td><font style="color:rgb(79, 79, 79);">查询指定列的最大值</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">min</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">查询指定列的最小值</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);">count</font></td>
+<td><font style="color:rgb(79, 79, 79);">统计查询结果的行数</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">sum</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">求和，返回指定列的总和</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);">avg</font></td>
+<td><font style="color:rgb(79, 79, 79);">求平均值，返回指定列数据的平均值</font></td>
+</tr>
+</tbody></table>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/mysql/" rel="tag"><i class="fa fa-tag"></i> mysql</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/06/15/Mysql%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/" rel="prev" title="MySQL数据类型">
+      <i class="fa fa-chevron-left"></i> MySQL数据类型
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/06/15/MySQL%E7%94%A8truncate%E5%91%BD%E4%BB%A4%E5%BF%AB%E9%80%9F%E6%B8%85%E7%A9%BA%E4%B8%80%E4%B8%AA%E6%95%B0%E6%8D%AE%E5%BA%93%E4%B8%AD%E7%9A%84%E6%89%80%E6%9C%89%E8%A1%A8/" rel="next" title="MySQL快速清空数据库中的所有表">
+      MySQL快速清空数据库中的所有表 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%87%BD%E6%95%B0%EF%BC%9A"><span class="nav-number">1.</span> <span class="nav-text">字符串函数：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%95%B0%E5%80%BC%E5%87%BD%E6%95%B0"><span class="nav-number">2.</span> <span class="nav-text">数值函数:</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%97%A5%E6%9C%9F%E6%97%B6%E9%97%B4%E5%87%BD%E6%95%B0"><span class="nav-number">3.</span> <span class="nav-text">日期时间函数:</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B5%81%E7%A8%8B%E5%87%BD%E6%95%B0"><span class="nav-number">4.</span> <span class="nav-text">流程函数:</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%81%9A%E5%90%88%E5%87%BD%E6%95%B0"><span class="nav-number">5.</span> <span class="nav-text">聚合函数:</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="139"
+      src="/images/custom/avatar.jpg">
+  <p class="site-author-name" itemprop="name">139</p>
+  <div class="site-description" itemprop="description">一个普通的JAVA开发的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">40</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">34</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+  <div class="beian"><a href="https://beian.miit.gov.cn/" rel="noopener" target="_blank">浙ICP备2023004484号-1 </a>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">139</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

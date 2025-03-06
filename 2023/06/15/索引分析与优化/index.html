@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="EXPLAINMySQL 提供了一个 EXPLAIN 命令，它可以对 SELECT 语句进行分析，并输出 SELECT 执行的详细信息，供开发人员有针对性的优化。例如： EXPLAIN SELECT * from user WHERE id &lt; 3; EXPLAIN 命令的输出内容大致如下：">
+<meta property="og:type" content="article">
+<meta property="og:title" content="索引分析与优化">
+<meta property="og:url" content="http://example.com/2023/06/15/%E7%B4%A2%E5%BC%95%E5%88%86%E6%9E%90%E4%B8%8E%E4%BC%98%E5%8C%96/index.html">
+<meta property="og:site_name" content="进学阁">
+<meta property="og:description" content="EXPLAINMySQL 提供了一个 EXPLAIN 命令，它可以对 SELECT 语句进行分析，并输出 SELECT 执行的详细信息，供开发人员有针对性的优化。例如： EXPLAIN SELECT * from user WHERE id &lt; 3; EXPLAIN 命令的输出内容大致如下：">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1656582561774-3eca4d5a-9d80-402a-9bf5-941d77d94c23.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1656582583684-130fc794-b0d8-4a44-b0c4-995a7b1499ea.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717061817669-5ea5e340-a576-4631-9ab0-5af75552ac2b.webp">
+<meta property="article:published_time" content="2023-06-14T16:00:00.000Z">
+<meta property="article:modified_time" content="2025-03-06T09:35:12.467Z">
+<meta property="article:author" content="139">
+<meta property="article:tag" content="mysql">
+<meta property="article:tag" content="索引">
+<meta property="article:tag" content="优化">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1656582561774-3eca4d5a-9d80-402a-9bf5-941d77d94c23.png">
+
+<link rel="canonical" href="http://example.com/2023/06/15/%E7%B4%A2%E5%BC%95%E5%88%86%E6%9E%90%E4%B8%8E%E4%BC%98%E5%8C%96/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>索引分析与优化 | 进学阁</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">进学阁</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">业精于勤荒于嬉，行成于思毁于随</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">34</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">8</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">40</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/06/15/%E7%B4%A2%E5%BC%95%E5%88%86%E6%9E%90%E4%B8%8E%E4%BC%98%E5%8C%96/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          索引分析与优化
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-06-15 00:00:00" itemprop="dateCreated datePublished" datetime="2023-06-15T00:00:00+08:00">2023-06-15</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-06 17:35:12" itemprop="dateModified" datetime="2025-03-06T17:35:12+08:00">2025-03-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="EXPLAIN"><a href="#EXPLAIN" class="headerlink" title="EXPLAIN"></a><font style="color:rgb(34, 34, 34);">EXPLAIN</font></h3><p><font style="color:rgb(34, 34, 34);">MySQL 提供了一个 EXPLAIN 命令，它可以对 SELECT 语句进行分析，并输出 SELECT 执行的详细信息，供开发人员有针对性的优化。例如：</font></p>
+<p><font style="color:rgb(34, 34, 34);">EXPLAIN SELECT * from user WHERE id &lt; 3;</font></p>
+<p><font style="color:rgb(34, 34, 34);">EXPLAIN 命令的输出内容大致如下：</font></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1656582561774-3eca4d5a-9d80-402a-9bf5-941d77d94c23.png"></p>
+<span id="more"></span>
+<p><strong><font style="color:rgb(34, 34, 34);">1. select_type</font></strong><font style="color:rgb(34, 34, 34);">:</font><font style="color:rgb(34, 34, 34);">表示查询的类型。常用的值如下：</font></p>
+<ul>
+<li><font style="color:rgb(34, 34, 34);">SIMPLE ： 表示查询语句不包含子查询或union</font></li>
+<li><font style="color:rgb(34, 34, 34);">PRIMARY：表示此查询是最外层的查询</font></li>
+<li><font style="color:rgb(34, 34, 34);">UNION：表示此查询是UNION的第二个或后续的查询</font></li>
+<li><font style="color:rgb(34, 34, 34);">DEPENDENT UNION：UNION中的第二个或后续的查询语句，使用了外面查询结果</font></li>
+<li><font style="color:rgb(34, 34, 34);">UNION RESULT：UNION的结果</font></li>
+<li><font style="color:rgb(34, 34, 34);">SUBQUERY：SELECT子查询语句</font></li>
+<li><font style="color:rgb(34, 34, 34);">DEPENDENT SUBQUERY：SELECT子查询语句依赖外层查询的结果。</font></li>
+</ul>
+<p><font style="color:rgb(34, 34, 34);">最常见的查询类型是SIMPLE，表示我们的查询没有子查询也没用到UNION查询。</font></p>
+<p><strong><font style="color:rgb(34, 34, 34);">2.type</font></strong><font style="color:rgb(34, 34, 34);">表示存储引擎查询数据时采用的方式。比较重要的一个属性，通过它可以判断出查询是全表扫描还是基于索引的部分扫描。常用属性值如下，从上至下效率依次增强。</font></p>
+<ul>
+<li><font style="color:rgb(34, 34, 34);">ALL：表示全表扫描，性能最差。</font></li>
+<li><font style="color:rgb(34, 34, 34);">index：表示基于索引的全表扫描，先扫描索引再扫描全表数据。</font></li>
+<li><font style="color:rgb(34, 34, 34);">range：表示使用索引范围查询。使用&gt;、&gt;&#x3D;、&lt;、&lt;&#x3D;、in等等。</font></li>
+<li><font style="color:rgb(34, 34, 34);">ref：表示使用非唯一索引进行单值查询。</font></li>
+<li><font style="color:rgb(34, 34, 34);">eq_ref：一般情况下出现在多表join查询，表示前面表的每一个记录，都只能匹配后面表的一行结果。</font></li>
+<li><font style="color:rgb(34, 34, 34);">const：表示使用主键或唯一索引做等值查询，常量查询。</font></li>
+<li><font style="color:rgb(34, 34, 34);">NULL：表示不用访问表，速度最快。</font></li>
+</ul>
+<p><strong><font style="color:rgb(34, 34, 34);">3. possible_keys</font></strong><font style="color:rgb(34, 34, 34);">表示查询时能够使用到的索引。注意并不一定会真正使用，显示的是索引名称。</font></p>
+<p><strong><font style="color:rgb(34, 34, 34);">4. key</font></strong><font style="color:rgb(34, 34, 34);">表示查询时真正使用到的索引，显示的是索引名称。</font></p>
+<p><strong><font style="color:rgb(34, 34, 34);">5. rows</font></strong><font style="color:rgb(34, 34, 34);">MySQL查询优化器会根据统计信息，估算SQL要查询到结果需要扫描多少行记录。原则上rows是越少效率越高，可以直观的了解到SQL效率高低。</font></p>
+<p><strong><font style="color:rgb(34, 34, 34);">6. key_len</font></strong><font style="color:rgb(34, 34, 34);">表示查询使用了索引的字节数量。可以判断是否全部使用了组合索引。key_len的计算规则如下：</font></p>
+<ul>
+<li><font style="color:rgb(34, 34, 34);">字符串类型</font><font style="color:rgb(34, 34, 34);">字符串长度跟字符集有关：latin1&#x3D;1、gbk&#x3D;2、utf8&#x3D;3、utf8mb4&#x3D;4</font><font style="color:rgb(34, 34, 34);">char(n)：n*字符集长度</font><font style="color:rgb(34, 34, 34);">varchar(n)：n * 字符集长度 + 2字节</font></li>
+<li><font style="color:rgb(34, 34, 34);">数值类型</font><font style="color:rgb(34, 34, 34);">TINYINT：1个字节</font><font style="color:rgb(34, 34, 34);">SMALLINT：2个字节</font><font style="color:rgb(34, 34, 34);">MEDIUMINT：3个字节</font><font style="color:rgb(34, 34, 34);">INT、FLOAT：4个字节</font><font style="color:rgb(34, 34, 34);">BIGINT、DOUBLE：8个字节</font></li>
+<li><font style="color:rgb(34, 34, 34);">时间类型</font><font style="color:rgb(34, 34, 34);">DATE：3个字节</font><font style="color:rgb(34, 34, 34);">TIMESTAMP：4个字节</font><font style="color:rgb(34, 34, 34);">DATETIME：8个字节</font></li>
+<li><font style="color:rgb(34, 34, 34);">字段属性</font><font style="color:rgb(34, 34, 34);">NULL属性占用1个字节，如果一个字段设置了NOT NULL，则没有此项。</font></li>
+</ul>
+<p><strong><font style="color:rgb(34, 34, 34);">7. Extra</font></strong><font style="color:rgb(34, 34, 34);">Extra表示很多额外的信息，各种操作会在Extra提示相关信息，常见几种如下：</font></p>
+<ul>
+<li><font style="color:rgb(34, 34, 34);">Using where</font><font style="color:rgb(34, 34, 34);">表示查询需要通过索引回表查询数据。</font></li>
+<li><font style="color:rgb(34, 34, 34);">Using index</font><font style="color:rgb(34, 34, 34);">表示查询需要通过索引，索引就可以满足所需数据。</font></li>
+<li><font style="color:rgb(34, 34, 34);">Using filesort</font><font style="color:rgb(34, 34, 34);">表示查询出来的结果需要额外排序，数据量小在内存，大的话在磁盘，因此有Using filesort建议优化。</font></li>
+<li><font style="color:rgb(34, 34, 34);">Using temprorary查询使用到了临时表，一般出现于去重、分组等操作。</font></li>
+</ul>
+<h3 id="回表查询"><a href="#回表查询" class="headerlink" title="回表查询"></a><font style="color:rgb(34, 34, 34);">回表查询</font></h3><p><font style="color:rgb(34, 34, 34);">InnoDB索引有聚簇索引和辅助索引。聚簇索引的叶子节点存储行记录，InnoDB必须要有，且只有一个。辅助索引的叶子节点存储的是主键值和索引字段值，通过辅助索引无法直接定位行记录，通常情况下，需要扫码两遍索引树。先通过辅助索引定位主键值，然后再通过聚簇索引定位行记录，这就叫做</font><strong><font style="color:rgb(34, 34, 34);">回表查询</font></strong><font style="color:rgb(34, 34, 34);">，它的性能比扫一遍索引树低。总结：通过索引查询主键值，然后再去聚簇索引查询记录信息</font></p>
+<h3 id="覆盖索引"><a href="#覆盖索引" class="headerlink" title="覆盖索引"></a><font style="color:rgb(34, 34, 34);">覆盖索引</font></h3><p><font style="color:rgb(34, 34, 34);">在MySQL官网，类似的说法出现在explain查询计划优化章节，即explain的输出结果Extra字段为Using</font><font style="color:rgb(34, 34, 34);">index时，能够触发索引覆盖。</font></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1656582583684-130fc794-b0d8-4a44-b0c4-995a7b1499ea.png"></p>
+<p><strong><font style="color:rgb(34, 34, 34);">只需要在一棵索引树上就能获取SQL所需的所有列数据，无需回表，速度更快，这就叫做索引覆盖</font></strong><font style="color:rgb(34, 34, 34);">。实现索引覆盖最常见的方法就是：将被查询的字段，建立到组合索引。</font></p>
+<p><font style="color:rgb(34, 34, 34);"></font></p>
+<h2 id="最左前缀原则"><a href="#最左前缀原则" class="headerlink" title="最左前缀原则"></a><strong><font style="color:black;">最左前缀原则</font></strong></h2><p><strong><font style="color:rgb(145, 109, 213);">「组合索引使用时遵循最左前缀原则，最左前缀顾名思义，就是最左优先，即查询中使用到最左边的列， 那么查询就会使用到索引，如果从索引的第二列开始查找，索引将失效」</font></strong><font style="color:rgb(0, 0, 0);">。</font></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1717061817669-5ea5e340-a576-4631-9ab0-5af75552ac2b.webp"></p>
+<h3 id="索引与排序"><a href="#索引与排序" class="headerlink" title="索引与排序"></a><font style="color:rgb(34, 34, 34);">索引与排序</font></h3><p><font style="color:rgb(34, 34, 34);">MySQL查询支持filesort和index两种方式的排序，</font></p>
+<ul>
+<li><font style="color:rgb(34, 34, 34);">filesort是先把结果查出，然后在缓存或磁盘进行排序操作，效率较低。</font></li>
+<li><font style="color:rgb(34, 34, 34);">index是指利用索引自动实现排序，不需另做排序操作，效率会比较高。</font></li>
+</ul>
+<h4 id="排序方式的选择"><a href="#排序方式的选择" class="headerlink" title="排序方式的选择"></a><font style="color:black;">排序方式的选择</font></h4><h5 id="使用index排序的场景"><a href="#使用index排序的场景" class="headerlink" title="使用index排序的场景"></a>使用<font style="color:rgb(34, 34, 34);">index排序的场景</font></h5><p><font style="color:black;">ORDER BY 子句索引列组合满足索引最左前列</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">explain select id from user order by id; //对应(id)、(id,name)索引有效</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:black;">WHERE子句+ORDER BY子句索引列组合满足索引最左前缀</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#对应(age,name)组合索引</span><br><span class="line">explain select id from user where age=18 order by name;</span><br></pre></td></tr></table></figure>
+
+<h5 id="使用filesort方式的排序的场景"><a href="#使用filesort方式的排序的场景" class="headerlink" title="使用filesort方式的排序的场景"></a>使用filesort方式的排序的场景</h5><p><font style="color:black;">对索引列</font>同时使用了<font style="color:black;">ASC和DESC</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#对应(age,name)组合索引</span><br><span class="line">explain select id from user order by age asc,name desc;</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:black;">WHERE子句和ORDER BY子句满足最左前缀，但where子句使用了范围查询（例如&gt;、&lt;、in 等）</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#对应(age,name)组合索引</span><br><span class="line">explain select id from user where age&gt;10 order by name;</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:black;">ORDER BY或者WHERE+ORDER BY索引列没有满足索引最左前缀</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#对应(age,name)组合索引</span><br><span class="line">explain select id from user order by name;</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:black;">使用了不同的索引，MySQL每次只采用一个索引，ORDER BY涉及了两个索引</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#对应(name)、(age)两个索引</span><br><span class="line">explain select id from user order by name,age;</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:black;">WHERE子句与ORDER BY子句，使用了不同的索引</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#对应(name)、(age)索引</span><br><span class="line">explain select id from user where name=&#x27;tom&#x27; order by age;</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:black;">WHERE子句或者ORDER BY子句中索引列使用了表达式，包括函数表达式</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#对应(age)索引</span><br><span class="line">explain select id from user order by abs(age);</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(0, 0, 0);"></font></p>
+<h4 id="filesort排序"><a href="#filesort排序" class="headerlink" title="filesort排序"></a><font style="color:rgb(34, 34, 34);">filesort排序</font></h4><p><strong><font style="color:rgb(34, 34, 34);">filesort有两种排序算法：双路排序和单路排序。</font></strong></p>
+<h5 id="双路排序"><a href="#双路排序" class="headerlink" title="双路排序"></a><font style="color:rgb(34, 34, 34);">双路排序</font></h5><p><font style="color:rgb(34, 34, 34);">需要两次磁盘扫描读取，最终得到用户数据。第一次将排序字段读取出来，然后排序；第二次去读取其他字段数据。</font></p>
+<h5 id="单路排序"><a href="#单路排序" class="headerlink" title="单路排序"></a><font style="color:rgb(34, 34, 34);">单路排序</font></h5><p><font style="color:rgb(34, 34, 34);">从磁盘查询所需的所有列数据，然后在内存排序将结果返回。</font></p>
+<p><font style="color:rgb(34, 34, 34);"></font></p>
+<p><font style="color:rgb(34, 34, 34);">如果查询数据超出缓存sort_buffer，会导致多次磁盘读取操作，并创建临时表，最后产生了多次IO，反而会增加负担。</font></p>
+<p><font style="color:rgb(34, 34, 34);">解决方案：少使用select *；增加sort_buffer_size容量和max_length_for_sort_data容量。</font></p>
+<h3 id=""><a href="#" class="headerlink" title=""></a></h3>
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/mysql/" rel="tag"><i class="fa fa-tag"></i> mysql</a>
+              <a href="/tags/%E7%B4%A2%E5%BC%95/" rel="tag"><i class="fa fa-tag"></i> 索引</a>
+              <a href="/tags/%E4%BC%98%E5%8C%96/" rel="tag"><i class="fa fa-tag"></i> 优化</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/06/14/%E7%B4%A2%E5%BC%95/" rel="prev" title="索引">
+      <i class="fa fa-chevron-left"></i> 索引
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/06/15/too%20many%20connections%20%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/" rel="next" title="too many connections 解决方法">
+      too many connections 解决方法 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#EXPLAIN"><span class="nav-number">1.</span> <span class="nav-text">EXPLAIN</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9B%9E%E8%A1%A8%E6%9F%A5%E8%AF%A2"><span class="nav-number">2.</span> <span class="nav-text">回表查询</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A6%86%E7%9B%96%E7%B4%A2%E5%BC%95"><span class="nav-number">3.</span> <span class="nav-text">覆盖索引</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%80%E5%B7%A6%E5%89%8D%E7%BC%80%E5%8E%9F%E5%88%99"><span class="nav-number"></span> <span class="nav-text">最左前缀原则</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%B4%A2%E5%BC%95%E4%B8%8E%E6%8E%92%E5%BA%8F"><span class="nav-number">1.</span> <span class="nav-text">索引与排序</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8E%92%E5%BA%8F%E6%96%B9%E5%BC%8F%E7%9A%84%E9%80%89%E6%8B%A9"><span class="nav-number">1.1.</span> <span class="nav-text">排序方式的选择</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8index%E6%8E%92%E5%BA%8F%E7%9A%84%E5%9C%BA%E6%99%AF"><span class="nav-number">1.1.1.</span> <span class="nav-text">使用index排序的场景</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8filesort%E6%96%B9%E5%BC%8F%E7%9A%84%E6%8E%92%E5%BA%8F%E7%9A%84%E5%9C%BA%E6%99%AF"><span class="nav-number">1.1.2.</span> <span class="nav-text">使用filesort方式的排序的场景</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#filesort%E6%8E%92%E5%BA%8F"><span class="nav-number">1.2.</span> <span class="nav-text">filesort排序</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%8F%8C%E8%B7%AF%E6%8E%92%E5%BA%8F"><span class="nav-number">1.2.1.</span> <span class="nav-text">双路排序</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%8D%95%E8%B7%AF%E6%8E%92%E5%BA%8F"><span class="nav-number">1.2.2.</span> <span class="nav-text">单路排序</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text"></span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="139"
+      src="/images/custom/avatar.jpg">
+  <p class="site-author-name" itemprop="name">139</p>
+  <div class="site-description" itemprop="description">一个普通的JAVA开发的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">40</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">34</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+  <div class="beian"><a href="https://beian.miit.gov.cn/" rel="noopener" target="_blank">浙ICP备2023004484号-1 </a>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">139</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

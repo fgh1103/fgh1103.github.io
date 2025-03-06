@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Mysql提供了多种数据类型，主要包括数值型、字符串类型、日期和时间类型。接下来以Mysql5.0为例，详细介绍Mysql中的各种数据类型。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL数据类型">
+<meta property="og:url" content="http://example.com/2023/06/15/Mysql%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/index.html">
+<meta property="og:site_name" content="进学阁">
+<meta property="og:description" content="Mysql提供了多种数据类型，主要包括数值型、字符串类型、日期和时间类型。接下来以Mysql5.0为例，详细介绍Mysql中的各种数据类型。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2024/png/25873401/1716948693406-7caa2e19-123f-4cca-af84-e307c5e2ebfb.png">
+<meta property="article:published_time" content="2023-06-14T16:00:00.000Z">
+<meta property="article:modified_time" content="2025-03-06T09:35:23.738Z">
+<meta property="article:author" content="139">
+<meta property="article:tag" content="mysql">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.nlark.com/yuque/0/2024/png/25873401/1716948693406-7caa2e19-123f-4cca-af84-e307c5e2ebfb.png">
+
+<link rel="canonical" href="http://example.com/2023/06/15/Mysql%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>MySQL数据类型 | 进学阁</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">进学阁</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">业精于勤荒于嬉，行成于思毁于随</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">34</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">8</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">40</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/06/15/Mysql%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          MySQL数据类型
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-06-15 00:00:00" itemprop="dateCreated datePublished" datetime="2023-06-15T00:00:00+08:00">2023-06-15</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-06 17:35:23" itemprop="dateModified" datetime="2025-03-06T17:35:23+08:00">2025-03-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><font style="color:rgb(77, 77, 77);">Mysql提供了多种数据类型，主要包括数值型、字符串类型、日期和时间类型。接下来以Mysql5.0为例，详细介绍Mysql中的各种数据类型。</font></p>
+<span id="more"></span>
+<h2 id="数值类型"><a href="#数值类型" class="headerlink" title="数值类型"></a><font style="color:rgb(79, 79, 79);">数值类型</font></h2><h5 id="整数类型"><a href="#整数类型" class="headerlink" title="整数类型"></a><font style="color:rgb(79, 79, 79);">整数类型</font></h5><table>
+<thead>
+<tr>
+<th><font style="color:rgb(79, 79, 79);"></font></th>
+<th><strong><font style="color:rgb(79, 79, 79);background-color:rgb(239, 243, 245);">字节</font></strong></th>
+<th><strong><font style="color:rgb(79, 79, 79);background-color:rgb(239, 243, 245);">最小值</font></strong></th>
+<th><strong><font style="color:rgb(79, 79, 79);background-color:rgb(239, 243, 245);">最大值</font></strong></th>
+<th><strong><font style="color:rgb(79, 79, 79);">备注</font></strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><font style="color:rgb(79, 79, 79);">TINYINT</font></td>
+<td>1</td>
+<td><font style="color:rgb(79, 79, 79);">有符号-128(-2</font><sup><font style="color:rgb(79, 79, 79);">7</font></sup><font style="color:rgb(79, 79, 79);">)</font>   <font style="color:rgb(79, 79, 79);">无符号0</font></td>
+<td><font style="color:rgb(79, 79, 79);">有符号127(2</font><sup><font style="color:rgb(79, 79, 79);">7</font></sup><font style="color:rgb(79, 79, 79);">-1)</font>   <font style="color:rgb(79, 79, 79);">无符号255(2</font><sup><font style="color:rgb(79, 79, 79);">8</font></sup><font style="color:rgb(79, 79, 79);">-1)</font></td>
+<td><font style="color:rgb(79, 79, 79);">很小的整数</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">SMALLINT</font></td>
+<td>2</td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">有符号-32768(-2</font><sup><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">15</font></sup><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">)</font>   <font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">无符号0</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">有符号32767(2</font><sup><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">15</font></sup><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">-1)</font>   <font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">无符号65535(2</font><sup><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">16</font></sup><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">)</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">小的整数</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);">MEDIUMINT</font></td>
+<td>3</td>
+<td><font style="color:rgb(79, 79, 79);">   </font><font style="color:rgb(79, 79, 79);">有符号- 8388608(-2</font><sup><font style="color:rgb(79, 79, 79);">23</font></sup><font style="color:rgb(79, 79, 79);">)   </font><font style="color:rgb(79, 79, 79);">无符号0</font></td>
+<td><font style="color:rgb(79, 79, 79);">有符号8388607(2</font><sup><font style="color:rgb(79, 79, 79);">23</font></sup><font style="color:rgb(79, 79, 79);">-1)</font>   <font style="color:rgb(79, 79, 79);">无符号1677215(2</font><sup><font style="color:rgb(79, 79, 79);">24</font></sup><font style="color:rgb(79, 79, 79);">-1)</font></td>
+<td><font style="color:rgb(79, 79, 79);">中等大小的整数</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">INT</font><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">、INTEGER</font></td>
+<td>4</td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">有符号- 2147483648(-2</font><sup><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">31</font></sup><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">)</font>   <font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">无符号0</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">有符号2147483647(2</font><sup><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">31</font></sup><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">-1)</font>   <font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">无符号4294967295(2</font><sup><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">32</font></sup><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">-1)</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">普通大小的整数</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">BIGINT</font></td>
+<td>8</td>
+<td><font style="color:rgb(79, 79, 79);">有符号-9223372036854775808(-2</font><sup><font style="color:rgb(79, 79, 79);">63</font></sup><font style="color:rgb(79, 79, 79);">)</font>   <font style="color:rgb(79, 79, 79);">无符号0</font></td>
+<td><font style="color:rgb(79, 79, 79);">有符号9223372036854775807(2</font><sup><font style="color:rgb(79, 79, 79);">63</font></sup><font style="color:rgb(79, 79, 79);">-1)</font>   <font style="color:rgb(79, 79, 79);">无符号18446744073709551615(2</font><sup><font style="color:rgb(79, 79, 79);">64</font></sup><font style="color:rgb(79, 79, 79);">-1)</font></td>
+<td><font style="color:rgb(79, 79, 79);">大的整数</font></td>
+</tr>
+</tbody></table>
+<p><font style="color:rgb(77, 77, 77);"> 对于整型数据，Mysql支持在类型名称后面的小括号内指定显示宽度。例如</font><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">int(5)表示当数值宽度小于5位的时候在数字前面，默认用空格填满宽度，如果不显示指定宽度则默认为int(11)</font><font style="color:rgb(77, 77, 77);">。</font></p>
+<p>:::tips<br><font style="color:rgb(85, 86, 102);background-color:rgb(238, 240, 244);">如果需要用哪个数字’0’填充，则需要使用zerofill，并且使用zerofill 时，默认会自动unsigned(无符号)属性，使用unsigned属性后，数值范围是原值的2倍，例如，有符号为-128</font><sub><font style="color:rgb(85, 86, 102);background-color:rgb(238, 240, 244);">+127，无符号为0</font></sub><font style="color:rgb(85, 86, 102);background-color:rgb(238, 240, 244);">256。</font></p>
+<p>:::</p>
+<h5 id="浮点数类型"><a href="#浮点数类型" class="headerlink" title="浮点数类型"></a><font style="color:rgb(79, 79, 79);">浮点数类型</font></h5><table>
+<thead>
+<tr>
+<th></th>
+<th><strong><font style="color:rgb(79, 79, 79);background-color:rgb(239, 243, 245);">字节</font></strong></th>
+<th><strong><font style="color:rgb(79, 79, 79);background-color:rgb(239, 243, 245);">最小值</font></strong></th>
+<th><strong><font style="color:rgb(79, 79, 79);background-color:rgb(239, 243, 245);">最大值</font></strong></th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><font style="color:rgb(79, 79, 79);">FLOAT</font></td>
+<td><font style="color:rgb(79, 79, 79);">4</font></td>
+<td><font style="color:rgb(79, 79, 79);">±1.175494351E-38</font></td>
+<td><font style="color:rgb(79, 79, 79);">±3.402823466E+38</font></td>
+<td><font style="color:rgb(79, 79, 79);">单精度浮点型，m总个数，d小数位</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">DOUBLE</font></td>
+<td>8</td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">±2.2250738585072014E-308</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">±1.7976931348623157E+308</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">双精度浮点型， m总个数，d小数位</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);">DEC(M,D)</font></td>
+<td><font style="color:rgb(79, 79, 79);">M+2</font></td>
+<td><font style="color:rgb(79, 79, 79);">最大取值范围与DOUBLE相同，给定DECIMAL的有效取值范围由M和D决定</font></td>
+<td><font style="color:rgb(79, 79, 79);">压缩严格的定点数</font></td>
+<td></td>
+</tr>
+<tr>
+<td><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">DECIMAL(M,D)</font></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<p> 对于小数的表示，MySQL分为两种方式：浮点数和定点数。浮点数包括float（单精度）和double（双精度），而定点数则只有decimal一种表示。定点数在MySQL内部以字符串形式存放，比浮点数更精确，适合用来表示金额等精度高的数据。</p>
+<p>  浮点数和定点数都可以用类型名称后加“(M,D)”的方式来进行表示，“(M,D)”表示该值一共显示M位数字（整数位+小数位），其中D位于小数点后面。M和D又称为精度和标度。</p>
+<p>:::tips<br><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">float和double在不指定精度时，默认会按照实际的精度来显示</font><font style="color:rgb(77, 77, 77);">，而</font><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">DECIMAL在不指定精度时，默认整数为10，小数为0</font><font style="color:rgb(77, 77, 77);">。</font></p>
+<p><font style="color:rgb(85, 86, 102);background-color:rgb(238, 240, 244);">decimal插入的数据超过精度之后会触发警告</font></p>
+<p><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">decimal采用的是四舍五入</font><font style="color:rgb(77, 77, 77);">。</font><font style="color:rgb(85, 86, 102);background-color:rgb(238, 240, 244);"><br></font><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">float和double采用的是四舍六入五成双</font><font style="color:rgb(77, 77, 77);">。</font></p>
+<p><font style="color:rgb(85, 86, 102);background-color:rgb(238, 240, 244);">四舍六入五成双：就是5以下舍弃5以上进位，如果需要处理数字为5的时候，需要看5后面是否还有不为0的任何数字，如果有，则直接进位；如果没有，需要看5前面的数字，若是奇数则进位，若是偶数则将5舍掉。</font></p>
+<p><font style="color:rgb(77, 77, 77);">如果将数据库中 float 、 double类型的数据进行计算时，会存在精度问题。而使用decimal时是正常的，所以非int数据，一般decimal用的比较多</font></p>
+<p>:::</p>
+<h5 id="日期时间类型"><a href="#日期时间类型" class="headerlink" title="日期时间类型"></a><font style="color:rgb(79, 79, 79);">日期时间类型</font></h5><table>
+<thead>
+<tr>
+<th></th>
+<th><strong><font style="color:rgb(79, 79, 79);background-color:rgb(239, 243, 245);">字节</font></strong></th>
+<th><strong><font style="color:rgb(79, 79, 79);background-color:rgb(239, 243, 245);">最小值</font></strong></th>
+<th><strong><font style="color:rgb(79, 79, 79);background-color:rgb(239, 243, 245);">最大值</font></strong></th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><font style="color:rgb(79, 79, 79);">DATE</font></td>
+<td><font style="color:rgb(79, 79, 79);">4</font></td>
+<td><font style="color:rgb(79, 79, 79);">1000-01-01</font></td>
+<td><font style="color:rgb(79, 79, 79);">9999-12-31</font></td>
+<td><font style="color:rgb(79, 79, 79);">YYYY-MM-DD</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">DATETIME</font></td>
+<td><strong><font style="color:rgb(79, 79, 79);background-color:rgb(239, 243, 245);">8</font></strong></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">1000-01-01 00:00:00</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">9999-12-31 23:59:59</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">YYYY-MM-DD HH:MM:SS</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);">TIMESTAMP</font></td>
+<td><strong><font style="color:rgb(79, 79, 79);background-color:rgb(239, 243, 245);">4</font></strong></td>
+<td><font style="color:rgb(79, 79, 79);">19700101080001</font></td>
+<td><font style="color:rgb(79, 79, 79);">2038-01-19 03:14:07UTC（格林尼治时间）</font></td>
+<td><font style="color:rgb(79, 79, 79);">YYYY-MM-DD HH:MM:SS</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">TIME</font></td>
+<td><strong><font style="color:rgb(79, 79, 79);background-color:rgb(239, 243, 245);">3</font></strong></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">-838:59:59</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">838:59:59</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">HH:MM:SS</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);">YEAR</font></td>
+<td><strong><font style="color:rgb(79, 79, 79);background-color:rgb(239, 243, 245);">1</font></strong></td>
+<td><font style="color:rgb(79, 79, 79);">1901</font></td>
+<td><font style="color:rgb(79, 79, 79);">2155</font></td>
+<td><font style="color:rgb(79, 79, 79);">YYYY</font></td>
+</tr>
+</tbody></table>
+<p>如果要用来表示年月日，通常用DATE来表示。</p>
+<p>  如果要用来表示年月日时分秒，通常用DATETIME表示。</p>
+<p>  如果只用来表示时分秒，通常用TIME来表示。</p>
+<p>  如果需要经常插入或者更新日期为当前系统时间，则通常使用TIMESTAMP来表示。</p>
+<p>  如果只是表示年份，可以用YEAR来表示，它比DATE占用更少的空间。YEAR有2位或4位格式的年。默认是4位格式。在4位格式中，允许的值是1901～2155和0000。在2位格式中，允许的值是70～69，表示从1970～2069年。</p>
+<p>  DATETIME是DATE和TIME的组合。</p>
+<p>:::tips<br><font style="color:rgb(85, 86, 102);background-color:rgb(238, 240, 244);"> TIMESTAMP还有一个重要特点，就是和时区相关。当插入日期时，会先转换为本地时区后存放；而从数据库里面取出时，也同样需要将日期转换为本地时区后显示。这样，两个不同时区的用户看到的同一个日期可能是不一样的。</font></p>
+<p>:::</p>
+<p>尽量使用timestamp，空间效率高于datetime（datetime占用8字节，timestamp占用4字节）。</p>
+<p>  如果需要存储微秒，可以使用bigint存储。</p>
+<p>  DATETIME表示的时间范围较大，TIMESTAMP表示的时间范围较小。</p>
+<p>  关于表中的更新时间字段，使用示例（插入数据时为当前时间，更新数据时也会随之更新）：</p>
+<h5 id="字符串类型"><a href="#字符串类型" class="headerlink" title="字符串类型"></a><font style="color:rgb(79, 79, 79);">字符串类型</font></h5><table>
+<thead>
+<tr>
+<th></th>
+<th><strong><font style="color:rgb(79, 79, 79);background-color:rgb(239, 243, 245);">字节</font></strong></th>
+<th><strong><font style="color:rgb(79, 79, 79);background-color:rgb(239, 243, 245);">范围</font></strong></th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">char</font><font style="color:rgb(79, 79, 79);">(M)</font></td>
+<td><font style="color:rgb(79, 79, 79);">m</font></td>
+<td><font style="color:rgb(79, 79, 79);">[0,m]，m的范围[0, 2</font><sup><font style="color:rgb(79, 79, 79);">8</font></sup><font style="color:rgb(79, 79, 79);">-1]</font></td>
+<td><font style="color:rgb(79, 79, 79);">定长字符串</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">varchar</font><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">(M)</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">m</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">[0,m]，m的范围[0, 2</font><sup><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">16</font></sup><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">-1]</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">0-65535 字节</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);">tinyblob</font></td>
+<td><font style="color:rgb(79, 79, 79);">L+1</font></td>
+<td><font style="color:rgb(79, 79, 79);">0-255(2</font><sup><font style="color:rgb(79, 79, 79);">8</font></sup><font style="color:rgb(79, 79, 79);"> -1)字节</font></td>
+<td><font style="color:rgb(79, 79, 79);">不超过 255 个字符的二进制字符串</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">blob</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">L+2</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">0-65535( 2</font><sup><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">16</font></sup><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">-1)字节</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">二进制形式的长文本数据</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);">mediumblob</font></td>
+<td><font style="color:rgb(79, 79, 79);">L+3</font></td>
+<td><font style="color:rgb(79, 79, 79);">0-16777215(2</font><sup><font style="color:rgb(79, 79, 79);">24</font></sup><font style="color:rgb(79, 79, 79);"> -1)字节</font></td>
+<td><font style="color:rgb(79, 79, 79);">二进制形式的中等长度文本数据</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">longblob</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">L+4</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">0-4294967295( 2</font><sup><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">32</font></sup><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">-1)字节</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">二进制形式的极大文本数据</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);">tinytext</font></td>
+<td><font style="color:rgb(79, 79, 79);">L+1</font></td>
+<td><font style="color:rgb(79, 79, 79);">0-255( 2</font><sup><font style="color:rgb(79, 79, 79);">8</font></sup><font style="color:rgb(79, 79, 79);">-1)字节</font></td>
+<td><font style="color:rgb(79, 79, 79);">短文本字符串</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">text</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">L+2</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">0-65535(2</font><sup><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">16</font></sup><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);"> -1)字节</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">长文本数据</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);">mediumtext</font></td>
+<td><font style="color:rgb(79, 79, 79);">L+3</font></td>
+<td><font style="color:rgb(79, 79, 79);">0-16777215(2</font><sup><font style="color:rgb(79, 79, 79);">24</font></sup><font style="color:rgb(79, 79, 79);"> -1)字节</font></td>
+<td><font style="color:rgb(79, 79, 79);">中等长度文本数据</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">longtext</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">L+4</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">0-4294967295( 2</font><sup><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">32</font></sup><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">-1)字节</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">极大文本数据</font></td>
+</tr>
+</tbody></table>
+<p><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">char类型占用固定长度，如果存放的数据为固定长度的建议使用char类型，如：手机号码、身份证等固定长度的信息</font><font style="color:rgb(77, 77, 77);">。</font></p>
+<p><font style="color:rgb(77, 77, 77);">表格中的L表示存储的数据本身占用的字节，L 以外所需的额外字节为存放该值的长度所需的字节数。<br></font><font style="color:rgb(77, 77, 77);"> CHAR和VARCHAR很类似，都用来保存MySQL中较短的字符串。二者的主要区别在于存储方式的不同：</font></p>
+<p><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">CHAR列的长度固定为创建表时声明的长度，长度可以为从0～255的任何值，存储的字符串长度不足时用空格填充到特定长度</font><font style="color:rgb(77, 77, 77);">；</font></p>
+<p><font style="color:rgb(77, 77, 77);">而VARCHAR列中的值为可变长字符串，也就是说申请的只是最大长度，占用的空间为实际字符长度+1，最后一个字符存储使用了多长的空间。<br></font><font style="color:rgb(77, 77, 77);"> 在检索效率上来讲,char &gt; varchar。</font></p>
+<p><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">在检索的时候，CHAR删除了尾部的空格</font><font style="color:rgb(77, 77, 77);">，而VARCHAR则保留这些空格</font></p>
+<p><font style="color:rgb(77, 77, 77);">BINARY和VARBINARY类似于CHAR和VARCHAR，不同的是它们包含二进制字符串而不包含非二进制字符串。</font></p>
+<p><font style="color:rgb(77, 77, 77);">  关于varchar(n)中n的单位，Mysql4.1及之后的版本，VARCHAR的单位是字符；Mysql4.1之前的版本，VARCHAR的单位是字节。</font></p>
+<p><font style="color:rgb(77, 77, 77);">  varchar和char的使用策略：</font></p>
+<p>:::tips</p>
+<ol>
+<li><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">对于经常变更的数据来说，CHAR</font><font style="color:rgba(0, 0, 0, 0.5);">比VARCHAR</font><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">更好，因为CHAR不容易产生碎片</font><font style="color:rgba(0, 0, 0, 0.5);">。</font></li>
+<li><font style="color:rgba(0, 0, 0, 0.5);">对于非常短的列，CHAR比VARCHAR在存储空间上更有效率。</font></li>
+<li><font style="color:rgba(0, 0, 0, 0.5);">使用时要注意只分配需要的空间。</font></li>
+<li><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">尽量避免使用TEXT&#x2F;BLOB类型，查询时会使用临时表，导致严重的性能开销</font><font style="color:rgba(0, 0, 0, 0.5);">。</font></li>
+</ol>
+<p>:::</p>
+<p><font style="color:rgb(77, 77, 77);">TINYTEXT、TEXT、MEDIUMTEXT、LONGTEXT也称作 非标准字符串类型。</font></p>
+<h4 id="Mysql数据类型相关问题"><a href="#Mysql数据类型相关问题" class="headerlink" title="Mysql数据类型相关问题"></a><font style="color:rgb(79, 79, 79);">Mysql数据类型相关问题</font></h4><h5 id="若一张表中只有一个字段VARCHAR-N-类型，utf8编码，则N最大值为多少"><a href="#若一张表中只有一个字段VARCHAR-N-类型，utf8编码，则N最大值为多少" class="headerlink" title="若一张表中只有一个字段VARCHAR(N) 类型，utf8编码，则N最大值为多少"></a>若一张表中只有一个字段VARCHAR(N) 类型，utf8编码，则N最大值为多少</h5><p>  由于utf8的每个字符最多占用3个字节。而MySQL定义行的长度不能超过65535，因此N的最大值计算方法为：(65535-1-2)&#x2F;3。</p>
+<p> 减去1的原因是实际存储从第二个字节开始，减去2的原因是因为要在列表长度存储实际的字符长度，除以3是因为utf8限制：每个字符最多占用3个字节。</p>
+<h5 id="选择合适的数据类型"><a href="#选择合适的数据类型" class="headerlink" title="选择合适的数据类型"></a><font style="color:rgb(79, 79, 79);">选择合适的数据类型</font></h5><h6 id="CHAR与VARCHAR"><a href="#CHAR与VARCHAR" class="headerlink" title="CHAR与VARCHAR"></a>CHAR与VARCHAR</h6><p>  CHAR和VARCHAR类型类似，都用来存储字符串，但它们保存和检索的方式不同。CHAR属于固定长度的字符类型，而VARCHAR属于可变长度的字符类型。</p>
+<p>  看一个字符串值保存到CHAR(4)和VARCHAR(4)列的结果对比：</p>
+<p><img src="https://cdn.nlark.com/yuque/0/2024/png/25873401/1716948693406-7caa2e19-123f-4cca-af84-e307c5e2ebfb.png"></p>
+<p>  由于CHAR是固定长度的，所以它的处理速度比VARCHAR快得多，但是缺点是浪费存储空间，程序需要对行尾空格进行处理，所以对于那些长度变化不大并且对查询速度有较高要求的数据可以考虑使用CHAR类型来存储。</p>
+<p>  在MySQL中，不同的存储引擎对CHAR和VARCHAR的使用原则有所不同，简单概括：</p>
+<p>:::tips<br>  MyISAM：建议使用固定长度的数据列代替可变长度的数据列。</p>
+<p>  MEMORY：目前都使用固定长度的数据行存储，因此无论使用CHAR或VARCHAR列都没有关系。两者都是作为CHAR类型处理。</p>
+<p>  InnoDB：建议使用VARCHAR类型。对于InnoDB数据表，内部的行存储格式没有区分固定长度和可变长度列（所有数据行都使用指向数据列值的头指针），因此在本质上，使用固定长度的CHAR列不一定比使用可变长度VARCHAR列性能要好。因而，主要的性能因素是数据行使用的存储总量。由于CHAR平均占用的空间多于VARCHAR，因此使用VARCHAR来最小化需要处理的数据行的存储总量和磁盘I&#x2F;O是比较好的。</p>
+<p>:::</p>
+<h6 id="浮点数与定点数"><a href="#浮点数与定点数" class="headerlink" title="浮点数与定点数"></a><font style="color:rgba(0, 0, 0, 0.75);">浮点数与定点数</font></h6><p> 浮点数一般用于表示含有小数部分的数值。当一个字段被定义为浮点类型后，如果插入数据的精度超过该列定义的实际精度，则插入值会被四舍五入到实际定义的精度值，然后插入，四舍五入的过程不会报错。在MySQL中float、double（或 real）用来表示浮点数。</p>
+<p>  定点数不同于浮点数，定点数实际上是以字符串形式存放的，所以定点数可以更加精确的保存数据。</p>
+<p>  浮点数和定点数使用的几个原则：</p>
+<p>:::tips</p>
+<ol>
+<li><font style="color:rgba(0, 0, 0, 0.5);">浮点数存在误差问题；</font></li>
+<li><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">对货币等对精度敏感的数据，应该用定点数表示或存储</font><font style="color:rgba(0, 0, 0, 0.5);">；</font></li>
+<li><font style="color:rgba(0, 0, 0, 0.5);">在编程中，如果用到浮点数，要特别注意误差问题，并尽量避免做浮点数比较；</font></li>
+<li><font style="color:rgba(0, 0, 0, 0.5);">要注意浮点数中一些特殊值的处理。</font></li>
+</ol>
+<p>:::</p>
+<h6 id="日期类型选择"><a href="#日期类型选择" class="headerlink" title="日期类型选择"></a><font style="color:rgba(0, 0, 0, 0.75);">日期类型选择</font></h6><p><font style="color:rgba(0, 0, 0, 0.75);">MySQL提供的常用日期类型有DATE、TIME 、DATETIME、TIMESTAMP。使用原则：</font></p>
+<p>:::tips<br>根据实际需要选择能够满足应用的最小存储的日期类型。如果应用只需要记录“年份”，那么用1个字节来存储的YEAR类型完全可以满足，而不需要用4个字节来存储的DATE类型。这样不仅仅能节约存储，更能够提高表的操作效率。</p>
+<p>如果要记录年月日时分秒，并且记录的年份比较久远，那么最好使用DATETIME，</p>
+<p>而不要使用TIMESTAMP。因为TIMESTAMP表示的日期范围比DATETIME要短得多。</p>
+<p>如果记录的日期需要让不同时区的用户使用，那么最好使用TIMESTAMP，因为日期类型中只有它能够和实际时区相对应。</p>
+<p>:::</p>
+<h6 id="ENUM和VARCHAR"><a href="#ENUM和VARCHAR" class="headerlink" title="ENUM和VARCHAR"></a><font style="color:rgba(0, 0, 0, 0.75);">ENUM和VARCHAR</font></h6><p>ENUM类型是非常快和紧凑的。在实际上，其保存的是TINYINT，但其外表上显示为字符串。这样一来，用这个字段来做一些选项列表变得相当的完美。</p>
+<p>  如果有一个字段，比如“性别”，“国家”，“民族”，“状态”或“部门”，这些字段的取值是有限而且固定的，那么，就应该使用ENUM而不是VARCHAR。</p>
+<h5 id="数据类型选择的一些建议"><a href="#数据类型选择的一些建议" class="headerlink" title="数据类型选择的一些建议"></a><font style="color:rgb(79, 79, 79);">数据类型选择的一些建议</font></h5><h6 id="选小不选大"><a href="#选小不选大" class="headerlink" title="选小不选大"></a>选小不选大</h6><p>  一般情况下选择可以正确存储数据的最小数据类型，越小的数据类型通常更快，占用磁盘，内存和CPU缓存更小。</p>
+<h6 id="简单就好"><a href="#简单就好" class="headerlink" title="简单就好"></a>简单就好</h6><p>  简单的数据类型的操作通常需要更少的CPU周期，例如：整型比字符操作代价要小得多，因为字符集和校对规则(排序规则)使字符比整型比较更加复杂。</p>
+<h6 id="尽量避免NULL"><a href="#尽量避免NULL" class="headerlink" title="尽量避免NULL"></a>尽量避免NULL</h6><p>  尽量制定列为NOT NULL，除非真的需要NULL类型的值，有NULL的列值会使得索引、索引统计和值比较更加复杂。</p>
+<h6 id="浮点类型的建议统一选择decimal"><a href="#浮点类型的建议统一选择decimal" class="headerlink" title="浮点类型的建议统一选择decimal"></a>浮点类型的建议统一选择decimal</h6><h6 id="记录时间的建议使用int或者bigint类型"><a href="#记录时间的建议使用int或者bigint类型" class="headerlink" title="记录时间的建议使用int或者bigint类型"></a>记录时间的建议使用int或者bigint类型</h6><p>将时间转换为时间戳格式，如将时间转换为秒、毫秒，进行存储，方便走索引</p>
+<h5 id="使用int做主键和使用string有什么优劣"><a href="#使用int做主键和使用string有什么优劣" class="headerlink" title="使用int做主键和使用string有什么优劣"></a><font style="color:rgb(79, 79, 79);">使用int做主键和使用string有什么优劣</font></h5><p><strong><font style="color:rgba(0, 0, 0, 0.75);">使用整数（int）作为主键</font></strong></p>
+<p><font style="color:rgba(0, 0, 0, 0.75);">优势：</font></p>
+<p>:::tips<br>性能：整数类型通常占用较少的存储空间，并且在进行比较和排序操作时速度更快。</p>
+<p>索引效率：整数类型的索引通常比字符串类型的索引更加紧凑和高效。</p>
+<p>自增属性：许多数据库系统支持整数类型的自增属性，这可以自动为新记录分配一个唯一的标识符，无需应用程序干预。</p>
+<p>空间效率：整数类型占用的存储空间较小，有助于减少数据库的总体大小。</p>
+<p>:::</p>
+<p>劣势：</p>
+<p>:::tips</p>
+<ol>
+<li><strong><font style="color:rgba(0, 0, 0, 0.5);">可读性</font></strong><font style="color:rgba(0, 0, 0, 0.5);">：整数类型不如字符串类型直观，不容易从主键值中直接获取有关记录的信息。</font></li>
+<li><strong><font style="color:rgba(0, 0, 0, 0.5);">扩展性</font></strong><font style="color:rgba(0, 0, 0, 0.5);">：在某些情况下，如果整数主键达到其最大值，可能需要更复杂的方案来处理。</font></li>
+</ol>
+<p>:::</p>
+<p><strong><font style="color:rgba(0, 0, 0, 0.75);">使用字符串（string）作为主键</font></strong></p>
+<p><font style="color:rgba(0, 0, 0, 0.75);"> 优势：</font></p>
+<p>:::tips</p>
+<ol>
+<li><strong><font style="color:rgba(0, 0, 0, 0.5);">可读性</font></strong><font style="color:rgba(0, 0, 0, 0.5);">：字符串类型的主键通常更容易理解，因为它们可能包含描述性信息。</font></li>
+<li><strong><font style="color:rgba(0, 0, 0, 0.5);">灵活性</font></strong><font style="color:rgba(0, 0, 0, 0.5);">：字符串类型可以容纳更多种类的数据，包括字母、数字和特殊字符，使得它们在处理复杂的主键需求时更加灵活。</font></li>
+<li><strong><font style="color:rgba(0, 0, 0, 0.5);">扩展性</font></strong><font style="color:rgba(0, 0, 0, 0.5);">：字符串类型的主键在达到存储限制之前可以容纳更多的信息。</font></li>
+</ol>
+<p>:::</p>
+<p>劣势：</p>
+<p>:::tips<br>性能：字符串类型通常比整数类型占用更多的存储空间，并且在进行比较和排序操作时速度较慢。</p>
+<p>索引效率：字符串类型的索引通常比整数类型的索引更大且效率较低。</p>
+<p>错误风险：在处理字符串类型的主键时，需要更加小心地处理大小写敏感性、空格、特殊字符等问题，以避免潜在的错误。</p>
+<p>存储空间：由于字符串的长度可变，因此可能会浪费存储空间，特别是在存储较短的字符串时。</p>
+<p>:::</p>
+<p><strong><font style="color:rgba(0, 0, 0, 0.75);">如何选择合适的主键类型</font></strong></p>
+<p><strong><font style="color:rgba(0, 0, 0, 0.75);"> </font></strong><font style="color:rgba(0, 0, 0, 0.75);">1、根据业务需求：根据具体业务场景来选择合适的主键类型。例如，如果业务需求中需要处理大量数值类型的数据，可以使用 int 作为主键；如果需要处理字符串类型的数据，可以使用 string 作为主键。</font></p>
+<p><font style="color:rgba(0, 0, 0, 0.75);">  2、考虑数据量的大小：如果数据量较大，可以使用 int 作为主键，以提高查询和更新的效率；如果数据量较小，可以使用 string 作为主键，以提高数据的可读性和可操作性。</font></p>
+<p><font style="color:rgba(0, 0, 0, 0.75);">  3、考虑数据类型的稳定性和一致性：如果数据类型需要保持稳定性和一致性，可以使用 int 作为主键；如果数据类型可能会发生变化，可以使用 string 作为主键。 综上所述，使用 int 和 string 作为主键各有优劣。在实际应用中，需要根据具体业务场景和数据特点来选择合适的主键类型，以满足数据的存储、管理和处理需求。</font></p>
+<p><font style="color:rgba(0, 0, 0, 0.75);"></font></p>
+<p><font style="color:rgba(0, 0, 0, 0.75);"></font></p>
+<h2 id="Mysql字符集"><a href="#Mysql字符集" class="headerlink" title="Mysql字符集"></a><font style="color:rgb(79, 79, 79);">Mysql字符集</font></h2><p><font style="color:rgb(77, 77, 77);">简单地说，字符集就是一套文字符号及其编码、比较规则的集合。</font><br><font style="color:rgb(77, 77, 77);"> Mysql常用字符集：</font></p>
+<table>
+<thead>
+<tr>
+<th><strong><font style="color:rgb(79, 79, 79);background-color:rgb(239, 243, 245);">字符集</font></strong></th>
+<th><strong><font style="color:rgb(79, 79, 79);background-color:rgb(239, 243, 245);">是否定长</font></strong></th>
+<th><strong><font style="color:rgb(79, 79, 79);background-color:rgb(239, 243, 245);">编码方式</font></strong></th>
+<th><strong><font style="color:rgb(79, 79, 79);background-color:rgb(239, 243, 245);">说明</font></strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><font style="color:rgb(79, 79, 79);">ACSII</font></td>
+<td><font style="color:rgb(79, 79, 79);">是</font></td>
+<td><font style="color:rgb(79, 79, 79);">单字节 7 位编码</font></td>
+<td><font style="color:rgb(79, 79, 79);">最早的奠基性字符集</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">GBK</font></td>
+<td><font style="color:rgb(79, 79, 79);">是</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">双字节编码</font></td>
+<td></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);">UTF-32</font></td>
+<td><font style="color:rgb(79, 79, 79);">是</font></td>
+<td><font style="color:rgb(79, 79, 79);">4 字节编码</font></td>
+<td><font style="color:rgb(79, 79, 79);">目前很少采用</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">UTF-16</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">否</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">2 字节或 4 字节编码</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">Java和Windows XP&#x2F;NT等内部使用UTF-16</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);">UTF-8</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">否</font></td>
+<td><font style="color:rgb(79, 79, 79);">1 至 4 字节编码</font></td>
+<td><font style="color:rgb(79, 79, 79);">互联网和UNIX&#x2F;Linux 广泛支持的Unicode字符集；MySQLServer也使用UTF-8</font></td>
+</tr>
+<tr>
+<td><font style="color:rgb(79, 79, 79);">utf8mb4</font></td>
+<td><font style="color:rgb(79, 79, 79);background-color:rgb(247, 247, 247);">否</font></td>
+<td><font style="color:rgb(79, 79, 79);"> 4 字节编码</font></td>
+<td><font style="color:rgb(13, 13, 13);">完全支持所有Unicode字符，包括Emoji。建议在新项目中使用此字符集。</font></td>
+</tr>
+</tbody></table>
+<h3 id="选择字符集时，要考虑的因素："><a href="#选择字符集时，要考虑的因素：" class="headerlink" title="选择字符集时，要考虑的因素："></a><font style="color:rgb(77, 77, 77);">选择字符集时，要考虑的因素：</font></h3><ol>
+<li>满足应用支持语言的需求，如果应用要处理各种各样的文字，或者将发布到使用不同语言的国家或地区，就应该选择Unicode字符集。对MySQL来说，目前就是UTF-8。</li>
+<li>如果应用中涉及已有数据的导入，就要充分考虑数据库字符集对已有数据的兼容性。</li>
+<li>如果数据库只需要支持一般中文，数据量很大，性能要求也很高，那就应该选择双字节定长编码的中文字符集，比如GBK。因为，相对于UTF-8而言，GBK比较“小”，每个汉字只占2个字节，而UTF-8汉字编码需要3个字节，这样可以减少磁盘I&#x2F;O、数据库cache，以及网络传输的时间，从而提高性能。相反，如果应用主要处理英文字符，仅有少量汉字数据，那么选择UTF-8更好，因为GBK、UCS-2、UTF-16的西文字符编码都是2个字节,会造成很大不必要的开销。</li>
+<li>如果数据库需要做大量的字符运算，如比较、排序等，选择定长字符集可能更好，因为定长字符集的处理速度要比变长字符集的处理速度快。</li>
+</ol>
+<p><font style="color:rgb(77, 77, 77);"> MySQL服务器可以支持多种字符集，在同一台服务器、同一个数据库、甚至同一个表的不同字段都可以指定使用不同的字符集。</font></p>
+<p><font style="color:rgb(77, 77, 77);">总的来说，建议在能够完全满足应用的前提下，尽量使用小的字符集。因为更小的字符集意味着能够节省空间、减少网络传输字节数，同时由于存储空间的较小间接地提高了系统的性能。</font></p>
+<p><font style="color:rgb(77, 77, 77);">  有很多字符集可以保存汉字，比如utf8、gb2312、gbk等等，但是常用的是gb2312和gbk。因为gb2312字库比gbk字库小，有些偏僻字（如：洺）不能保存。因此在选择字符集时一定要权衡这些偏僻字在应用出现的几率以及造成的影响，不能做出肯定答复的最好选用gbk。</font></p>
+<p><font style="color:rgb(77, 77, 77);">  在实际项目开发时，使用utf8mb4即可，即：CHARSET&#x3D;utf8mb4。</font></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/mysql/" rel="tag"><i class="fa fa-tag"></i> mysql</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/06/15/Mysql%E8%BF%90%E7%AE%97%E7%AC%A6/" rel="prev" title="MySQL运算符">
+      <i class="fa fa-chevron-left"></i> MySQL运算符
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/06/15/Mysql%E5%B8%B8%E7%94%A8%E5%87%BD%E6%95%B0/" rel="next" title="MySQL常用函数">
+      MySQL常用函数 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B0%E5%80%BC%E7%B1%BB%E5%9E%8B"><span class="nav-number">1.</span> <span class="nav-text">数值类型</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%95%B4%E6%95%B0%E7%B1%BB%E5%9E%8B"><span class="nav-number">1.0.0.1.</span> <span class="nav-text">整数类型</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%B5%AE%E7%82%B9%E6%95%B0%E7%B1%BB%E5%9E%8B"><span class="nav-number">1.0.0.2.</span> <span class="nav-text">浮点数类型</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%97%A5%E6%9C%9F%E6%97%B6%E9%97%B4%E7%B1%BB%E5%9E%8B"><span class="nav-number">1.0.0.3.</span> <span class="nav-text">日期时间类型</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%AD%97%E7%AC%A6%E4%B8%B2%E7%B1%BB%E5%9E%8B"><span class="nav-number">1.0.0.4.</span> <span class="nav-text">字符串类型</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Mysql%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E7%9B%B8%E5%85%B3%E9%97%AE%E9%A2%98"><span class="nav-number">1.0.1.</span> <span class="nav-text">Mysql数据类型相关问题</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E8%8B%A5%E4%B8%80%E5%BC%A0%E8%A1%A8%E4%B8%AD%E5%8F%AA%E6%9C%89%E4%B8%80%E4%B8%AA%E5%AD%97%E6%AE%B5VARCHAR-N-%E7%B1%BB%E5%9E%8B%EF%BC%8Cutf8%E7%BC%96%E7%A0%81%EF%BC%8C%E5%88%99N%E6%9C%80%E5%A4%A7%E5%80%BC%E4%B8%BA%E5%A4%9A%E5%B0%91"><span class="nav-number">1.0.1.1.</span> <span class="nav-text">若一张表中只有一个字段VARCHAR(N) 类型，utf8编码，则N最大值为多少</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E9%80%89%E6%8B%A9%E5%90%88%E9%80%82%E7%9A%84%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B"><span class="nav-number">1.0.1.2.</span> <span class="nav-text">选择合适的数据类型</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#CHAR%E4%B8%8EVARCHAR"><span class="nav-number">1.0.1.2.1.</span> <span class="nav-text">CHAR与VARCHAR</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E6%B5%AE%E7%82%B9%E6%95%B0%E4%B8%8E%E5%AE%9A%E7%82%B9%E6%95%B0"><span class="nav-number">1.0.1.2.2.</span> <span class="nav-text">浮点数与定点数</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E6%97%A5%E6%9C%9F%E7%B1%BB%E5%9E%8B%E9%80%89%E6%8B%A9"><span class="nav-number">1.0.1.2.3.</span> <span class="nav-text">日期类型选择</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#ENUM%E5%92%8CVARCHAR"><span class="nav-number">1.0.1.2.4.</span> <span class="nav-text">ENUM和VARCHAR</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E9%80%89%E6%8B%A9%E7%9A%84%E4%B8%80%E4%BA%9B%E5%BB%BA%E8%AE%AE"><span class="nav-number">1.0.1.3.</span> <span class="nav-text">数据类型选择的一些建议</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E9%80%89%E5%B0%8F%E4%B8%8D%E9%80%89%E5%A4%A7"><span class="nav-number">1.0.1.3.1.</span> <span class="nav-text">选小不选大</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E7%AE%80%E5%8D%95%E5%B0%B1%E5%A5%BD"><span class="nav-number">1.0.1.3.2.</span> <span class="nav-text">简单就好</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E5%B0%BD%E9%87%8F%E9%81%BF%E5%85%8DNULL"><span class="nav-number">1.0.1.3.3.</span> <span class="nav-text">尽量避免NULL</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E6%B5%AE%E7%82%B9%E7%B1%BB%E5%9E%8B%E7%9A%84%E5%BB%BA%E8%AE%AE%E7%BB%9F%E4%B8%80%E9%80%89%E6%8B%A9decimal"><span class="nav-number">1.0.1.3.4.</span> <span class="nav-text">浮点类型的建议统一选择decimal</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E8%AE%B0%E5%BD%95%E6%97%B6%E9%97%B4%E7%9A%84%E5%BB%BA%E8%AE%AE%E4%BD%BF%E7%94%A8int%E6%88%96%E8%80%85bigint%E7%B1%BB%E5%9E%8B"><span class="nav-number">1.0.1.3.5.</span> <span class="nav-text">记录时间的建议使用int或者bigint类型</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8int%E5%81%9A%E4%B8%BB%E9%94%AE%E5%92%8C%E4%BD%BF%E7%94%A8string%E6%9C%89%E4%BB%80%E4%B9%88%E4%BC%98%E5%8A%A3"><span class="nav-number">1.0.1.4.</span> <span class="nav-text">使用int做主键和使用string有什么优劣</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Mysql%E5%AD%97%E7%AC%A6%E9%9B%86"><span class="nav-number">2.</span> <span class="nav-text">Mysql字符集</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%89%E6%8B%A9%E5%AD%97%E7%AC%A6%E9%9B%86%E6%97%B6%EF%BC%8C%E8%A6%81%E8%80%83%E8%99%91%E7%9A%84%E5%9B%A0%E7%B4%A0%EF%BC%9A"><span class="nav-number">2.1.</span> <span class="nav-text">选择字符集时，要考虑的因素：</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="139"
+      src="/images/custom/avatar.jpg">
+  <p class="site-author-name" itemprop="name">139</p>
+  <div class="site-description" itemprop="description">一个普通的JAVA开发的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">40</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">34</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+  <div class="beian"><a href="https://beian.miit.gov.cn/" rel="noopener" target="_blank">浙ICP备2023004484号-1 </a>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">139</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
