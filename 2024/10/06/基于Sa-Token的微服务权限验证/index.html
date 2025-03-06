@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Sa-Token 是一个轻量级 Java 权限认证框架主，要解决：登录认证、权限认证、单点登录、OAuth2.0、分布式Session会话、微服务网关鉴权 等一系列权限相关问题。Sa-Token 旨在以简单、优雅的方式完成系统的权限认证部分。 官网地址：https:&#x2F;&#x2F;sa-token.cc&#x2F;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="基于Sa-Token的微服务权限验证">
+<meta property="og:url" content="http://example.com/2024/10/06/%E5%9F%BA%E4%BA%8ESa-Token%E7%9A%84%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%9D%83%E9%99%90%E9%AA%8C%E8%AF%81/index.html">
+<meta property="og:site_name" content="进学阁">
+<meta property="og:description" content="Sa-Token 是一个轻量级 Java 权限认证框架主，要解决：登录认证、权限认证、单点登录、OAuth2.0、分布式Session会话、微服务网关鉴权 等一系列权限相关问题。Sa-Token 旨在以简单、优雅的方式完成系统的权限认证部分。 官网地址：https:&#x2F;&#x2F;sa-token.cc&#x2F;">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-10-05T16:00:00.000Z">
+<meta property="article:modified_time" content="2025-03-06T07:30:10.305Z">
+<meta property="article:author" content="139">
+<meta property="article:tag" content="微服务">
+<meta property="article:tag" content="脚手架">
+<meta property="article:tag" content="权限">
+<meta property="article:tag" content="sa-token">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2024/10/06/%E5%9F%BA%E4%BA%8ESa-Token%E7%9A%84%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%9D%83%E9%99%90%E9%AA%8C%E8%AF%81/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>基于Sa-Token的微服务权限验证 | 进学阁</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">进学阁</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">业精于勤荒于嬉，行成于思毁于随</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">27</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">6</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">26</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/10/06/%E5%9F%BA%E4%BA%8ESa-Token%E7%9A%84%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%9D%83%E9%99%90%E9%AA%8C%E8%AF%81/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          基于Sa-Token的微服务权限验证
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-10-06 00:00:00" itemprop="dateCreated datePublished" datetime="2024-10-06T00:00:00+08:00">2024-10-06</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-06 15:30:10" itemprop="dateModified" datetime="2025-03-06T15:30:10+08:00">2025-03-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AA%E8%84%9A%E6%89%8B%E6%9E%B6/" itemprop="url" rel="index"><span itemprop="name">从零搭建一个脚手架</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><strong><font style="color:rgb(44, 62, 80);">Sa-Token</font></strong><font style="color:rgb(52, 73, 94);"> 是一个轻量级 Java 权限认证框架主，要解决：</font><strong><font style="color:rgb(44, 62, 80);">登录认证</font></strong><font style="color:rgb(52, 73, 94);">、</font><strong><font style="color:rgb(44, 62, 80);">权限认证</font></strong><font style="color:rgb(52, 73, 94);">、</font><strong><font style="color:rgb(44, 62, 80);">单点登录</font></strong><font style="color:rgb(52, 73, 94);">、</font><strong><font style="color:rgb(44, 62, 80);">OAuth2.0</font></strong><font style="color:rgb(52, 73, 94);">、</font><strong><font style="color:rgb(44, 62, 80);">分布式Session会话</font></strong><font style="color:rgb(52, 73, 94);">、</font><strong><font style="color:rgb(44, 62, 80);">微服务网关鉴权</font></strong><font style="color:rgb(52, 73, 94);"> 等一系列权限相关问题。Sa-Token 旨在以简单、优雅的方式完成系统的权限认证部分。</font></p>
+<p><font style="color:rgb(52, 73, 94);">官网地址：</font><a target="_blank" rel="noopener" href="https://sa-token.cc/">https://sa-token.cc/</a></p>
+<span id="more"></span>
+<h2 id="实现思路："><a href="#实现思路：" class="headerlink" title="实现思路："></a>实现思路：</h2><h3 id="功能"><a href="#功能" class="headerlink" title="功能"></a>功能</h3><ul>
+<li>多种登陆模式，账号密码，手机号验证码等</li>
+<li>网关验证登陆是否过期，黑白名单等处理</li>
+<li>可以支持角色和权限字符串鉴权验证</li>
+<li>实现登出功能</li>
+<li>减少数据库访问，登陆后数据详情放入redis中</li>
+</ul>
+<p>在pomelo中权限的验证，采用了token格式的数据，对与用户信息进行缓存的形式进行操作，并没有使用jwt，主要考虑有两种：jwt的数据保存在token字符串中，增加了前端到后段的通讯负担，敏感数据的解析一样需要从服务端中获取，所以在pomelo中，我们直接使用token来进行交互，并把用户的数据保存在redis缓存中，虽然需要承担redis缓存宕机带来的用户验证异常，但是也拥有很高的灵活性</p>
+<h3 id="网关统一认证处理"><a href="#网关统一认证处理" class="headerlink" title="网关统一认证处理"></a>网关统一认证处理</h3><p>网关可以统一的来实现权限的认证，但是不够灵活，所以在网关中只对消息中是否存在token来进行判断，token消息是否过期进行处理，当消息正常时新增Header对token进行透传</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br></pre></td><td class="code"><pre><span class="line">@Component</span><br><span class="line">@Slf4j</span><br><span class="line">public class AuthFilter implements GlobalFilter, Ordered &#123;</span><br><span class="line"></span><br><span class="line">    @Autowired</span><br><span class="line">    private DistributedCache distributedCache;</span><br><span class="line">    // 排除过滤的 uri 地址，nacos自行添加</span><br><span class="line">    @Autowired</span><br><span class="line">    private IgnoreWhiteProperties ignoreWhite;</span><br><span class="line">    @Autowired</span><br><span class="line">    private AuthProperties authProperties;</span><br><span class="line">    /**</span><br><span class="line">     * 连接 Token 前缀和 Token 值的字符</span><br><span class="line">     */</span><br><span class="line">    public static final String TOKEN_CONNECTOR_CHAT  = &quot; &quot;;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public Mono&lt;Void&gt; filter(ServerWebExchange exchange, GatewayFilterChain chain) &#123;</span><br><span class="line">        ServerHttpRequest request = exchange.getRequest();</span><br><span class="line">        ServerHttpRequest.Builder mutate = request.mutate();</span><br><span class="line">        String path = exchange.getRequest().getURI().getPath();</span><br><span class="line">        // 跳过不需要验证的路径</span><br><span class="line">        if (StringUtils.matches(path, ignoreWhite.getWhites())) &#123;</span><br><span class="line">            return chain.filter(exchange);</span><br><span class="line">        &#125;</span><br><span class="line">        String token = getToken(request);</span><br><span class="line">        if (StrUtil.isEmpty(token)) &#123;</span><br><span class="line">            return unauthorizedResponse(exchange, ErrorCode.TOKEN_EMPTY_ERROR);</span><br><span class="line">        &#125;</span><br><span class="line">        // 验证token是否过期</span><br><span class="line">        if (!distributedCache.hasKey(authProperties.getIdentifier() + &quot;:login:token:&quot; + token)) &#123;</span><br><span class="line">            return unauthorizedResponse(exchange, ErrorCode.TOKEN_EXPIRATION_ERROR);</span><br><span class="line">        &#125;</span><br><span class="line">        String prefixToken =String.format(&quot;%s%s%s&quot;, authProperties.getPrefix(),TOKEN_CONNECTOR_CHAT, token) ;</span><br><span class="line">        addHeader(mutate, authProperties.getIdentifier(), prefixToken,true);</span><br><span class="line">        String loginUserKey  = String.format(&quot;%S%S&quot;, SecurityConstants.USER_KEY, token);</span><br><span class="line">        if (distributedCache.hasKey(loginUserKey)) &#123;</span><br><span class="line">            LoginUser loginUser= distributedCache.get(loginUserKey, LoginUser.class);</span><br><span class="line">            if (loginUser != null)&#123;</span><br><span class="line">                addHeader(mutate, SecurityConstants.USER_ID_HEADER, loginUser.getUserId(),false);</span><br><span class="line">                addHeader(mutate, SecurityConstants.USER_NAME_HEADER, loginUser.getUserName(),false);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        return chain.filter(exchange.mutate().request(mutate.build()).build());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private void addHeader(ServerHttpRequest.Builder mutate, String name, Object value,Boolean isEncode) &#123;</span><br><span class="line">        if (value == null) &#123;</span><br><span class="line">            return;</span><br><span class="line">        &#125;</span><br><span class="line">        String valueStr = value.toString();</span><br><span class="line">        if (isEncode)&#123;</span><br><span class="line">            mutate.header(name, valueStr);</span><br><span class="line">            return;</span><br><span class="line">        &#125;</span><br><span class="line">        String valueEncode = ServletUtils.urlEncode(valueStr);</span><br><span class="line">        mutate.header(name, valueEncode);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private Mono&lt;Void&gt; unauthorizedResponse(ServerWebExchange exchange, ErrorCode errorCode) &#123;</span><br><span class="line">        log.error(&quot;[鉴权异常处理]请求路径:&#123;&#125;&quot;, exchange.getRequest().getPath());</span><br><span class="line">        return ServletUtils.webFluxResponseWriter(exchange.getResponse(), errorCode.getMessage(), errorCode.getCode());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 获取请求token</span><br><span class="line">     */</span><br><span class="line">    private String getToken(ServerHttpRequest request) &#123;</span><br><span class="line">        String token = request.getHeaders().getFirst(SecurityConstants.AUTHORIZATION_HEADER);</span><br><span class="line">        // 如果前端设置了令牌前缀，则裁剪掉前缀</span><br><span class="line">        if (StrUtil.isNotEmpty(token) &amp;&amp; token.startsWith(authProperties.getPrefix())) &#123;</span><br><span class="line">            token = token.replaceFirst(authProperties.getPrefix(), &quot;&quot;);</span><br><span class="line">        &#125;</span><br><span class="line">        return token;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int getOrder() &#123;</span><br><span class="line">        return 0;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="登陆授权"><a href="#登陆授权" class="headerlink" title="登陆授权"></a>登陆授权</h3><p>登陆需要支持两种模式一种是短信登陆，以及账号密码登陆。短信登陆时如果账号未注册，直接注册新用户，账号密码需要提前注册后才能登陆。当用户身份验证通过后，需要将token放入redis用于处理token超时的问题，2将token与用户信息关联，为后续验证做好准备</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line">   public LoginRspVo login(LoginDTO loginDTO) &#123;</span><br><span class="line">       // 预认证 验证参数</span><br><span class="line">       preAuthenticationCheck(loginDTO);</span><br><span class="line">       // 认证</span><br><span class="line">       LoginUser loginUser = authenticate(loginDTO);</span><br><span class="line">       CacheUtil.addLoginUser(loginUser);</span><br><span class="line">       // 角色获取</span><br><span class="line">       List&lt;String&gt; roles = getRoles(loginUser.getUserId());</span><br><span class="line">       if (CollectionUtil.isNotEmpty(roles))&#123;</span><br><span class="line">           CacheUtil.updateRoleCache(loginUser.getUserId(), roles);</span><br><span class="line"></span><br><span class="line">           // 权限获取</span><br><span class="line">           for (String role : roles) &#123;</span><br><span class="line">               List&lt;String&gt; permissions = getPermissions(role);</span><br><span class="line">               CacheUtil.updatePermissionCache(role, permissions);</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br><span class="line">       LoginRspVo loginRspVo = new LoginRspVo();</span><br><span class="line">       loginRspVo.setAccess_token(loginUser.getToken());</span><br><span class="line">       loginRspVo.setUserId(loginUser.getUserId());</span><br><span class="line">       loginRspVo.setUserName(loginUser.getUserName());</span><br><span class="line">       loginRspVo.setLoginTime(loginUser.getLoginTime());</span><br><span class="line">       return loginRspVo;</span><br><span class="line">       </span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+<p>实现思路：当系统用户登录完成后，将用户数据放入缓存，以及将用户的角色和权限信息放入到缓存。以供网关以及后续鉴权提供数据支持。</p>
+<h3 id="服务鉴权"><a href="#服务鉴权" class="headerlink" title="服务鉴权"></a>服务鉴权</h3><p>在sa-token中提供了StpInterface借口，来对权限以及角色进行处理，处理思路：定义PomeloInterfaceImpl对用户的权限以及角色获取</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">@Component</span><br><span class="line">public class PomeloInterfaceImpl implements StpInterface &#123;</span><br><span class="line">    </span><br><span class="line">    @Override</span><br><span class="line">    @SuppressWarnings(&quot;unchecked&quot;)</span><br><span class="line">    public List&lt;String&gt; getPermissionList(Object loginId, String loginType) &#123;</span><br><span class="line">        // 1. 声明权限码集合</span><br><span class="line">        List&lt;String&gt; list = new ArrayList&lt;&gt;();</span><br><span class="line">        // 2. 遍历角色列表，查询拥有的权限码</span><br><span class="line">        for (String roleId : getRoleList(loginId, loginType)) &#123;</span><br><span class="line">            List&lt;String&gt; permissionList = (List&lt;String&gt;) SaManager.getSaTokenDao()</span><br><span class="line">                    .getObject(SaManager.getConfig().getTokenName()+&quot;:role-find-permission:&quot; + roleId);</span><br><span class="line">            if (permissionList == null) &#123;</span><br><span class="line">                continue;</span><br><span class="line">            &#125;</span><br><span class="line">            list.addAll(permissionList);</span><br><span class="line">        &#125;</span><br><span class="line">        return list;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    @Override</span><br><span class="line">    @SuppressWarnings(&quot;unchecked&quot;)</span><br><span class="line">    public List&lt;String&gt; getRoleList(Object loginId, String loginType) &#123;</span><br><span class="line">        List&lt;String&gt; roleList = (List&lt;String&gt;) SaManager.getSaTokenDao()</span><br><span class="line">                .getObject(SaManager.getConfig().getTokenName()+&quot;:loginId-find-role:&quot; + loginId);</span><br><span class="line">        return roleList;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" rel="tag"><i class="fa fa-tag"></i> 微服务</a>
+              <a href="/tags/%E8%84%9A%E6%89%8B%E6%9E%B6/" rel="tag"><i class="fa fa-tag"></i> 脚手架</a>
+              <a href="/tags/%E6%9D%83%E9%99%90/" rel="tag"><i class="fa fa-tag"></i> 权限</a>
+              <a href="/tags/sa-token/" rel="tag"><i class="fa fa-tag"></i> sa-token</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2024/10/03/%E5%AE%9E%E7%8E%B0%E7%94%A8%E6%88%B7%E9%85%8D%E7%BD%AE%E6%95%B0%E6%8D%AE%E6%BA%90%E5%BC%95%E7%94%A8%E5%88%87%E6%8D%A2/" rel="prev" title="实现用户配置数据源引用切换">
+      <i class="fa fa-chevron-left"></i> 实现用户配置数据源引用切换
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2024/10/06/%E7%BB%9F%E4%B8%80%E8%BF%94%E5%9B%9E%E6%97%B6%E9%97%B4%E6%A0%BC%E5%BC%8F/" rel="next" title="统一返回时间格式">
+      统一返回时间格式 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0%E6%80%9D%E8%B7%AF%EF%BC%9A"><span class="nav-number">1.</span> <span class="nav-text">实现思路：</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8A%9F%E8%83%BD"><span class="nav-number">1.1.</span> <span class="nav-text">功能</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BD%91%E5%85%B3%E7%BB%9F%E4%B8%80%E8%AE%A4%E8%AF%81%E5%A4%84%E7%90%86"><span class="nav-number">1.2.</span> <span class="nav-text">网关统一认证处理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%99%BB%E9%99%86%E6%8E%88%E6%9D%83"><span class="nav-number">1.3.</span> <span class="nav-text">登陆授权</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E9%89%B4%E6%9D%83"><span class="nav-number">1.4.</span> <span class="nav-text">服务鉴权</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="139"
+      src="/images/custom/avatar.jpg">
+  <p class="site-author-name" itemprop="name">139</p>
+  <div class="site-description" itemprop="description">一个普通的JAVA开发的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">26</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">27</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+  <div class="beian"><a href="https://beian.miit.gov.cn/" rel="noopener" target="_blank">浙ICP备2023004484号-1 </a>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">139</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

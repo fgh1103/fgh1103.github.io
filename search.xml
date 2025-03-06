@@ -1353,4 +1353,582 @@
         <tag>脚手架</tag>
       </tags>
   </entry>
+  <entry>
+    <title>分布式事务</title>
+    <url>/2024/05/03/%E5%8D%95%E4%BD%93%E5%BA%94%E7%94%A8%E5%92%8C%E5%BE%AE%E6%9C%8D%E5%8A%A1%E7%9A%84%E5%8C%BA%E5%88%AB/</url>
+    <content><![CDATA[<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>单体</th>
+<th>微服务</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>部署速度</td>
+<td>慢</td>
+<td>快</td>
+</tr>
+<tr>
+<td>扩展能力</td>
+<td>低</td>
+<td>高</td>
+</tr>
+<tr>
+<td>复用能力</td>
+<td>低</td>
+<td>高</td>
+</tr>
+<tr>
+<td>复杂度</td>
+<td>高</td>
+<td>低</td>
+</tr>
+<tr>
+<td>耦合度</td>
+<td>高</td>
+<td>低</td>
+</tr>
+<tr>
+<td>调试</td>
+<td>容易</td>
+<td>困难</td>
+</tr>
+<tr>
+<td>问题排查</td>
+<td>容易</td>
+<td>困难</td>
+</tr>
+<tr>
+<td>性能</td>
+<td>高</td>
+<td>差</td>
+</tr>
+</tbody></table>
+<span id="more"></span>
+
+
+<p>单体应用：随着时间的积累代码量越来越大构建速度会越来越慢，部署也会越来越慢，随着代码的积累各种代码的耦合度会越来越高，技术债务逐步上升代码的扩展能力持续下降，复用困难，业务为了避免各种技术债务复杂度会越来越高。因为技术债务较高当开发人员离职后，继任者需要大量的时间去熟悉系统和代码，造成经济损失。但是在开发中单体服务代码集中日志集中所以调试简单，问题排查过程简单。而且单体中不需要额外的服务调用所以性能会更好一点</p>
+<p>微服务应用：通过设计将业务进行拆分，降低各个服务间的耦合，每个服务独立部署并且实现服务轻量化，所以构建迅速。因为各个服务独立与其他服务耦合度低所以复用能力和扩展能力更强，每个服务更专注自己的业务领域所以业务的复杂度更低。复杂度更低即使开发人员离职，继任者只需要了解自己需要负责的服务就可以胜任。但是微服务因为做了拆分所以数据的交换需要进行进程通讯，而且同一个请求可能经过多个服务。进程间的通讯会对性能产生影响，请求经过多个服务会使数据的事务实施困难，以及单个请求的异常因为链路太长定位问题困难。</p>
+<p>针对微服务的缺点我们的弥补措施：</p>
+<p>微服务之间互相调用网络请求的瓶颈：尽量的明确接口数据长度，使用缓存，减少服务间的交互，更改交互方式为rpc</p>
+<p>调试和问题排查：问题排查主要是分为两部分</p>
+<p>1.问题的定位问题： 引入skywalking来对全链路进行追踪</p>
+<p>2.问题的上下文信息获取：引入ELK日志管理解决方案，对日志进行集中，并通过skywalking提供的唯一ID对数据进行查询分析</p>
+<p>事务：事务可以根据业务情况来使用诸如两段式提交的解决方案或者使用最终一致性解决方案来解决</p>
+]]></content>
+      <categories>
+        <category>微服务</category>
+      </categories>
+      <tags>
+        <tag>微服务</tag>
+        <tag>单体</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>OpenFeign调用时如何传递传递Token并且多线程环境也能适用</title>
+    <url>/2024/10/16/OpenFeign%E8%B0%83%E7%94%A8%E6%97%B6%E5%A6%82%E4%BD%95%E4%BC%A0%E9%80%92%E4%BC%A0%E9%80%92Token%E5%B9%B6%E4%B8%94%E5%A4%9A%E7%BA%BF%E7%A8%8B%E7%8E%AF%E5%A2%83%E4%B9%9F%E8%83%BD%E9%80%82%E7%94%A8%EF%BC%9F/</url>
+    <content><![CDATA[<p>在上一片文章中我<font style="color:rgb(47, 48, 52);">们解决了网关层认证后向后端服务传递用户信息的问题。今天我们来解决另外一个问题：如何在 OpenFeign 中传递 Token，并且保证多线程情况下也能适用。</font></p>
+<span id="more"></span>
+<p><font style="color:rgb(47, 48, 52);">如果我们想要在OpenFeign中获取到用户信息，我们可以通过如下步骤实现</font></p>
+<h3 id="实现RequestInterceptor接口"><a href="#实现RequestInterceptor接口" class="headerlink" title="实现RequestInterceptor接口"></a><font style="color:rgb(47, 48, 52);">实现RequestInterceptor接口</font></h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">public class PomeloFeignRequestInterceptor implements RequestInterceptor &#123;</span><br><span class="line">    </span><br><span class="line">    @Override</span><br><span class="line">    public void apply(RequestTemplate requestTemplate) &#123;</span><br><span class="line">        Map&lt;String, String&gt; headerMap = RequestHeaderContextHolder.getInstance().get();</span><br><span class="line">        if (ObjectUtil.isNotEmpty(headerMap)) &#123;</span><br><span class="line">            // heders头透传</span><br><span class="line">            for (Map.Entry&lt;String, String&gt; entry : headerMap.entrySet()) &#123;</span><br><span class="line">                requestTemplate.header(entry.getKey(), entry.getValue());</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="使用InheritableThreadLocal保存header信息"><a href="#使用InheritableThreadLocal保存header信息" class="headerlink" title="使用InheritableThreadLocal保存header信息"></a>使用<font style="color:rgb(47, 48, 52);">InheritableThreadLocal保存header信息</font></h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">public class RequestHeaderContextHolder &#123;</span><br><span class="line">    </span><br><span class="line">    // 使用InheritableThreadLocal，使得共享变量可被子线程继承</span><br><span class="line">    private final ThreadLocal&lt;Map&lt;String, String&gt;&gt; REQUEST_HEADER_HOLDER;</span><br><span class="line">    private RequestHeaderContextHolder() &#123;</span><br><span class="line">        this.REQUEST_HEADER_HOLDER = new InheritableThreadLocal&lt;&gt;() &#123;</span><br><span class="line">            </span><br><span class="line">            @Override</span><br><span class="line">            protected Map&lt;String, String&gt; initialValue() &#123;</span><br><span class="line">                return new HashMap&lt;&gt;();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;;</span><br><span class="line">    &#125;</span><br><span class="line">    /**</span><br><span class="line">     * return RequestHeaderHolder instance</span><br><span class="line">     */</span><br><span class="line">    public static RequestHeaderContextHolder getInstance() &#123;</span><br><span class="line">        return SingletonHolder.instance;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    /**</span><br><span class="line">     * 根据键获取请求头的值</span><br><span class="line">     * @param key 请求头的键</span><br><span class="line">     * @return 对应键的值</span><br><span class="line">     */</span><br><span class="line">    public String getValue(String key) &#123;</span><br><span class="line">        return this.REQUEST_HEADER_HOLDER.get().get(key);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    /**</span><br><span class="line">     * 获取当前线程的请求头信息</span><br><span class="line">     * @return 请求头Map</span><br><span class="line">     */</span><br><span class="line">    public Map&lt;String, String&gt; get() &#123;</span><br><span class="line">        return this.REQUEST_HEADER_HOLDER.get();</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    /**</span><br><span class="line">     * 获取当前线程的用户信息</span><br><span class="line">     * @return 当前用户信息</span><br><span class="line">     */</span><br><span class="line">    public String getCurrentUser() &#123;</span><br><span class="line">        return this.REQUEST_HEADER_HOLDER.get().get(SecurityConstants.USER_ID_HEADER);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public String getCurrentUserName() &#123;</span><br><span class="line">        return this.REQUEST_HEADER_HOLDER.get().get(SecurityConstants.USER_NAME_HEADER);</span><br><span class="line">    &#125;</span><br><span class="line">    /**</span><br><span class="line">     * 设置当前线程的用户信息</span><br><span class="line">     * @param userId 用户ID</span><br><span class="line">     */</span><br><span class="line">    public void setCurrentUser(String userId) &#123;</span><br><span class="line">        this.REQUEST_HEADER_HOLDER.get().put(SecurityConstants.USER_ID_HEADER, userId);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void setCurrentUser(String userId, String userName) &#123;</span><br><span class="line">        this.REQUEST_HEADER_HOLDER.get().put(SecurityConstants.USER_ID_HEADER, userId);</span><br><span class="line">        this.REQUEST_HEADER_HOLDER.get().put(SecurityConstants.USER_NAME_HEADER, userName);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line">    /**</span><br><span class="line">     * 设置请求头信息</span><br><span class="line">     */</span><br><span class="line">    public void set(String key, String value) &#123;</span><br><span class="line">        this.REQUEST_HEADER_HOLDER.get().put(key, value);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    public void clear() &#123;</span><br><span class="line">        this.REQUEST_HEADER_HOLDER.remove();</span><br><span class="line">    &#125;</span><br><span class="line">    /**</span><br><span class="line">     * 静态内部类的单例模式</span><br><span class="line">     */</span><br><span class="line">    private static class SingletonHolder &#123;</span><br><span class="line">        </span><br><span class="line">        private static final RequestHeaderContextHolder instance = new RequestHeaderContextHolder();</span><br><span class="line">        private SingletonHolder() &#123;</span><br><span class="line">            </span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="修改请求拦截器"><a href="#修改请求拦截器" class="headerlink" title="修改请求拦截器"></a><font style="color:rgb(47, 48, 52);">修改请求拦截器</font></h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">public class UserTokenHandlerInterceptor implements HandlerInterceptor &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception &#123;</span><br><span class="line">        String userId = request.getHeader(SecurityConstants.USER_ID_HEADER);</span><br><span class="line">        String userName = request.getHeader(SecurityConstants.USER_NAME_HEADER);</span><br><span class="line">        RequestHeaderContextHolder.getInstance().setCurrentUser(userId, userName);</span><br><span class="line">        return true;</span><br><span class="line">    &#125;</span><br><span class="line">    @Override</span><br><span class="line">    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception &#123;</span><br><span class="line">        RequestHeaderContextHolder.getInstance().clear();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>小结：</p>
+<p>通过实现requestInterceotor接口我们在每次进行feign调用时都会将header头文件进行传递。但是在异步的环境中无法获取到header头文件信息，我们通过自定义<font style="color:rgb(47, 48, 52);">InheritableThreadLocal结构体对header进行保存然后贡献的形式进行处理。这样可以在不同的场景下依然可以完成数据的保存</font></p>
+]]></content>
+      <categories>
+        <category>从零搭建一个脚手架</category>
+      </categories>
+      <tags>
+        <tag>微服务</tag>
+        <tag>脚手架</tag>
+        <tag>OpenFeign</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>基于Sa-Token的微服务权限验证</title>
+    <url>/2024/10/06/%E5%9F%BA%E4%BA%8ESa-Token%E7%9A%84%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%9D%83%E9%99%90%E9%AA%8C%E8%AF%81/</url>
+    <content><![CDATA[<p><strong><font style="color:rgb(44, 62, 80);">Sa-Token</font></strong><font style="color:rgb(52, 73, 94);"> 是一个轻量级 Java 权限认证框架主，要解决：</font><strong><font style="color:rgb(44, 62, 80);">登录认证</font></strong><font style="color:rgb(52, 73, 94);">、</font><strong><font style="color:rgb(44, 62, 80);">权限认证</font></strong><font style="color:rgb(52, 73, 94);">、</font><strong><font style="color:rgb(44, 62, 80);">单点登录</font></strong><font style="color:rgb(52, 73, 94);">、</font><strong><font style="color:rgb(44, 62, 80);">OAuth2.0</font></strong><font style="color:rgb(52, 73, 94);">、</font><strong><font style="color:rgb(44, 62, 80);">分布式Session会话</font></strong><font style="color:rgb(52, 73, 94);">、</font><strong><font style="color:rgb(44, 62, 80);">微服务网关鉴权</font></strong><font style="color:rgb(52, 73, 94);"> 等一系列权限相关问题。Sa-Token 旨在以简单、优雅的方式完成系统的权限认证部分。</font></p>
+<p><font style="color:rgb(52, 73, 94);">官网地址：</font><a href="https://sa-token.cc/">https://sa-token.cc/</a></p>
+<span id="more"></span>
+<h2 id="实现思路："><a href="#实现思路：" class="headerlink" title="实现思路："></a>实现思路：</h2><h3 id="功能"><a href="#功能" class="headerlink" title="功能"></a>功能</h3><ul>
+<li>多种登陆模式，账号密码，手机号验证码等</li>
+<li>网关验证登陆是否过期，黑白名单等处理</li>
+<li>可以支持角色和权限字符串鉴权验证</li>
+<li>实现登出功能</li>
+<li>减少数据库访问，登陆后数据详情放入redis中</li>
+</ul>
+<p>在pomelo中权限的验证，采用了token格式的数据，对与用户信息进行缓存的形式进行操作，并没有使用jwt，主要考虑有两种：jwt的数据保存在token字符串中，增加了前端到后段的通讯负担，敏感数据的解析一样需要从服务端中获取，所以在pomelo中，我们直接使用token来进行交互，并把用户的数据保存在redis缓存中，虽然需要承担redis缓存宕机带来的用户验证异常，但是也拥有很高的灵活性</p>
+<h3 id="网关统一认证处理"><a href="#网关统一认证处理" class="headerlink" title="网关统一认证处理"></a>网关统一认证处理</h3><p>网关可以统一的来实现权限的认证，但是不够灵活，所以在网关中只对消息中是否存在token来进行判断，token消息是否过期进行处理，当消息正常时新增Header对token进行透传</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">@Component</span><br><span class="line">@Slf4j</span><br><span class="line">public class AuthFilter implements GlobalFilter, Ordered &#123;</span><br><span class="line"></span><br><span class="line">    @Autowired</span><br><span class="line">    private DistributedCache distributedCache;</span><br><span class="line">    // 排除过滤的 uri 地址，nacos自行添加</span><br><span class="line">    @Autowired</span><br><span class="line">    private IgnoreWhiteProperties ignoreWhite;</span><br><span class="line">    @Autowired</span><br><span class="line">    private AuthProperties authProperties;</span><br><span class="line">    /**</span><br><span class="line">     * 连接 Token 前缀和 Token 值的字符</span><br><span class="line">     */</span><br><span class="line">    public static final String TOKEN_CONNECTOR_CHAT  = &quot; &quot;;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public Mono&lt;Void&gt; filter(ServerWebExchange exchange, GatewayFilterChain chain) &#123;</span><br><span class="line">        ServerHttpRequest request = exchange.getRequest();</span><br><span class="line">        ServerHttpRequest.Builder mutate = request.mutate();</span><br><span class="line">        String path = exchange.getRequest().getURI().getPath();</span><br><span class="line">        // 跳过不需要验证的路径</span><br><span class="line">        if (StringUtils.matches(path, ignoreWhite.getWhites())) &#123;</span><br><span class="line">            return chain.filter(exchange);</span><br><span class="line">        &#125;</span><br><span class="line">        String token = getToken(request);</span><br><span class="line">        if (StrUtil.isEmpty(token)) &#123;</span><br><span class="line">            return unauthorizedResponse(exchange, ErrorCode.TOKEN_EMPTY_ERROR);</span><br><span class="line">        &#125;</span><br><span class="line">        // 验证token是否过期</span><br><span class="line">        if (!distributedCache.hasKey(authProperties.getIdentifier() + &quot;:login:token:&quot; + token)) &#123;</span><br><span class="line">            return unauthorizedResponse(exchange, ErrorCode.TOKEN_EXPIRATION_ERROR);</span><br><span class="line">        &#125;</span><br><span class="line">        String prefixToken =String.format(&quot;%s%s%s&quot;, authProperties.getPrefix(),TOKEN_CONNECTOR_CHAT, token) ;</span><br><span class="line">        addHeader(mutate, authProperties.getIdentifier(), prefixToken,true);</span><br><span class="line">        String loginUserKey  = String.format(&quot;%S%S&quot;, SecurityConstants.USER_KEY, token);</span><br><span class="line">        if (distributedCache.hasKey(loginUserKey)) &#123;</span><br><span class="line">            LoginUser loginUser= distributedCache.get(loginUserKey, LoginUser.class);</span><br><span class="line">            if (loginUser != null)&#123;</span><br><span class="line">                addHeader(mutate, SecurityConstants.USER_ID_HEADER, loginUser.getUserId(),false);</span><br><span class="line">                addHeader(mutate, SecurityConstants.USER_NAME_HEADER, loginUser.getUserName(),false);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        return chain.filter(exchange.mutate().request(mutate.build()).build());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private void addHeader(ServerHttpRequest.Builder mutate, String name, Object value,Boolean isEncode) &#123;</span><br><span class="line">        if (value == null) &#123;</span><br><span class="line">            return;</span><br><span class="line">        &#125;</span><br><span class="line">        String valueStr = value.toString();</span><br><span class="line">        if (isEncode)&#123;</span><br><span class="line">            mutate.header(name, valueStr);</span><br><span class="line">            return;</span><br><span class="line">        &#125;</span><br><span class="line">        String valueEncode = ServletUtils.urlEncode(valueStr);</span><br><span class="line">        mutate.header(name, valueEncode);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private Mono&lt;Void&gt; unauthorizedResponse(ServerWebExchange exchange, ErrorCode errorCode) &#123;</span><br><span class="line">        log.error(&quot;[鉴权异常处理]请求路径:&#123;&#125;&quot;, exchange.getRequest().getPath());</span><br><span class="line">        return ServletUtils.webFluxResponseWriter(exchange.getResponse(), errorCode.getMessage(), errorCode.getCode());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 获取请求token</span><br><span class="line">     */</span><br><span class="line">    private String getToken(ServerHttpRequest request) &#123;</span><br><span class="line">        String token = request.getHeaders().getFirst(SecurityConstants.AUTHORIZATION_HEADER);</span><br><span class="line">        // 如果前端设置了令牌前缀，则裁剪掉前缀</span><br><span class="line">        if (StrUtil.isNotEmpty(token) &amp;&amp; token.startsWith(authProperties.getPrefix())) &#123;</span><br><span class="line">            token = token.replaceFirst(authProperties.getPrefix(), &quot;&quot;);</span><br><span class="line">        &#125;</span><br><span class="line">        return token;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int getOrder() &#123;</span><br><span class="line">        return 0;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="登陆授权"><a href="#登陆授权" class="headerlink" title="登陆授权"></a>登陆授权</h3><p>登陆需要支持两种模式一种是短信登陆，以及账号密码登陆。短信登陆时如果账号未注册，直接注册新用户，账号密码需要提前注册后才能登陆。当用户身份验证通过后，需要将token放入redis用于处理token超时的问题，2将token与用户信息关联，为后续验证做好准备</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">@Override</span><br><span class="line">   public LoginRspVo login(LoginDTO loginDTO) &#123;</span><br><span class="line">       // 预认证 验证参数</span><br><span class="line">       preAuthenticationCheck(loginDTO);</span><br><span class="line">       // 认证</span><br><span class="line">       LoginUser loginUser = authenticate(loginDTO);</span><br><span class="line">       CacheUtil.addLoginUser(loginUser);</span><br><span class="line">       // 角色获取</span><br><span class="line">       List&lt;String&gt; roles = getRoles(loginUser.getUserId());</span><br><span class="line">       if (CollectionUtil.isNotEmpty(roles))&#123;</span><br><span class="line">           CacheUtil.updateRoleCache(loginUser.getUserId(), roles);</span><br><span class="line"></span><br><span class="line">           // 权限获取</span><br><span class="line">           for (String role : roles) &#123;</span><br><span class="line">               List&lt;String&gt; permissions = getPermissions(role);</span><br><span class="line">               CacheUtil.updatePermissionCache(role, permissions);</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br><span class="line">       LoginRspVo loginRspVo = new LoginRspVo();</span><br><span class="line">       loginRspVo.setAccess_token(loginUser.getToken());</span><br><span class="line">       loginRspVo.setUserId(loginUser.getUserId());</span><br><span class="line">       loginRspVo.setUserName(loginUser.getUserName());</span><br><span class="line">       loginRspVo.setLoginTime(loginUser.getLoginTime());</span><br><span class="line">       return loginRspVo;</span><br><span class="line">       </span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+<p>实现思路：当系统用户登录完成后，将用户数据放入缓存，以及将用户的角色和权限信息放入到缓存。以供网关以及后续鉴权提供数据支持。</p>
+<h3 id="服务鉴权"><a href="#服务鉴权" class="headerlink" title="服务鉴权"></a>服务鉴权</h3><p>在sa-token中提供了StpInterface借口，来对权限以及角色进行处理，处理思路：定义PomeloInterfaceImpl对用户的权限以及角色获取</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">@Component</span><br><span class="line">public class PomeloInterfaceImpl implements StpInterface &#123;</span><br><span class="line">    </span><br><span class="line">    @Override</span><br><span class="line">    @SuppressWarnings(&quot;unchecked&quot;)</span><br><span class="line">    public List&lt;String&gt; getPermissionList(Object loginId, String loginType) &#123;</span><br><span class="line">        // 1. 声明权限码集合</span><br><span class="line">        List&lt;String&gt; list = new ArrayList&lt;&gt;();</span><br><span class="line">        // 2. 遍历角色列表，查询拥有的权限码</span><br><span class="line">        for (String roleId : getRoleList(loginId, loginType)) &#123;</span><br><span class="line">            List&lt;String&gt; permissionList = (List&lt;String&gt;) SaManager.getSaTokenDao()</span><br><span class="line">                    .getObject(SaManager.getConfig().getTokenName()+&quot;:role-find-permission:&quot; + roleId);</span><br><span class="line">            if (permissionList == null) &#123;</span><br><span class="line">                continue;</span><br><span class="line">            &#125;</span><br><span class="line">            list.addAll(permissionList);</span><br><span class="line">        &#125;</span><br><span class="line">        return list;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    @Override</span><br><span class="line">    @SuppressWarnings(&quot;unchecked&quot;)</span><br><span class="line">    public List&lt;String&gt; getRoleList(Object loginId, String loginType) &#123;</span><br><span class="line">        List&lt;String&gt; roleList = (List&lt;String&gt;) SaManager.getSaTokenDao()</span><br><span class="line">                .getObject(SaManager.getConfig().getTokenName()+&quot;:loginId-find-role:&quot; + loginId);</span><br><span class="line">        return roleList;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+]]></content>
+      <categories>
+        <category>从零搭建一个脚手架</category>
+      </categories>
+      <tags>
+        <tag>微服务</tag>
+        <tag>脚手架</tag>
+        <tag>权限</tag>
+        <tag>sa-token</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>微服务中的ACL与OpenFeign的绝佳配合</title>
+    <url>/2024/10/08/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B8%AD%E7%9A%84ACL%E4%B8%8EOpenFeign%E7%9A%84%E7%BB%9D%E4%BD%B3%E9%85%8D%E5%90%88/</url>
+    <content><![CDATA[<h2 id="ACL的概念"><a href="#ACL的概念" class="headerlink" title="ACL的概念"></a>ACL的概念</h2><p>在一些情况下我们需要引入第三方的接口来进行操作，但是当我们引用第三方接口的时候也会有一些隐患，第三方&#x3D;不可空，没准哪一天对方的接口参数突然就变掉了，如果我们直接在多个地方引用了第三方的接口，我们就需要在不同的地方处理接口方法，这时我们就需要引入防腐层的概念</p>
+<h3 id="什么是防腐层"><a href="#什么是防腐层" class="headerlink" title="什么是防腐层"></a>什么是防腐层</h3><p>在许多情况下，我们的系统需要依赖其他系统，但被依赖的系统可能具有不合理的数据结构、API、协议或技术实现。如果我们强烈依赖外部系统，就会导致我们的系统受到<strong>“腐蚀”</strong>。在这种情况下，通过引入防腐层，可以有效地隔离外部依赖和内部逻辑，无论外部如何变化，内部代码尽可能保持不变。</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2025/png/25873401/1737213600511-5dd8e777-8274-4482-92b6-db88a7a8179e.png"></p>
+<span id="more"></span>
+<p>防腐层不仅仅是一层简单的调用封装，在实际开发中，ACL可以提供更多强大的功能：</p>
+<ol>
+<li><strong>适配器：</strong> 很多时候外部依赖的数据、接口和协议并不符合内部规范，通过适配器模式，可以将数据转化逻辑封装到ACL内部，降低对业务代码的侵入。</li>
+<li><strong>缓存：</strong> 对于频繁调用且数据变更不频繁的外部依赖，通过在ACL里嵌入缓存逻辑，能够有效的降低对于外部依赖的请求压力。同时，很多时候缓存逻辑是写在业务代码里的，通过将缓存逻辑嵌入ACL，能够降低业务代码的复杂度。</li>
+<li><strong>兜底：</strong> 如果外部依赖的稳定性较差，提高系统稳定性的策略之一是通过ACL充当兜底，例如在外部依赖出问题时，返回最近一次成功的缓存或业务兜底数据。这种兜底逻辑通常复杂，如果散布在核心业务代码中，会难以维护。通过集中在ACL中，更容易进行测试和修改。</li>
+<li><strong>易于测试：</strong> ACL的接口类能够很容易的实现Mock或Stub，以便于单元测试。</li>
+<li><strong>功能开关：</strong> 有时候，我们希望在某些场景下启用或禁用某个接口的功能，或者让某个接口返回特定值。我们可以在ACL中配置功能开关，而不会影响真实的业务代码。</li>
+</ol>
+<h3 id="如何实现防腐层"><a href="#如何实现防腐层" class="headerlink" title="如何实现防腐层"></a>如何实现防腐层</h3><p><font style="color:rgb(47, 48, 52);">实现ACL防腐层的步骤如下：</font></p>
+<ol>
+<li><font style="color:rgb(47, 48, 52);">对于依赖的外部对象，我们提取所需的字段，并创建一个内部所需的DTO类。</font></li>
+<li><font style="color:rgb(47, 48, 52);">构建一个新的Facade，在Facade中封装调用链路，将外部类转化为内部类。Facade可以参考Repository的实现模式，将接口定义在领域层，而将实现放在基础设施层。</font></li>
+<li><font style="color:rgb(47, 48, 52);">在ApplicationService中依赖内部的Facade对象。</font></li>
+</ol>
+<p>具体的实现如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">@Data</span><br><span class="line">@AllArgsConstructor</span><br><span class="line">@NoArgsConstructor</span><br><span class="line">public class CustomerMenuDTO &#123;</span><br><span class="line">    // 菜单ID</span><br><span class="line">    private String menuId;</span><br><span class="line">    // 父菜单ID，一级菜单为0</span><br><span class="line">    private String parentId;</span><br><span class="line">    // 菜单名称</span><br><span class="line">    private String name;</span><br><span class="line">    // 别称</span><br><span class="line">    private String anotherName;</span><br><span class="line">    // 组件路径</span><br><span class="line">    private String component;</span><br><span class="line">    // 菜单URL</span><br><span class="line">    private String path;</span><br><span class="line">    // 排序</span><br><span class="line">    private Integer orderNum;</span><br><span class="line">    // 菜单标题</span><br><span class="line">    private String title;</span><br><span class="line">    // 授权(多个用逗号分隔)</span><br><span class="line">    private String perms;</span><br><span class="line">    // 类型 0：目录 1：菜单 2：按钮</span><br><span class="line">    private Integer type;</span><br><span class="line">    // 菜单图标</span><br><span class="line">    private String icon;</span><br><span class="line">    // 是否跳转</span><br><span class="line">    private Boolean IsFull;</span><br><span class="line">    // 是否外链</span><br><span class="line">    private String isLink;</span><br><span class="line">    // 是否隐藏</span><br><span class="line">    private Boolean isHide;</span><br><span class="line">    // 是否固定</span><br><span class="line">    private Boolean isAffix;</span><br><span class="line">    // 是否长连接</span><br><span class="line">    private Boolean isKeepAlive;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(51, 51, 51);">Facade</font></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">@FeignClient(name = &quot;pomelo-customer&quot;)</span><br><span class="line">public interface CustomerRemoteFacade &#123;</span><br><span class="line">    //获取用户角色</span><br><span class="line">    @GetMapping(&quot;/Internal/customer/getUserInfoByUserName/&#123;UserName&#125;&quot;)</span><br><span class="line">    CustomerUserDTO getUserInfoByUserName(@PathVariable(&quot;UserName&quot;) String UserName);</span><br><span class="line">    //获取用户信息</span><br><span class="line">    @GetMapping(&quot;/Internal/customer/getUserInfoByUserId/&#123;UserId&#125;&quot;)</span><br><span class="line">    CustomerUserDTO getUserInfoByUserId(@PathVariable(&quot;UserId&quot;) String UserId);</span><br><span class="line">    //根据手机号获取用户信息</span><br><span class="line">    @GetMapping(&quot;/Internal/customer/getUserInfoByPhoneNumber/&#123;PhoneNumber&#125;&quot;)</span><br><span class="line">    CustomerUserDTO getUserInfoByPhoneNumber(@PathVariable(&quot;PhoneNumber&quot;) String PhoneNumber);</span><br><span class="line">    //获取用户角色信息</span><br><span class="line">    @GetMapping(&quot;/Internal/customer/getRoleByUserId/&#123;userId&#125;&quot;)</span><br><span class="line">    List&lt;CustomerRoleDto&gt; getRoleByUserId(@PathVariable(&quot;userId&quot;) String userId);</span><br><span class="line">    //获取用户权限</span><br><span class="line">    @GetMapping(&quot;/Internal/customer/getByRoleId/&#123;roleId&#125;&quot;)</span><br><span class="line">    List&lt;CustomerMenuDTO&gt; getByPermissions(@PathVariable(&quot;roleId&quot;) String roleId);</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>在服务中应用</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">private final CustomerRemoteFacade customerRemoteFacade;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">  CustomerUserDTO customerUser = customerRemoteFacade.getUserInfoByPhoneNumber(phonePasswordLoginDTO.getPhone());</span><br><span class="line">       if (customerUser ==null)&#123;</span><br><span class="line">           throw new BusinessException(ErrorCode.USERNAME_PASSWORD_INCORRECT);</span><br><span class="line">       &#125;</span><br></pre></td></tr></table></figure>
+
+<p>这样，经过acl防腐处理，我们的服务中就不需要直接调用第三方接口了，当第三方的接口有过修改，我们只需要在acl中将逻辑更改，这样并不会影响到主体业务</p>
+<h3 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h3><p><font style="color:rgb(47, 48, 52);">在没有防腐层ACL的情况下，系统需要直接依赖外部对象和外部调用接口，调用逻辑如下：</font></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2025/png/25873401/1737214136984-079e1779-c4fe-4ae8-b17d-eab63490e35b.png"></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">而有了防腐层ACL后，系统只需要依赖内部的值类和接口，调用逻辑如下：</font></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2025/png/25873401/1737214136953-fab41375-7967-4827-a6d7-eb95351dd551.png"></p>
+<h2 id="OpenFeign的应用"><a href="#OpenFeign的应用" class="headerlink" title="OpenFeign的应用"></a>OpenFeign的应用</h2><h3 id="微服务中的远程调用"><a href="#微服务中的远程调用" class="headerlink" title="微服务中的远程调用"></a>微服务中的远程调用</h3><p>在pomelo中服务间的远程调用，我们单独的定义一个包来完成。同样我们在引用方，也可以以acl的思想来使用openFeign应用。接下来我们看一下用户登录引用用户服务的实现过程</p>
+<h4 id="定义服务接口"><a href="#定义服务接口" class="headerlink" title="定义服务接口"></a>定义服务接口</h4><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">@RestController</span><br><span class="line">@RequiredArgsConstructor(onConstructor = @__(@Autowired))</span><br><span class="line">public class CustomerUserInternal &#123;</span><br><span class="line">    private final CustomerUserService customerUserService;</span><br><span class="line">    private final CustomerRoleService customerRoleService;</span><br><span class="line">    private final CustomerMenuService customerMenuService;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 根据用户名获取用户信息</span><br><span class="line">     *</span><br><span class="line">     * @param UserName</span><br><span class="line">     * @return</span><br><span class="line">     */</span><br><span class="line">    @GetMapping(&quot;/Internal/customer/getUserInfoByUserName/&#123;UserName&#125;&quot;)</span><br><span class="line">    public CustomerUserDTO getUserInfoByUserName(@PathVariable(&quot;UserName&quot;) String UserName) &#123;</span><br><span class="line">        return customerUserService.selectUserByUserName(UserName);</span><br><span class="line">    &#125;</span><br><span class="line">    /**</span><br><span class="line">     * 根据手机号获取用户信息</span><br><span class="line">     *</span><br><span class="line">     * @param PhoneNumber</span><br><span class="line">     * @return</span><br><span class="line">     */</span><br><span class="line">    @GetMapping(&quot;/Internal/customer/getUserInfoByPhoneNumber/&#123;PhoneNumber&#125;&quot;)</span><br><span class="line">    public CustomerUserDTO getUserInfoByPhoneNumber(@PathVariable(&quot;PhoneNumber&quot;) String PhoneNumber) &#123;</span><br><span class="line">        return customerUserService.selectUserByPhoneNumber(PhoneNumber);</span><br><span class="line">    &#125;</span><br><span class="line">    /**</span><br><span class="line">     * 根据id获取用户信息</span><br><span class="line">     *</span><br><span class="line">     * @param id</span><br><span class="line">     * @return</span><br><span class="line">     */</span><br><span class="line">    @GetMapping(&quot;/Internal/customer/getUserInfoById/&#123;id&#125;&quot;)</span><br><span class="line">    public CustomerUserListDTO getUserInfoById(@PathVariable(&quot;id&quot;) String id) &#123;</span><br><span class="line">        return customerUserService.selectUserById(id);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @GetMapping(&quot;/Internal/customer/getRoleByUserId/&#123;userId&#125;&quot;)</span><br><span class="line">    public List&lt;CustomerRoleDto&gt; getRoleByUserId(@PathVariable(&quot;userId&quot;) String userId) &#123;</span><br><span class="line">        return customerRoleService.selectRoleByUserId(userId);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 根据角色获取权限信息</span><br><span class="line">     */</span><br><span class="line">    @GetMapping(&quot;/Internal/customer/getByRoleId/&#123;roleId&#125;&quot;)</span><br><span class="line">    public List&lt;CustomerMenuDTO&gt; getByPermissions(@PathVariable(&quot;roleId&quot;) String roleId) &#123;</span><br><span class="line">        return customerMenuService.getMenuOptionsByRoleId(roleId);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="acl防腐层facade实现"><a href="#acl防腐层facade实现" class="headerlink" title="acl防腐层facade实现"></a>acl防腐层facade实现</h4><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">@FeignClient(name = &quot;pomelo-customer&quot;)</span><br><span class="line">public interface CustomerRemoteFacade &#123;</span><br><span class="line">    //获取用户角色</span><br><span class="line">    @GetMapping(&quot;/Internal/customer/getUserInfoByUserName/&#123;UserName&#125;&quot;)</span><br><span class="line">    CustomerUserDTO getUserInfoByUserName(@PathVariable(&quot;UserName&quot;) String UserName);</span><br><span class="line">    //获取用户信息</span><br><span class="line">    @GetMapping(&quot;/Internal/customer/getUserInfoByUserId/&#123;UserId&#125;&quot;)</span><br><span class="line">    CustomerUserDTO getUserInfoByUserId(@PathVariable(&quot;UserId&quot;) String UserId);</span><br><span class="line">    //根据手机号获取用户信息</span><br><span class="line">    @GetMapping(&quot;/Internal/customer/getUserInfoByPhoneNumber/&#123;PhoneNumber&#125;&quot;)</span><br><span class="line">    CustomerUserDTO getUserInfoByPhoneNumber(@PathVariable(&quot;PhoneNumber&quot;) String PhoneNumber);</span><br><span class="line">    //获取用户角色信息</span><br><span class="line">    @GetMapping(&quot;/Internal/customer/getRoleByUserId/&#123;userId&#125;&quot;)</span><br><span class="line">    List&lt;CustomerRoleDto&gt; getRoleByUserId(@PathVariable(&quot;userId&quot;) String userId);</span><br><span class="line">    //获取用户权限</span><br><span class="line">    @GetMapping(&quot;/Internal/customer/getByRoleId/&#123;roleId&#125;&quot;)</span><br><span class="line">    List&lt;CustomerMenuDTO&gt; getByPermissions(@PathVariable(&quot;roleId&quot;) String roleId);</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h4 id="启动服务增加注解"><a href="#启动服务增加注解" class="headerlink" title="启动服务增加注解"></a>启动服务增加注解</h4><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">@EnableFeignClients(&quot;com.fbb.pomelo.auth.acl&quot;)</span><br></pre></td></tr></table></figure>
+
+<p>这样我们就可以在引用方调用接口进行参数处理</p>
+<h3 id="自定义微服务解码器"><a href="#自定义微服务解码器" class="headerlink" title="自定义微服务解码器"></a>自定义微服务解码器</h3><p>我们在构建统一返回以及全局异常处理中提出过对参数的返回体进行了包装，那我们引用feign的时间就需要对之前的包装进行解码</p>
+<p>代码如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">public class PomeloFeignResponseDecoder implements Decoder &#123;</span><br><span class="line">    </span><br><span class="line">    @Override</span><br><span class="line">    public Object decode(Response response, Type type) throws IOException, DecodeException, FeignException &#123;</span><br><span class="line">        // 因为在web中定义过返回自动转换为Result，所以在使用openfeign时为了方便我们需要自定义解码将Result接触</span><br><span class="line">        Result&lt;?&gt; result = JsonUtils.inputStream2Obj(response.body().asInputStream(),Result.class);</span><br><span class="line">        if (ErrorCode.OK.getCode().equals(result.getCode())) &#123;</span><br><span class="line">            Object data = result.getData();</span><br><span class="line">            if (ObjectUtil.isEmpty(data))&#123;</span><br><span class="line">                return null;</span><br><span class="line">            &#125;</span><br><span class="line">            JavaType javaType = TypeFactory.defaultInstance().constructType(type);</span><br><span class="line">            return JsonUtils.convertValue(data, javaType);</span><br><span class="line">        &#125;</span><br><span class="line">        // 异常则抛出业务异常</span><br><span class="line">        throw new RemoteException(result.getCode(), result.getMessage());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="上游异常的统一处理"><a href="#上游异常的统一处理" class="headerlink" title="上游异常的统一处理"></a>上游异常的统一处理</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">@Slf4j</span><br><span class="line">public class PomeloFeignErrorDecoder implements ErrorDecoder &#123;</span><br><span class="line">    </span><br><span class="line">    @Override</span><br><span class="line">    public Exception decode(String s, Response response) &#123;</span><br><span class="line">        try &#123;</span><br><span class="line">            Reader reader = response.body().asReader(Charset.defaultCharset());</span><br><span class="line">            Result&lt;?&gt; result = JsonUtils.reader2Obj(reader, Result.class);</span><br><span class="line">            return new RemoteException(result.getCode(), result.getMessage());</span><br><span class="line">        &#125; catch (IOException e) &#123;</span><br><span class="line">            log.error(&quot;Response转换异常&quot;, e);</span><br><span class="line">            throw new RemoteException(ErrorCode.FEIGN_ERROR);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="Feign全局异常处理"><a href="#Feign全局异常处理" class="headerlink" title="Feign全局异常处理"></a>Feign全局异常处理</h3><p>feign的全局异常依然是沿用了spring的RestControllerAdvice注解</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">@RestControllerAdvice</span><br><span class="line">@Slf4j</span><br><span class="line">@Order(Ordered.HIGHEST_PRECEDENCE) // 优先级</span><br><span class="line">@ResponseStatus(code = HttpStatus.BAD_REQUEST) // 统一 HTTP 状态码</span><br><span class="line">public class PomeloFeignExceptionHandler &#123;</span><br><span class="line">    </span><br><span class="line">    @ExceptionHandler(FeignException.class)</span><br><span class="line">    public Result&lt;?&gt; handleFeignException(FeignException e) &#123;</span><br><span class="line">        // log.error(&quot;FeignException: &quot;, e);</span><br><span class="line">        return new Result&lt;Void&gt;()</span><br><span class="line">                .setCode(ErrorCode.REMOTE_ERROR.getCode())</span><br><span class="line">                .setMessage(e.getMessage())</span><br><span class="line">                .setTimestamp(System.currentTimeMillis());</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    @ExceptionHandler(DecodeException.class)</span><br><span class="line">    public Result&lt;?&gt; handleDecodeException(DecodeException e) &#123;</span><br><span class="line">        log.error(&quot;Feign Decode Error: &quot;, e);</span><br><span class="line">        Throwable cause = e.getCause();</span><br><span class="line">        if (cause instanceof AbstractException) &#123;</span><br><span class="line">            RemoteException remoteException = (RemoteException) cause;</span><br><span class="line">            // 上游符合全局响应包装约定的再次抛出即可</span><br><span class="line">            return new Result&lt;Void&gt;()</span><br><span class="line">                    .setCode(remoteException.getCode())</span><br><span class="line">                    .setMessage(remoteException.getMessage())</span><br><span class="line">                    .setTimestamp(System.currentTimeMillis());</span><br><span class="line">        &#125;</span><br><span class="line">        // 全部转换成RemoteException</span><br><span class="line">        return new Result&lt;Void&gt;()</span><br><span class="line">                .setCode(ErrorCode.REMOTE_ERROR.getCode())</span><br><span class="line">                .setMessage(e.getMessage())</span><br><span class="line">                .setTimestamp(System.currentTimeMillis());</span><br><span class="line">    &#125;</span><br><span class="line">    @ExceptionHandler(RemoteException.class)</span><br><span class="line">    public Result&lt;?&gt; handleRemoteException(RemoteException e) &#123;</span><br><span class="line">        log.error(&quot;Feign Remote Error: &quot;, e);</span><br><span class="line">        return new Result&lt;Void&gt;()</span><br><span class="line">                .setCode(e.getCode())</span><br><span class="line">                .setMessage(e.getMessage())</span><br><span class="line">                .setTimestamp(System.currentTimeMillis());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="小结："><a href="#小结：" class="headerlink" title="小结："></a>小结：</h3><p><font style="color:rgb(47, 48, 52);">我们学习了如何使用ACL来隔离外部依赖，降低系统耦合度。在微服务架构中，我们探讨了如何通过OpenFeign来实现跨服务调用，并解决了全局包装和异常处理的问题，希望本文的内容对您在软件开发项目中有所帮助。</font></p>
+]]></content>
+      <categories>
+        <category>从零搭建一个脚手架</category>
+      </categories>
+      <tags>
+        <tag>微服务</tag>
+        <tag>脚手架</tag>
+        <tag>OpenFeign</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>分布式事务</title>
+    <url>/2024/05/01/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/</url>
+    <content><![CDATA[<h2 id="CAP理论"><a href="#CAP理论" class="headerlink" title="CAP理论"></a>CAP理论</h2><p><font style="color:rgb(77, 77, 77);">1998年，加州大学的计算机科学家 Eric Brewer 提出，分布式系统有三个指标。</font></p>
+<p>:::info</p>
+<ul>
+<li><font style="color:rgba(0, 0, 0, 0.5);">Consistency（一致性）</font></li>
+<li><font style="color:rgba(0, 0, 0, 0.5);">Availability（可用性）</font></li>
+<li><font style="color:rgba(0, 0, 0, 0.5);">Partition tolerance （分区容错性）</font></li>
+</ul>
+<p>:::</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1727676127141-2d6e2681-9b7a-40cc-a38f-71676129af12.png"></p>
+<span id="more"></span>
+<p><font style="color:rgb(77, 77, 77);">它们的第一个字母分别是 C、A、P。</font></p>
+<p><font style="color:rgb(77, 77, 77);">Eric Brewer 说，这三个指标不可能同时做到。这个结论就叫做 CAP 定理。</font></p>
+<h3 id="一致性"><a href="#一致性" class="headerlink" title="一致性"></a>一致性</h3><p><font style="color:rgb(77, 77, 77);">Consistency（一致性）：用户访问分布式系统中的任意节点，得到的数据必须一致。</font></p>
+<h3 id="可用性"><a href="#可用性" class="headerlink" title="可用性"></a>可用性</h3><p><font style="color:rgb(77, 77, 77);">Availability （可用性）：用户访问集群中的任意健康节点，必须能得到响应，而不是超时或拒绝。</font></p>
+<h3 id="分区容错"><a href="#分区容错" class="headerlink" title="分区容错"></a>分区容错</h3><p><strong><font style="color:rgb(77, 77, 77);">Partition（分区）</font></strong><font style="color:rgb(77, 77, 77);">：因为网络故障或其它原因导致分布式系统中的部分节点与其它节点失去连接，形成独立分区。</font></p>
+<p><strong><font style="color:rgb(77, 77, 77);">Tolerance（容错）</font></strong><font style="color:rgb(77, 77, 77);">：在集群出现分区时，整个系统也要持续对外提供服务</font></p>
+<h3 id="矛盾"><a href="#矛盾" class="headerlink" title="矛盾"></a>矛盾</h3><p><font style="color:rgb(77, 77, 77);">在分布式系统中，系统间的网络不能100%保证健康，一定会有故障的时候，而服务有必须对外保证服务。因此Partition Tolerance不可避免。</font></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1727676224018-30b6e228-e99e-4d1f-b7e9-e33ebe7f5390.png"></p>
+<p>如果此时要保证一致性，就必须等待网络恢复，完成数据同步后，整个集群才对外提供服务，服务处于阻塞状态，不可用。</p>
+<p>如果此时要保证可用性，就不能等待网络恢复，那node01、node02与node03之间就会出现数据不一致。</p>
+<p>也就是说，在P(分区情况下)一定会出现的情况下，A和C之间只能实现一个。</p>
+<h2 id="BASE理论"><a href="#BASE理论" class="headerlink" title="BASE理论"></a>BASE理论</h2><p>BASE理论是对CAP的一种解决思路，包含三个思想：</p>
+<ul>
+<li>Basically Available （基本可用）：分布式系统在出现故障时，允许损失部分可用性，即保证核心可用。</li>
+<li><strong>Soft State（软状态）：</strong>在一定时间内，允许出现中间状态，比如临时的不一致状态。</li>
+<li>Eventually Consistent（最终一致性）：虽然无法保证强一致性，但是在软状态结束后，最终达到数据一致。</li>
+</ul>
+<h2 id="解决分布式事务的思路"><a href="#解决分布式事务的思路" class="headerlink" title="解决分布式事务的思路"></a><font style="color:rgb(79, 79, 79);">解决分布式事务的思路</font></h2><p><font style="color:rgb(77, 77, 77);">分布式事务最大的问题是各个子事务的一致性问题，因此可以借鉴CAP定理和BASE理论，有两种解决思路：</font></p>
+<ul>
+<li><font style="color:rgb(77, 77, 77);">AP模式：</font><strong><font style="color:rgb(77, 77, 77);">各子事务分别执行和提交，允许出现结果不一致，然后采用弥补措施恢复数据即可，实现最终一致。  既最终一致性</font></strong></li>
+<li><font style="color:rgb(77, 77, 77);">CP模式：</font><strong><font style="color:rgb(77, 77, 77);">各个子事务执行后互相等待，同时提交，同时回滚，达成强一致。但事务等待过程中，处于弱可用状态</font></strong><font style="color:rgb(77, 77, 77);">。既最终一致性</font></li>
+</ul>
+<h3 id="实际应用"><a href="#实际应用" class="headerlink" title="实际应用"></a>实际应用</h3><p>在实际应用中，</p>
+<p>2PC与3PC都是使用的AP模式</p>
+<p>本地事务表使用的CP模式</p>
+<h3 id="2PC与3PC"><a href="#2PC与3PC" class="headerlink" title="2PC与3PC"></a>2PC与3PC</h3><h4 id="二阶段提交（2PC）"><a href="#二阶段提交（2PC）" class="headerlink" title="二阶段提交（2PC）"></a>二阶段提交（2PC）</h4><h5 id="阶段一：准备阶段"><a href="#阶段一：准备阶段" class="headerlink" title="阶段一：准备阶段"></a>阶段一：准备阶段</h5><p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1727680107070-126ca8cb-a71a-4392-b599-9a044ac40c3d.png"></p>
+<ol>
+<li><font style="color:rgb(37, 41, 51);">协调者向所有参与者发送commit请求，询问是否可以提交事务，并等待答复。</font></li>
+<li><font style="color:rgb(37, 41, 51);">各参与者开始准备执行事务，将uodo log和redo log记入事务日志中，并不提交事务。</font></li>
+<li><font style="color:rgb(37, 41, 51);">如果参与者执行成功，则向协调者返回yes，否则返回no。</font></li>
+</ol>
+<h5 id="阶段二：提交阶段"><a href="#阶段二：提交阶段" class="headerlink" title="阶段二：提交阶段"></a>阶段二：提交阶段</h5><p><font style="color:rgb(37, 41, 51);">协调者收到各个参与者的准备信息后，根据反馈情况，通知各个参与者Commit或者Rollback。</font></p>
+<h6 id="事务提交"><a href="#事务提交" class="headerlink" title="事务提交"></a><font style="color:rgb(37, 41, 51);">事务提交</font></h6><p>当第一阶段所有参与者都反馈同意时，协调者发起正式提交事务请求，当所有的参与者都回复成功，则表明完成事务，具体流程如下：</p>
+<ol>
+<li><font style="color:rgb(37, 41, 51);">协调者向所有参与者发送正式提交事务请求（即：commit请求）。</font></li>
+<li><font style="color:rgb(37, 41, 51);">参与者收到协调者的commit请求后，参与者正式执行事务提交操作，并释放整个事务期间占用的资源。</font></li>
+<li><font style="color:rgb(37, 41, 51);">参与者完成事务提交后，向协调者发送ACK消息。</font></li>
+<li><font style="color:rgb(37, 41, 51);">协调者收到所有参与者反馈的ACK消息后，完成事务。</font></li>
+</ol>
+<h6 id="事务回滚"><a href="#事务回滚" class="headerlink" title="事务回滚"></a>事务回滚</h6><p>如果任意一个参与者在第一阶段返回中止信息，或者由于超时协调者无法获取到所有参与者的信息，那么这个事务将会被回滚，具体流程如下：</p>
+<ol>
+<li>协调者向所有参与者发送回滚请求（即：rollback请求）。</li>
+<li>参与者收到协调者发送的回滚请求后，参与者使用第一阶段中的undo log信息执行回滚操作，并释放在整个事务期间占用的资源。</li>
+<li>参与者在执行完回滚操作之后，向协调者发送ACK信息。</li>
+<li>协调者受到所有参与者反馈的信息后，取消事务。</li>
+</ol>
+<h5 id="2PC的优缺点"><a href="#2PC的优缺点" class="headerlink" title="2PC的优缺点"></a>2PC的优缺点</h5><p><strong>二阶段的确可以提供原子性操作，但是仍有如下缺点：</strong></p>
+<ol>
+<li>性能问题：所有参与者在提交阶段，都处于同步阻塞状态，占用系统资源，容易导致性能瓶颈。</li>
+<li>可靠性问题：如果协调者出现单点故障，或者出现不可用状态，参与者将一直处于锁定状态。</li>
+<li>数据一致性问题：在阶段2中，如果出现协调者和参与者都挂了，有可能导致数据不一致。</li>
+</ol>
+<h4 id="三阶段提交（3PC）"><a href="#三阶段提交（3PC）" class="headerlink" title="三阶段提交（3PC）"></a><font style="color:rgb(37, 41, 51);">三阶段提交（3PC）</font></h4><p>与两阶段提交不同的是，三阶段提交有两个改动点：</p>
+<ul>
+<li>引入超时机制，在协调者与参与者中都引入了超时机制。</li>
+<li>在第一阶段与第二阶段中，插入了一个<code>准备阶段</code>。保证了在最后提交阶段之前，各参与节点的状态是一致的。故3PC有CanCommit，PreCommit，DoCommit。</li>
+</ul>
+<p>所以3PC处理流程如下：</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1727680774753-2f1543a6-0c4c-4e5c-a214-d22cc31374c1.webp"></p>
+<h5 id="CanCommit阶段"><a href="#CanCommit阶段" class="headerlink" title=" CanCommit阶段"></a><font style="color:rgb(37, 41, 51);"> CanCommit阶段</font></h5><p>3PC的CanCommit阶段其实和2PC的准备阶段很像。协调者向参与者发送commit请求，参与者如果可以提交就返回yes，否则返回no。</p>
+<ol>
+<li><strong>事务询问：</strong> 协调者向参与者发送CanCommit请求，询问是否可以执行事务提交操作，然后开始等待答复。</li>
+<li><strong>响应反馈：</strong> 参与者接到CanCommit请求后，如果可以顺利执行事务，则反馈yes响应，并进入<code>预备状态</code>，否则反馈no。</li>
+</ol>
+<h5 id="PreCommit阶段"><a href="#PreCommit阶段" class="headerlink" title="PreCommit阶段"></a><font style="color:rgb(37, 41, 51);">PreCommit阶段</font></h5><p><code>协调者</code>根据<code>参与者</code>的反馈情况决定是否可以继续执行事务的<code>PreCommit</code>阶段。</p>
+<p>有两种反馈情况：</p>
+<p>一、所有的参与者都反馈yes响应，那么就会执行事务的<code>PreCommit</code>阶段。</p>
+<ol>
+<li><strong>发送预提交请求：</strong> 协调者向参与者发送<code>PreCommit</code>请求，并进入Prepared阶段。</li>
+<li><strong>预提交事务：</strong> 参与者收到PreCommit请求后，会执行事务操作，并将undo和redo信息记录到事务日志中 <strong>（但不提交事务）</strong> 。</li>
+<li><strong>响应反馈：</strong> 如果参与者都成功了执行事务操作，则返回ack响应，同时开始等待最终命令。</li>
+</ol>
+<p>二、加入有任何一个参与者反馈no响应，或者等待超时之后，协调者也没收到参与者的反馈，那么就执行事务中断。</p>
+<ol>
+<li><strong>发送中断请求：</strong> 协调者向所有参与者发送abort请求。</li>
+<li><strong>中断事务：</strong> 参与者收到协调者发送的abort请求后（或者超时后，仍未收到协调者的请求），开始执行事务的中断。</li>
+</ol>
+<h5 id="DoCommit阶段"><a href="#DoCommit阶段" class="headerlink" title="DoCommit阶段"></a><font style="color:rgb(37, 41, 51);">DoCommit阶段</font></h5><p>该阶段进行真正的事务提交，可以分为如下两种情况：</p>
+<p><strong>一、执行事务提交：协调者收到所有参与者的ack信息，开始执行提交事务。</strong></p>
+<ol>
+<li>发送DoCommit请求：协调者收到参与者发送的ack响应后，那么就会从<code>预提交状态</code>进入到<code>提交状态</code>，并向所有的参与者发送DoCommit请求。</li>
+<li>事务提交：参与者接收到协调者发送的DoCommit请求，开始执行事务提交操作，并在完成事务操作后释放所有的事务资源。</li>
+<li>响应反馈：事务提交完成后，参与者向协调者发送ack信息。</li>
+<li>事务完成：协调者受到所有参与者的ack信息后，完成事务。</li>
+</ol>
+<p><strong>二、中断事务：协调者没能收到所有参与者的ack信息，开始执行中断事务。</strong></p>
+<ol>
+<li>发送中断请求：协调者性所有的参与者发送abort请求。</li>
+<li>事务回滚：参与者收到abort请求后，开始利用阶段2中记录的undo log执行事务的回滚操作，并在完成回滚后，释放所有的事务资源。</li>
+<li>响应反馈：参与者完成事务回滚后，向协调者发送ack信息。</li>
+<li>中断事务：协调者受到所有参与者的ack信息后，执行事务中断。</li>
+</ol>
+<p>在进入DoCommit阶段是，如果协调者或者参与者出现问题，导致参与者无法接收到协调者发出的<code>提交事务/中断事务</code>请求，此时，参与者都会在等待超时之后，继续执行事务提交。这是基于概率来决定，当进入第三阶段时，说明第一阶段，所有的参与者都同意进行修改操作，同时在第二阶段，所有的参与者都统一同意PreCommit操作。所以，如果在第三阶段，如果出现网络问题，虽然参与者没有收到commit&#x2F;abort请求，但是它有理由相信：成功提交的几率很大。</p>
+<p><font style="color:rgb(37, 41, 51);">3PC的优缺点</font></p>
+<p><font style="color:rgb(37, 41, 51);">与2PC相比，3PC降低了阻塞范围，并且在等待超时后，协调者或者参与者中断事务，避免了协调者单点问题，阶段3中协调者出现问题时，参与者会继续提交事务，可能造成数据不一致。</font></p>
+<p><strong><font style="color:rgb(37, 41, 51);">2PC和3PC都无法保证数据绝对的一致性，一般为预防这种问题，可以提交一个告警。</font></strong></p>
+<h3 id="TCC"><a href="#TCC" class="headerlink" title="TCC"></a><font style="color:rgb(77, 77, 77);">TCC</font></h3><p><strong><font style="color:rgb(37, 41, 51);">TCC：</font></strong><font style="color:rgb(37, 41, 51);"> </font><font style="color:rgb(37, 41, 51);">TCC（Try Confirm Cancel）是应用层的两阶段提交，所以对业务有侵入。</font></p>
+<p><strong><font style="color:rgb(37, 41, 51);">核心思想：</font></strong><font style="color:rgb(37, 41, 51);"> 针对每个操作，都要实现对应的</font><code>&lt;font style=&quot;color:rgb(255, 80, 44);background-color:rgb(255, 245, 245);&quot;&gt;确认&lt;/font&gt;</code><font style="color:rgb(37, 41, 51);">和</font><code>&lt;font style=&quot;color:rgb(255, 80, 44);background-color:rgb(255, 245, 245);&quot;&gt;补偿&lt;/font&gt;</code><font style="color:rgb(37, 41, 51);">操作，也就是业务逻辑的每个分支，都要实现Try、Confirm、Cancel三个操作。</font></p>
+<h4 id="TCC的执行流程"><a href="#TCC的执行流程" class="headerlink" title="TCC的执行流程"></a><font style="color:rgb(37, 41, 51);">TCC的执行流程</font></h4><p>TCC的执行过程可以分成两个阶段：</p>
+<ol>
+<li><strong>第一阶段：</strong> Try。该阶段，通过try操作做检测并预留资源。（比如：下单，在try阶段，并不是真正的扣减库存，只是把下单的库存进行锁定。）</li>
+<li><strong>第二阶段：</strong> Confirm&#x2F;Cancel。根据第一阶段的结果决定是执行confirm还是cancel。<ol>
+<li>Confirm：对Try阶段锁定的资源实际扣除。</li>
+<li>Cancel：对Try阶段锁定的资源进行释放。</li>
+</ol>
+</li>
+</ol>
+<h4 id="TCC是如何保证最终一致性"><a href="#TCC是如何保证最终一致性" class="headerlink" title="TCC是如何保证最终一致性"></a><font style="color:rgb(37, 41, 51);">TCC是如何保证最终一致性</font></h4><ul>
+<li>TCC是以Try为中心的，Confirm操作和Cancel操作都是围绕着Try展开的。所以在Try阶段保障性是最好的，即使出现失败，也可以通过Cancel操作将其执行结果撤销。</li>
+<li>在Try阶段执行成功，并进入到Confirm阶段时，默认Confirm阶段是不会出错的，也就是说只要Try成功，Confirm一定成功（TCC设计之初的定义）。</li>
+<li>Confirm和Cancel如果失败，则由TCC框架进行重试补偿（定时）。</li>
+<li>但仍存在极低情况下在<strong>CC</strong>阶段彻底失败，则需要人工介入。</li>
+</ul>
+<h4 id="TCC的注意事项"><a href="#TCC的注意事项" class="headerlink" title=" TCC的注意事项"></a><font style="color:rgb(37, 41, 51);"> TCC的注意事项</font></h4><h5 id="1-允许空回滚："><a href="#1-允许空回滚：" class="headerlink" title="(1) 允许空回滚："></a>(1) 允许空回滚：</h5><p>空回滚的原因是Try阶段超时或者丢包，导致TCC二阶段进行回滚，触发Cancel操作，此时事务参与者可能可能未收到Try操作，但是收到了Cancel操作。</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1727681701463-5db96149-aabe-4002-aa6b-496cb9967df8.webp"></p>
+<p>所以，Cancel操作在实现的时候需要允许空回滚，即在Cancel执行时，如果没有查到对应业务的Try操作时，也是需要返回成功，让事务管理器认为已回滚。</p>
+<h5 id="2-防悬挂控制："><a href="#2-防悬挂控制：" class="headerlink" title="(2) 防悬挂控制："></a>(2) 防悬挂控制：</h5><p><strong>悬挂</strong>是指二阶段的Cancel比一阶段的Try操作先执行，出现该问题的原因是Try阶段由于网络拥堵而超时，导致事务管理器生成回滚，触发Cancel操作，但之后拥堵网络的Try又被资源管理器收到了，但是Cancel操作比Try操作先到。如果按照前面允许空回滚的逻辑，回滚是会成功，事务管理器认为回滚成功，所以，此时应该<code>拒绝</code>空回滚之后的Try操作，否则会产生数据不一致。</p>
+<p>因此，我们在Cancel空回滚返回成功之前，应记录该条事务xid或者业务主键，标识该记录已经回滚过，Try操作在执行前先检查这条事务xid或者业务主键是否标记为回滚成功，如果是，则不执行Try操作。</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1727681701424-9de15540-02c8-47b1-9359-05020686875c.webp"></p>
+<h5 id="3-幂等控制"><a href="#3-幂等控制" class="headerlink" title="(3) 幂等控制"></a>(3) 幂等控制</h5><p>由于网络原因或者重试操作都有可能导致Try - Confirm - Cancel三个操作重复执行，所以使用TCC时需要注意这三个操作的幂等控制。通常针对具体业务选择对应的<code>业务幂等键</code>来做防重控制。</p>
+<h4 id="TCC方案的优缺点"><a href="#TCC方案的优缺点" class="headerlink" title="TCC方案的优缺点"></a><font style="color:rgb(37, 41, 51);">TCC方案的优缺点</font></h4><h6 id="TCC事务机制相比上面的2PC3PC事务机制，有如下优点："><a href="#TCC事务机制相比上面的2PC3PC事务机制，有如下优点：" class="headerlink" title="TCC事务机制相比上面的2PC3PC事务机制，有如下优点："></a>TCC事务机制相比上面的2PC3PC事务机制，有如下优点：</h6><ol>
+<li>性能提升：具体业务实现，控制资源锁的粒度变小，不会锁定整个资源。</li>
+<li>数据最终一致性：基于Confirm和Cancel操作的幂等性，确保事务最终完成或者取消，保证了数据一致性。</li>
+<li>可靠性：解决了XA协议的协调者单点故障问题。由主业务发起并控制整个业务活动，业务活动管理器可以变成多点，引入集群。</li>
+</ol>
+<h6 id="缺点："><a href="#缺点：" class="headerlink" title="缺点："></a>缺点：</h6><p>TCC的Try - Confirm - Cancel操作功能需要按具体业务实现，业务耦合度高，提高了开发成功。</p>
+<h3 id="本地事务表"><a href="#本地事务表" class="headerlink" title="本地事务表"></a>本地事务表</h3><h4 id="什么是本地消息表"><a href="#什么是本地消息表" class="headerlink" title="什么是本地消息表"></a><font style="color:rgb(37, 41, 51);">什么是本地消息表</font></h4><p><strong>本地事务表</strong>的核心思路是将**<code>分布式事务</code><strong>拆分</strong><code>**成本地事务**</code><strong>进行处理，该方案中主要有两个角色：</strong><code>事务主动方</code><strong>和</strong><code>事务被动方</code>**。<br>**<code>事务主动方</code><strong>需要额外新建事务消息表，并在本地事务中完成业务处理和记录事务消息，并轮训事务消息表的数据发哦那个事务消息，</strong><code>事务被动方</code>**基于消息中间件消费事务消息表中的事务。</p>
+<p>这样可以避免一下两种情况导致的数据不一致性：</p>
+<ul>
+<li>业务处理成功，事务消息发送失败。</li>
+<li>业务处理失败，事务消息发送成功。</li>
+</ul>
+<h4 id="本地事务表的执行流程"><a href="#本地事务表的执行流程" class="headerlink" title="本地事务表的执行流程"></a><font style="color:rgb(37, 41, 51);">本地事务表的执行流程</font></h4><p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1727682899971-9cb09696-10ea-493b-998e-11ccc9a0eecf.webp"></p>
+<ul>
+<li>事务主动方在同一个本地事务中处理业务和写消息表操作。</li>
+<li>事务主动方通过消息中间件发送消息，通知事务被动发处理事务消息。</li>
+<li>事务被动方接收到消息后，处理业务逻辑。</li>
+<li>事务被动方通过消息中间件发送消息，通知事务主动方事务已处理。</li>
+<li>事务主动方接收到消息后，更新消息表的状态为已处理。</li>
+</ul>
+<h5 id="一些必要的容错处理如下"><a href="#一些必要的容错处理如下" class="headerlink" title="一些必要的容错处理如下"></a><font style="color:rgb(37, 41, 51);">一些必要的容错处理如下</font></h5><ul>
+<li>当①处理出错，由于事务还在事务主动方的本地事务中，直接回滚即可。</li>
+<li>当②、④、⑤处理出错，由于事务主动方本地保存了消息，只需要轮询消息重新通过消息中间件发送，通知事务被动方重新读取消息处理业务即可。</li>
+<li>当③业务上处理失败，事务被动方可以发送消息给事务主动方回滚事务。</li>
+</ul>
+<h4 id="本地消息表优缺点"><a href="#本地消息表优缺点" class="headerlink" title="本地消息表优缺点"></a><font style="color:rgb(37, 41, 51);">本地消息表优缺点</font></h4><h5 id="1-优点："><a href="#1-优点：" class="headerlink" title="1) 优点："></a>1) 优点：</h5><ul>
+<li>由于写消息表和业务数据在同一个本地事务中处理，确保了消息数据的可靠性，消息数据可靠性不依赖于消息中间件，弱化了对MQ中间件特性的依赖。</li>
+<li>方案轻量，容易实现。</li>
+</ul>
+<h5 id="2-缺点："><a href="#2-缺点：" class="headerlink" title="2) 缺点："></a>2) 缺点：</h5><ul>
+<li>与具体业务场景绑定，耦合性强，不可公用。</li>
+<li>消息数据和业务数据同库，占用业务系统资源。</li>
+<li>由于需要将消息持久化到数据库中，消息服务性能会受到一定的影响。</li>
+</ul>
+<h3 id="事务消息"><a href="#事务消息" class="headerlink" title="事务消息"></a><font style="color:rgb(37, 41, 51);">事务消息</font></h3><h4 id="MQ事务消息执行流程"><a href="#MQ事务消息执行流程" class="headerlink" title="MQ事务消息执行流程"></a><font style="color:rgb(37, 41, 51);">MQ事务消息执行流程</font></h4><p>通过消息的异步事务，可以保证<code>本地事务</code>和<code>消息发送</code>同时执行成功或失败，既能实现系统间的解耦，又能保证数据的最终一致性。</p>
+<p><code>本地消息表</code>方案中，<code>事务主动方</code>通过在<code>同一个本地事务</code>中写<code>业务数据</code>和<code>消息数据</code>来保证数据的一致性。而事务消息相对于普通的MQ提供了<code>2PC</code>的提交接口，流程如下：</p>
+<h5 id="1-正常执行情况"><a href="#1-正常执行情况" class="headerlink" title="1) 正常执行情况"></a><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1727683362207-58fe821c-381b-4aca-9f6e-d05b6833fbbf.webp">1) 正常执行情况</h5><p>在事务主动方服务正常，没有发生故障的情况下，发消息流程如下：</p>
+<ul>
+<li>步骤①：发送Half消息</li>
+<li>步骤②：Half消息发送成功</li>
+<li>步骤③：开始执行本地事务</li>
+<li>步骤④：根据本地事务执行结果向MQ Server发送Commit&#x2F;Rollback。</li>
+<li>最终步骤：MQ Server基于Commit&#x2F;Rollback进行消息投递或者删除。</li>
+</ul>
+<h5 id="2-异常情况"><a href="#2-异常情况" class="headerlink" title="2) 异常情况"></a>2) 异常情况</h5><p>在断网或者应用重启情况下，图中的步骤④Commit或者Rollback未到达MQ Server，此时处理逻辑如下：</p>
+<ul>
+<li>步骤⑤：MQ Server未收到二次确认消息，发起消息回查。</li>
+<li>步骤⑥：收到消息回查后，需要检查对应消息的本地事务执行状态。</li>
+<li>步骤⑦：根据检查的本地事务执行状态，再次向MQ发送Commit&#x2F;Rollback。</li>
+<li>最终步骤：MQ Server基于Commit&#x2F;Rollback进行消息投递或者删除</li>
+</ul>
+<h4 id="MQ事务消息的优缺点"><a href="#MQ事务消息的优缺点" class="headerlink" title="MQ事务消息的优缺点"></a>MQ事务消息的优缺点</h4><h5 id="1-优点（-相较于本地消息表-）"><a href="#1-优点（-相较于本地消息表-）" class="headerlink" title="1) 优点（ 相较于本地消息表 ）"></a>1) 优点（ 相较于本地消息表 ）</h5><ul>
+<li>消息数据独立存储，降低业务系统与消息系统的耦合性。</li>
+<li>吞吐量有所提升。</li>
+</ul>
+<h5 id="2-缺点"><a href="#2-缺点" class="headerlink" title="2) 缺点"></a>2) 缺点</h5><ul>
+<li>一次消息发送需要两次网络请求（Half消息+Commit&#x2F;Rollback）。</li>
+<li>业务处理服务需要实现消息状态回查接口。</li>
+</ul>
+<h4 id="最大努力通知"><a href="#最大努力通知" class="headerlink" title="最大努力通知"></a>最大努力通知</h4><p>最大努力通知也称为定期校对，是对MQ事务方案的进一步优化。它在事务主动方增加了消息校对接口，如果事务被动方没有接收到主动方发送的消息，此时可以调用事务主动方提供的消息校对接口<code>主动获取</code>。</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/webp/25873401/1727683362353-4ab255e2-2fa1-4673-a0cf-aac6358c75d5.webp"> 在可靠事务消息中，事务主动方需要将消息发送出去，并且让接收方成功接收消息，这种可靠性是由事务主动方保证的。</p>
+<p>但是最大努力通知，事务主动方仅仅是做到尽最大努力（重试，轮询…）将信息发送给事务被动方，所以存在事务被动方接收不到信息的情况，所以需要事务被动发通过消息校对接口主动查询获取消息并消费，这种通知的可靠性是由事务被动方保证的。</p>
+<p><strong>适用场景：</strong></p>
+<p>适用于业务通知类型，如支付宝&#x2F;微信交易的结果，就是通过最大努力通知方式通知商户，既有回调通知，也有交易查询接口。</p>
+<h3 id="分布式事务中间件Seata"><a href="#分布式事务中间件Seata" class="headerlink" title="分布式事务中间件Seata"></a>分布式事务中间件Seata</h3><h4 id="初识Seata"><a href="#初识Seata" class="headerlink" title="初识Seata"></a><font style="color:rgb(79, 79, 79);">初识Seata</font></h4><p><font style="color:rgb(77, 77, 77);">Seata是 2019 年 1 月份蚂蚁金服和阿里巴巴共同开源的</font><a href="https://so.csdn.net/so/search?q=%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88&spm=1001.2101.3001.7020"><font style="color:rgb(77, 77, 77);">分布式事务解决方案</font></a><font style="color:rgb(77, 77, 77);">。致力于提供高性能和简单易用的分布式事务服务，为用户打造一站式的分布式解决方案。</font></p>
+<p><font style="color:rgb(77, 77, 77);">官网地址：</font><a href="http://seata.io/">http://seata.io/</a><font style="color:rgb(77, 77, 77);">，其中的文档、播客中提供了大量的使用说明、源码分析。</font></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1727683681068-3113ed0f-ef7b-438f-8112-1e6af770a110.png"></p>
+<p><font style="color:rgb(77, 77, 77);"></font></p>
+<h4 id="Seata的架构"><a href="#Seata的架构" class="headerlink" title="Seata的架构"></a><font style="color:rgb(79, 79, 79);">Seata的架构</font></h4><p>Seata事务管理中有三个重要的角色：</p>
+<ul>
+<li>TC (Transaction Coordinator) - <strong>事务协调者：</strong>维护全局和分支事务的状态，协调全局事务提交或回滚。</li>
+<li>TM (Transaction Manager) - <strong>事务管理器：</strong>定义全局事务的范围、开始全局事务、提交或回滚全局事务。</li>
+<li>RM (Resource Manager) - <strong>资源管理器：</strong>管理分支事务处理的资源，与TC交谈以注册分支事务和报告分支事务的状态，并驱动分支事务提交或回滚。</li>
+</ul>
+<p>整体的架构如图：</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1727683745367-07fb02a0-a23e-463f-940c-cf4d4ad22024.png"></p>
+<p>Seata基于上述架构提供了四种不同的分布式事务解决方案：</p>
+<ul>
+<li>XA模式：强一致性分阶段事务模式，牺牲了一定的可用性，无业务侵入</li>
+<li>TCC模式：最终一致的分阶段事务模式，有业务侵入</li>
+<li>AT模式：最终一致的分阶段事务模式，无业务侵入，也是Seata的默认模式</li>
+<li>SAGA模式：长事务模式，有业务侵入</li>
+</ul>
+<p>:::info<br>无论哪种方案，都离不开TC，也就是事务的协调者。</p>
+<p>:::</p>
+<p>这里XA模式可以理解为2PC或者3PC</p>
+<p>TCC模式：上面已经讲过 </p>
+<p>SAGA模式<font style="color:rgb(77, 77, 77);">和tcc很想,但是TCC操作的是冻结的预留数据,这个是直接操作数据</font></p>
+<p>但是我们主要需要学习的是AT模式</p>
+<h4 id="AT模式"><a href="#AT模式" class="headerlink" title="AT模式"></a>AT模式</h4><p><font style="color:rgb(77, 77, 77);">AT模式同样是分阶段提交的事务模型，不过缺弥补了XA模型中资源锁定周期过长的缺陷。</font></p>
+<h5 id="Seata的AT模型"><a href="#Seata的AT模型" class="headerlink" title="Seata的AT模型"></a><font style="color:rgb(79, 79, 79);">Seata的AT模型</font></h5><p><font style="color:rgb(77, 77, 77);">基本流程图：</font></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1727685192520-38d73085-a173-4ffb-ad7d-36010bf6b7a1.png"></p>
+<h6 id="阶段一RM的工作："><a href="#阶段一RM的工作：" class="headerlink" title="阶段一RM的工作："></a><font style="color:rgb(77, 77, 77);">阶段一RM的工作：</font></h6><ul>
+<li><font style="color:rgba(0, 0, 0, 0.75);">注册分支事务</font></li>
+<li><font style="color:rgba(0, 0, 0, 0.75);">记录undo-log（数据快照）</font></li>
+<li><font style="color:rgba(0, 0, 0, 0.75);">执行业务sql并提交</font></li>
+<li><font style="color:rgba(0, 0, 0, 0.75);">报告事务状态</font></li>
+</ul>
+<h6 id="阶段二提交时RM的工作："><a href="#阶段二提交时RM的工作：" class="headerlink" title="阶段二提交时RM的工作："></a><font style="color:rgb(77, 77, 77);">阶段二提交时RM的工作：</font></h6><ul>
+<li><font style="color:rgba(0, 0, 0, 0.75);">删除undo-log即可</font></li>
+</ul>
+<h6 id="阶段二回滚时RM的工作："><a href="#阶段二回滚时RM的工作：" class="headerlink" title="阶段二回滚时RM的工作："></a><font style="color:rgb(77, 77, 77);">阶段二回滚时RM的工作：</font></h6><ul>
+<li><font style="color:rgba(0, 0, 0, 0.75);">根据undo-log恢复数据到更新前</font></li>
+</ul>
+<p>:::info<br><font style="color:rgb(85, 86, 102);">事务执行成功 删除快照 事务执行失败 同一回复到快照</font></p>
+<p>:::</p>
+<h5 id="流程梳理"><a href="#流程梳理" class="headerlink" title="流程梳理"></a><font style="color:rgb(79, 79, 79);">流程梳理</font></h5><p><font style="color:rgb(77, 77, 77);">我们用一个真实的业务来梳理下AT模式的原理。</font></p>
+<p><font style="color:rgb(77, 77, 77);">比如，现在又一个数据库表，记录用户余额：</font></p>
+<table>
+<thead>
+<tr>
+<th><strong><font style="color:rgb(79, 79, 79);">id</font></strong></th>
+<th><strong><font style="color:rgb(79, 79, 79);">money</font></strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><font style="color:rgb(79, 79, 79);">1</font></td>
+<td><font style="color:rgb(79, 79, 79);">100</font></td>
+</tr>
+</tbody></table>
+<p><font style="color:rgb(77, 77, 77);">其中一个分支业务要执行的SQL为：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">update tb_account set money = money - 10 where id = 1</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(77, 77, 77);">AT模式下，当前分支事务执行流程如下：</font></p>
+<p><font style="color:rgb(77, 77, 77);">一阶段：</font></p>
+<p><font style="color:rgb(77, 77, 77);">1）TM发起并注册全局事务到TC</font></p>
+<p><font style="color:rgb(77, 77, 77);">2）TM调用分支事务</font></p>
+<p><font style="color:rgb(77, 77, 77);">3）分支事务准备执行业务SQL</font></p>
+<p><font style="color:rgb(77, 77, 77);">4）RM拦截业务SQL，根据where条件查询原始数据，形成快照。</font></p>
+<p><font style="color:rgb(77, 77, 77);">5）RM执行业务SQL，提交本地事务，释放数据库锁。此时</font><font style="color:rgb(77, 77, 77);"> </font><code>&lt;font style=&quot;color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);&quot;&gt;money = 90&lt;/font&gt;</code></p>
+<p><font style="color:rgb(77, 77, 77);">6）RM报告本地事务状态给TC</font></p>
+<p><font style="color:rgb(77, 77, 77);">二阶段：</font></p>
+<p><font style="color:rgb(77, 77, 77);">1）TM通知TC事务结束</font></p>
+<p><font style="color:rgb(77, 77, 77);">2）TC检查分支事务状态</font></p>
+<p><font style="color:rgb(77, 77, 77);">a）如果都成功，则立即删除快照</font></p>
+<p><font style="color:rgb(77, 77, 77);">b）如果有分支事务失败，需要回滚。读取快照数据（</font><code>&lt;font style=&quot;color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);&quot;&gt;&#123;&quot;id&quot;: 1, &quot;money&quot;: 100&#125;&lt;/font&gt;</code><font style="color:rgb(77, 77, 77);">），将快照恢复到数据库。此时数据库再次恢复为100</font></p>
+<p><font style="color:rgb(77, 77, 77);">流程图：</font></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1727685541924-773c552b-0b8a-411f-aebd-c538347de620.png"></p>
+<h5 id="AT与XA的区别"><a href="#AT与XA的区别" class="headerlink" title="AT与XA的区别"></a><font style="color:rgb(79, 79, 79);">AT与XA的区别</font></h5><p><font style="color:rgb(77, 77, 77);">简述AT模式与XA模式最大的区别是什么？</font></p>
+<ul>
+<li><font style="color:rgba(0, 0, 0, 0.75);">XA模式一阶段不提交事务，锁定资源；AT模式一阶段直接提交，不锁定资源。</font></li>
+<li><font style="color:rgba(0, 0, 0, 0.75);">XA模式依赖数据库机制实现回滚；AT模式利用数据快照实现数据回滚。</font></li>
+<li><font style="color:rgba(0, 0, 0, 0.75);">XA模式强一致；AT模式最终一致 中间状态是软提交</font></li>
+</ul>
+<h5 id="脏写问题"><a href="#脏写问题" class="headerlink" title="脏写问题"></a><font style="color:rgb(79, 79, 79);">脏写问题</font></h5><p>在多线程并发访问AT模式的分布式事务时，有可能出现脏写问题，如图：</p>
+<p>假如多个线程操作同一事务,其中一个线程先拿到数据锁执行完sql 提交事务以后释放锁,另一个线程就能拿到锁在进行一次sql执行,并且线程一刚好完at模式中有个事务失败需要回滚,这个时候数据就脏写了</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1727685613699-c21e200f-32a7-47e9-a759-5cc24175eaa1.png"></p>
+<p>解决思路就是引入了全局锁的概念。</p>
+<p>在释放DB锁之前，先拿到全局锁。避免同一时刻有另外一个事务来操作当前数据。</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1727685625629-d0eb8311-bbe7-4762-809c-a3752dde5983.png"></p>
+<h5 id="优缺点"><a href="#优缺点" class="headerlink" title="优缺点"></a><font style="color:rgb(79, 79, 79);">优缺点</font></h5><p><font style="color:rgb(77, 77, 77);">AT模式的优点：</font></p>
+<ul>
+<li><font style="color:rgba(0, 0, 0, 0.75);">一阶段完成直接提交事务,释放数据库资源，性能比较好</font></li>
+<li><font style="color:rgba(0, 0, 0, 0.75);">利用全局锁实现读写隔离</font></li>
+<li><font style="color:rgba(0, 0, 0, 0.75);">没有代码侵入，框架自动完成回滚和提交</font></li>
+</ul>
+<p><font style="color:rgb(77, 77, 77);">AT模式的缺点：</font></p>
+<ul>
+<li><font style="color:rgba(0, 0, 0, 0.75);">两阶段之间属于软状态，属于最终一致</font></li>
+<li><font style="color:rgba(0, 0, 0, 0.75);">框架的快照功能会影响性能，但比XA模式要好很多</font></li>
+</ul>
+<p>:::info<br><font style="color:rgb(85, 86, 102);">XA事务的强一致性是通过事务等待来实现的,分支事务等待所有事务完成才能进行提交,提交后才能释放锁sql锁,对性能一致处于消耗,AT模式是直接先进性提交 然后释放sql锁,最后靠全局锁来实现防止脏数据,且回复靠快照,无序等待事务链中所有数据</font></p>
+<p>:::</p>
+<h2 id="小结："><a href="#小结：" class="headerlink" title="小结："></a>小结：</h2><p>在现实的架构设计中分布式事务，我们一般会本地事务表和seata结合使用，本地事务表来实现最终一致性，用来实现可以允许一定程度的不一致，但是最终结果一致的业务，比如涉及到第三方的支付，开票，优惠结算等。seata我们一般使用AT来实现一些要求强一致性的业务，比如下单库存扣减之类的场景。在实际的开发中我们应该尽量避免使用事务，因为涉及到第三方系统的可用性隐患+1，而且数据覆写需要尽量避免掉</p>
+<p><font style="color:rgb(79, 79, 79);"></font></p>
+]]></content>
+      <categories>
+        <category>分布式</category>
+      </categories>
+      <tags>
+        <tag>微服务</tag>
+        <tag>分布式</tag>
+        <tag>事务</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>微服务中的SpringCloudGateway如何传递用户信息</title>
+    <url>/2024/10/11/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B8%AD%E7%9A%84SpringCloudGateway%E5%A6%82%E4%BD%95%E4%BC%A0%E9%80%92%E7%94%A8%E6%88%B7%E4%BF%A1%E6%81%AF/</url>
+    <content><![CDATA[<p>我们在权限验证中提到了在网关中会通过缓存取出用户数据。当我们获取到用户信息后应该怎么传递下去，有两种方案：</p>
+<p>一种是通过redis对数据进行存储，在不同的服务中通过同一个redis进行调用。</p>
+<p>第二种：在SpringCloudGateway中将数据取出后放入请求头，然后通过请求头进行传输</p>
+<span id="more"></span>
+<p>第一种方案的弊端很明显，需要多次的进行redis链接，增加了redis的负担，也增加了系统的不稳定性</p>
+<p>所以我们这次的实现以第二种方法为主</p>
+<p> 代码实现：</p>
+<p>网关处获取到用户信息，通过定义header头信息将用户信息进行传递</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">String loginUserKey  = String.format(&quot;%S%S&quot;, SecurityConstants.USER_KEY, token);</span><br><span class="line">      if (distributedCache.hasKey(loginUserKey)) &#123;</span><br><span class="line">          LoginUser loginUser= distributedCache.get(loginUserKey, LoginUser.class);</span><br><span class="line">          if (loginUser != null)&#123;</span><br><span class="line">              addHeader(mutate, SecurityConstants.USER_ID_HEADER, loginUser.getUserId(),false);</span><br><span class="line">              addHeader(mutate, SecurityConstants.USER_NAME_HEADER, loginUser.getUserName(),false);</span><br><span class="line">          &#125;</span><br><span class="line">      &#125;</span><br></pre></td></tr></table></figure>
+
+<p>在服务中我们通过拦截器对请求进行拦截，通过拦截器来实现header头文件中的用户信息捕捉</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">public class UserTokenHandlerInterceptor implements HandlerInterceptor &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception &#123;</span><br><span class="line">        String userId = request.getHeader(SecurityConstants.USER_ID_HEADER);</span><br><span class="line">        String userName = request.getHeader(SecurityConstants.USER_NAME_HEADER);</span><br><span class="line">        RequestHeaderContextHolder.getInstance().setCurrentUser(userId, userName);</span><br><span class="line">        return true;</span><br><span class="line">    &#125;</span><br><span class="line">    @Override</span><br><span class="line">    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception &#123;</span><br><span class="line">        RequestHeaderContextHolder.getInstance().clear();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在spring中注册拦截器</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">public class WebMvcConfigurerAdaptor implements WebMvcConfigurer &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void addInterceptors(InterceptorRegistry registry) &#123;</span><br><span class="line">        registry.addInterceptor(new UserTokenHandlerInterceptor());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>这样我们就可以在服务中获取到用户信息</p>
+<p>小结：</p>
+<p>本文主要讲的spingcloud gateway中实现健权后如何将用户信息进行传递，通过拦截器以及网关传递轻松的实现了用户身份的传递</p>
+]]></content>
+      <categories>
+        <category>从零搭建一个脚手架</category>
+      </categories>
+      <tags>
+        <tag>微服务</tag>
+        <tag>SpringCloudGateway</tag>
+        <tag>脚手架</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>OpenFeign调用时如何传递传递Token并且多线程环境也能适用</title>
+    <url>/2024/10/19/%E8%87%AA%E5%AE%9A%E4%B9%89%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1/</url>
+    <content><![CDATA[<h2 id="为什么要自定义负载均衡"><a href="#为什么要自定义负载均衡" class="headerlink" title="为什么要自定义负载均衡"></a>为什么要自定义负载均衡</h2><p>在实际的开发中总是会遇到如下的场景：A,B两个成员一起开发，A在开发C服务，B在开发D服务，测试环境中也部署有C服务和D服务，A和B的诉求是不互相干扰对方。但是实际中nacos中注册了服务之后默认的负载策略是根据权重来决定访问哪个服务，当权重一致时就是各50%的访问，很容易就对其他成员造成干扰，所以我们需要一个自定义负载均衡器来做一个分流。</p>
+<h2 id="负载均衡的实现"><a href="#负载均衡的实现" class="headerlink" title="负载均衡的实现"></a>负载均衡的实现</h2><p>在springcloud的解决方案中负载均衡器使用的LoadBalancer框架，我们需要实现ReactorServiceInstanceLoadBalancer接口来完成自定义负载均衡。所以我们的思路就是在网关中进行打标，然后通过自定义负载均衡器来确定具体调用的服务。</p>
+<span id="more"></span>
+<h3 id="网关处理打标"><a href="#网关处理打标" class="headerlink" title="网关处理打标"></a>网关处理打标</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">@Component</span><br><span class="line">@Slf4j</span><br><span class="line">public class LoadBalancerFilter  implements GlobalFilter, Ordered &#123;</span><br><span class="line">    @Resource</span><br><span class="line">    private PomeloLoadBalancerProperties pomeloLoadBalancerProperties;</span><br><span class="line">    @Override</span><br><span class="line">    public Mono&lt;Void&gt; filter(ServerWebExchange exchange, GatewayFilterChain chain) &#123;</span><br><span class="line">        ServerHttpRequest request = exchange.getRequest();</span><br><span class="line">        ServerHttpRequest.Builder mutate = request.mutate();</span><br><span class="line">        //灰度标识分两种情况，1.通过header传过来，2.通过url传过来</span><br><span class="line">        String gray = request.getHeaders().getFirst(&quot;gray&quot;);</span><br><span class="line">        if (StrUtil.isNotEmpty(gray)) &#123;</span><br><span class="line">            HeaderUtils.addHeader(mutate, pomeloLoadBalancerProperties.getHeader(), gray, true);</span><br><span class="line">            return chain.filter(exchange.mutate().request(mutate.build()).build());</span><br><span class="line">        &#125;</span><br><span class="line">        String grayUrl = request.getQueryParams().getFirst(&quot;gray&quot;);</span><br><span class="line">        if (StrUtil.isNotEmpty(grayUrl)) &#123;</span><br><span class="line">            HeaderUtils.addHeader(mutate, pomeloLoadBalancerProperties.getHeader(), grayUrl, true);</span><br><span class="line">            return chain.filter(exchange.mutate().request(mutate.build()).build());</span><br><span class="line">        &#125;</span><br><span class="line">        return chain.filter(exchange);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int getOrder() &#123;</span><br><span class="line">        return 0;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="自定义负载均衡处理器"><a href="#自定义负载均衡处理器" class="headerlink" title="自定义负载均衡处理器"></a>自定义负载均衡处理器</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">public class PomeloLoadBalancer implements ReactorServiceInstanceLoadBalancer &#123;</span><br><span class="line">    private static final Logger log = LoggerFactory.getLogger(PomeloLoadBalancer.class);</span><br><span class="line">    @Resource</span><br><span class="line">    private PomeloLoadBalancerProperties pomeloLoadBalancerProperties;</span><br><span class="line"></span><br><span class="line">    private final ObjectProvider&lt;ServiceInstanceListSupplier&gt; serviceInstanceListSupplierProvider;</span><br><span class="line">    private final String serviceId;</span><br><span class="line"></span><br><span class="line">    private final AtomicInteger position;</span><br><span class="line"></span><br><span class="line">    public PomeloLoadBalancer(ObjectProvider&lt;ServiceInstanceListSupplier&gt; serviceInstanceListSupplierProvider</span><br><span class="line">            , String serviceId,PomeloLoadBalancerProperties pomeloLoadBalancerProperties) &#123;</span><br><span class="line">        this(serviceInstanceListSupplierProvider,serviceId,new Random().nextInt(1000),pomeloLoadBalancerProperties);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public PomeloLoadBalancer(ObjectProvider&lt;ServiceInstanceListSupplier&gt; serviceInstanceListSupplierProvider,</span><br><span class="line">                              String serviceId, int seedPosition,</span><br><span class="line">                              PomeloLoadBalancerProperties pomeloLoadBalancerProperties) &#123;</span><br><span class="line">        this.serviceId = serviceId;</span><br><span class="line">        this.serviceInstanceListSupplierProvider = serviceInstanceListSupplierProvider;</span><br><span class="line">        this.position = new AtomicInteger(seedPosition);</span><br><span class="line">        this.pomeloLoadBalancerProperties = pomeloLoadBalancerProperties;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public Mono&lt;Response&lt;ServiceInstance&gt;&gt; choose(Request request) &#123;</span><br><span class="line">        ServiceInstanceListSupplier supplier = this.serviceInstanceListSupplierProvider</span><br><span class="line">                .getIfAvailable(NoopServiceInstanceListSupplier::new);</span><br><span class="line">        return supplier.get(request).next()</span><br><span class="line">                .map(serviceInstances -&gt; processInstanceResponse(serviceInstances,request));</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 灰度处理</span><br><span class="line">     * @param instances</span><br><span class="line">     * @param request</span><br><span class="line">     * @return</span><br><span class="line">     */</span><br><span class="line">    private Response&lt;ServiceInstance&gt; processInstanceResponse(List&lt;ServiceInstance&gt; instances, Request request) &#123;</span><br><span class="line">        if (instances.isEmpty()) &#123;</span><br><span class="line">            return new EmptyResponse();</span><br><span class="line">        &#125;</span><br><span class="line">        DefaultRequestContext requestContext = (DefaultRequestContext) request.getContext();</span><br><span class="line">        RequestData clientRequest = (RequestData) requestContext.getClientRequest();</span><br><span class="line">        HttpHeaders headers = clientRequest.getHeaders();</span><br><span class="line">        // get Request Header</span><br><span class="line">        String reqVersion = headers.getFirst(pomeloLoadBalancerProperties.getHeader());</span><br><span class="line"></span><br><span class="line">        List&lt;ServiceInstance&gt; normalServiceInstances = instances.stream()</span><br><span class="line">                .filter(instance -&gt; !instance.getMetadata().containsKey(pomeloLoadBalancerProperties.getHeader()))</span><br><span class="line">                .collect(Collectors.toList());</span><br><span class="line">        log.debug(&quot;X-Pomelo-LoadBalancer:&#123;&#125;&quot;,reqVersion);</span><br><span class="line">        if (!StrUtil.isEmpty(reqVersion)) &#123;</span><br><span class="line">            // filter service instances</span><br><span class="line">            List&lt;ServiceInstance&gt; gsServiceInstances = instances.stream()</span><br><span class="line">                    .filter(instance -&gt; reqVersion.equals(instance.getMetadata().get(pomeloLoadBalancerProperties.getHeader())))</span><br><span class="line">                    .collect(Collectors.toList());</span><br><span class="line"></span><br><span class="line">            if (gsServiceInstances.size() &gt; 0) &#123;</span><br><span class="line">                return processRibbonInstanceResponse(gsServiceInstances);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        return processRibbonInstanceResponse(normalServiceInstances);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 负载均衡器</span><br><span class="line">     * 参考 org.springframework.cloud.loadbalancer.core.RoundRobinLoadBalancer#getInstanceResponse</span><br><span class="line">     */</span><br><span class="line">    private Response&lt;ServiceInstance&gt; processRibbonInstanceResponse(List&lt;ServiceInstance&gt; instances) &#123;</span><br><span class="line">        int pos = Math.abs(this.position.incrementAndGet());</span><br><span class="line">        ServiceInstance instance = instances.get(pos % instances.size());</span><br><span class="line">        return new DefaultResponse(instance);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+]]></content>
+      <categories>
+        <category>从零搭建一个脚手架</category>
+      </categories>
+      <tags>
+        <tag>微服务</tag>
+        <tag>nacos</tag>
+        <tag>脚手架</tag>
+        <tag>负载均衡</tag>
+      </tags>
+  </entry>
 </search>
