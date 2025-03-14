@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8335634399768246"
+     crossorigin="anonymous"></script>
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="1 性能调优概述">
+<meta property="og:type" content="article">
+<meta property="og:title" content="06 实例调优篇">
+<meta property="og:url" content="http://example.com/2023/09/06/06%20%E5%AE%9E%E4%BE%8B%E8%B0%83%E4%BC%98%E7%AF%87/index.html">
+<meta property="og:site_name" content="进学阁">
+<meta property="og:description" content="1 性能调优概述">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2021/jpeg/696107/1635307181489-e5d72ecf-945b-4eda-a491-afe9e200494e.jpeg">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1634999750807-1a52170b-b398-402d-9b00-63d1752186ce.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1634898452396-e7cf37eb-2fb5-4ccf-881b-33317c139bbf.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1634898386873-e23de004-0ecc-46b5-955f-a7f279f55df5.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635083738562-54419b26-a795-42bc-b41f-2b43d084508c.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635084360784-8e254919-d0a1-4b5d-8c73-dd33bf584252.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635084396207-150cd821-fe8b-495e-a3f2-7dcfd65c4348.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635084453297-4018dee9-bc81-4c99-acbd-b09f78d57da5.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635084618556-3c7f1d2b-d20b-40a4-9743-6681deaffc07.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635084689392-7ab386ff-879b-4852-a1c9-a33ec439ee99.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635085295430-030669de-7b39-4e47-a3ee-b4b33815b9c5.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635085560524-f0ad9f94-6ac2-45a7-b916-97d6d68dc70e.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635085625512-f26410dc-ccd2-45c9-8e4e-e3eee579be4b.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635085719276-d49bf91e-90f2-443d-81df-ae8d02239ddb.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635085936580-39f4250b-00df-41e0-a5c9-69ef00be82a2.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635086380520-bf11f044-b056-45b3-b18b-c7815253ae44.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635086513583-de94a555-c2a1-4c68-af45-fa57158ac729.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635242283711-819bce0e-38b8-449d-87a6-1e605344eabd.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635242692874-ee70d990-5802-406c-af92-25664366f7bf.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635242679411-3d5ec6c2-605c-4ae3-a82a-8e512ce104df.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635242920699-4dcc7206-75ef-4047-be94-783d5d4d73d2.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635246775708-b045139a-ee8e-434f-b070-98b5b5552a0d.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635233820516-1249f9d4-7192-4be4-bdbd-3d1d8cb3e806.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635229943704-57fc0495-5221-4d16-9af6-5f5b18e35e4d.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635237230786-e3f669b3-0628-4555-8338-065531dab790.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635230507192-94241673-8bfd-49f5-9d5e-ed4fb82bae25.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635172702411-2de5e111-94a4-4c98-80ba-1397de1cc296.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635172766875-529846b7-da9c-4ddb-9932-2a2878d3fad4.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635322268593-10c24be2-1d1b-49d1-8095-dcc5890afa84.png">
+<meta property="article:published_time" content="2023-09-06T13:17:22.000Z">
+<meta property="article:modified_time" content="2025-03-14T09:45:14.232Z">
+<meta property="article:author" content="139">
+<meta property="article:tag" content="jvm">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.fbbizyy.com/yuque/0/2021/jpeg/696107/1635307181489-e5d72ecf-945b-4eda-a491-afe9e200494e.jpeg">
+
+<link rel="canonical" href="http://example.com/2023/09/06/06%20%E5%AE%9E%E4%BE%8B%E8%B0%83%E4%BC%98%E7%AF%87/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>06 实例调优篇 | 进学阁</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">进学阁</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">业精于勤荒于嬉，行成于思毁于随</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">39</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">13</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">96</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/09/06/06%20%E5%AE%9E%E4%BE%8B%E8%B0%83%E4%BC%98%E7%AF%87/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          06 实例调优篇
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-09-06 21:17:22" itemprop="dateCreated datePublished" datetime="2023-09-06T21:17:22+08:00">2023-09-06</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-14 17:45:14" itemprop="dateModified" datetime="2025-03-14T17:45:14+08:00">2025-03-14</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/JVM%E4%B8%8B%E7%AF%87%EF%BC%9A%E6%80%A7%E8%83%BD%E7%9B%91%E6%8E%A7%E4%B8%8E%E8%B0%83%E4%BC%98%E7%AF%87/" itemprop="url" rel="index"><span itemprop="name">JVM下篇：性能监控与调优篇</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="1-性能调优概述"><a href="#1-性能调优概述" class="headerlink" title="1 性能调优概述"></a>1 性能调优概述</h1><p><img src="https://cdn.fbbizyy.com/yuque/0/2021/jpeg/696107/1635307181489-e5d72ecf-945b-4eda-a491-afe9e200494e.jpeg" alt="画板"></p>
+<span id="more"></span>
+<h1 id="2-OOM案例"><a href="#2-OOM案例" class="headerlink" title="2 OOM案例"></a>2 OOM案例</h1><h2 id="2-1-情况一：堆溢出（Java-heap-space）"><a href="#2-1-情况一：堆溢出（Java-heap-space）" class="headerlink" title="2.1 情况一：堆溢出（Java heap space）"></a>2.1 情况一：堆溢出（Java heap space）</h2><h3 id="代码与JVM参数设置"><a href="#代码与JVM参数设置" class="headerlink" title="代码与JVM参数设置"></a>代码与JVM参数设置</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">###<span class="number">1.0</span> 代码 ###</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">    ArrayList&lt;Student&gt; lists = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line">    <span class="keyword">while</span> (<span class="literal">true</span>)&#123;</span><br><span class="line">        lists.add(<span class="keyword">new</span> <span class="title class_">Student</span>());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">###<span class="number">2.0</span> JVM参数配置 ###</span><br><span class="line">-XX:+PrintGCDetails -XX:MetaspaceSize=64m -XX:+HeapDumpOnOutOfMemoryError  -XX:HeapDumpPath=heap/heapdump.hprof -XX:+PrintGCDateStamps -Xms200M  -Xmx200M  -Xloggc:log/gc-oomHeap.log</span><br><span class="line"></span><br><span class="line">###<span class="number">3.0</span> 堆溢出 ###</span><br><span class="line">Exception in thread <span class="string">&quot;main&quot;</span> java.lang.OutOfMemoryError: Java heap space</span><br><span class="line">	at java.util.Arrays.copyOf(Arrays.java:<span class="number">3210</span>)</span><br><span class="line">	at java.util.Arrays.copyOf(Arrays.java:<span class="number">3181</span>)</span><br><span class="line">	at java.util.ArrayList.grow(ArrayList.java:<span class="number">267</span>)</span><br><span class="line">	at java.util.ArrayList.ensureExplicitCapacity(ArrayList.java:<span class="number">241</span>)</span><br><span class="line">	at java.util.ArrayList.ensureCapacityInternal(ArrayList.java:<span class="number">233</span>)</span><br><span class="line">	at java.util.ArrayList.add(ArrayList.java:<span class="number">464</span>)</span><br><span class="line">	at Index.main(Index.java:<span class="number">13</span>)</span><br><span class="line"> </span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1634999750807-1a52170b-b398-402d-9b00-63d1752186ce.png"></p>
+<h3 id="原因与解决方案"><a href="#原因与解决方案" class="headerlink" title="原因与解决方案"></a>原因与解决方案</h3><blockquote>
+<p><strong>原因</strong></p>
+</blockquote>
+<ol>
+<li>代码中可能存在大对象分配 </li>
+<li>可能存在内存泄漏，导致在多次GC之后，还是无法找到一块足够大的内存容纳当前对象。** **</li>
+</ol>
+<blockquote>
+<p><strong>解决方案</strong></p>
+</blockquote>
+<ol>
+<li>检查是否存在大对象的分配，最有可能的是大数组分配</li>
+<li>通过jmap命令，把堆内存dump下来，使用MAT等工具分析一下，检查是否存在内存泄漏的问题</li>
+<li>如果没有找到明显的内存泄漏，使用 -Xmx 加大堆内存 </li>
+<li>还有一点容易被忽略，检查是否有大量的自定义的 Finalizable 对象，也有可能是框架内部提供的，考虑其存在的必要性</li>
+</ol>
+<h3 id="dump文件分析过程"><a href="#dump文件分析过程" class="headerlink" title="dump文件分析过程"></a>dump文件分析过程</h3><blockquote>
+<p>JVisualVM分析</p>
+</blockquote>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1634898452396-e7cf37eb-2fb5-4ccf-881b-33317c139bbf.png"></p>
+<blockquote>
+<p>MAT分析</p>
+</blockquote>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1634898386873-e23de004-0ecc-46b5-955f-a7f279f55df5.png"></p>
+<h2 id="2-2-情况二：元空间溢出"><a href="#2-2-情况二：元空间溢出" class="headerlink" title="2.2 情况二：元空间溢出"></a>2.2 情况二：元空间溢出</h2><h3 id="代码与JVM参数设置-1"><a href="#代码与JVM参数设置-1" class="headerlink" title="代码与JVM参数设置"></a>代码与JVM参数设置</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">###<span class="number">1.0</span> ###</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">Init</span><span class="params">()</span>&#123;</span><br><span class="line">        <span class="type">ClassLoadingMXBean</span> <span class="variable">classLoadingMXBean</span> <span class="operator">=</span> ManagementFactory.getClassLoadingMXBean();</span><br><span class="line">        <span class="keyword">while</span> (<span class="literal">true</span>)&#123;</span><br><span class="line">            <span class="type">Enhancer</span> <span class="variable">enhancer</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Enhancer</span>();</span><br><span class="line">            enhancer.setSuperclass(People.class);</span><br><span class="line">            <span class="comment">//如果使用的是缓存则不会方法区溢出</span></span><br><span class="line">            enhancer.setUseCache(<span class="literal">false</span>);</span><br><span class="line">            <span class="comment">//enhancer.setUseCache(true);</span></span><br><span class="line">            enhancer.setCallback((MethodInterceptor) (o, method, objects, methodProxy) -&gt; &#123;</span><br><span class="line">                System.out.println(<span class="string">&quot;我是加强类，输出print之前的加强方法&quot;</span>);</span><br><span class="line">                <span class="keyword">return</span> methodProxy.invokeSuper(o,objects);</span><br><span class="line">            &#125;);</span><br><span class="line">            <span class="type">People</span> <span class="variable">people</span> <span class="operator">=</span> (People)enhancer.create();</span><br><span class="line">            System.out.println(people.getClass());</span><br><span class="line">            System.out.println(<span class="string">&quot;totalClass:&quot;</span> + classLoadingMXBean.getTotalLoadedClassCount());</span><br><span class="line">            System.out.println(<span class="string">&quot;activeClass:&quot;</span> + classLoadingMXBean.getLoadedClassCount());</span><br><span class="line">            System.out.println(<span class="string">&quot;unloadedClass:&quot;</span> + classLoadingMXBean.getUnloadedClassCount());</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br><span class="line">###<span class="number">2.0</span> JVM参数设置 ###</span><br><span class="line">-XX:+PrintGCDetails </span><br><span class="line">-XX:MetaspaceSize=60m </span><br><span class="line">-XX:MaxMetaspaceSize=60m </span><br><span class="line">-Xss512K </span><br><span class="line">-XX:+HeapDumpOnOutOfMemoryError </span><br><span class="line">-XX:HeapDumpPath=heap/heapdumpMeta.hprof  </span><br><span class="line">-XX:SurvivorRatio=<span class="number">8</span> </span><br><span class="line">-XX:+TraceClassLoading </span><br><span class="line">-XX:+TraceClassUnloading </span><br><span class="line">-XX:+PrintGCDateStamps  </span><br><span class="line">-Xms60M  </span><br><span class="line">-Xmx60M </span><br><span class="line">-Xloggc:log/gc-oomMeta.log</span><br><span class="line"></span><br><span class="line">###<span class="number">3.0</span> 错误信息 ###</span><br><span class="line">Exception in thread <span class="string">&quot;http-nio-8083-exec-6&quot;</span> java.lang.OutOfMemoryError: Metaspace</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635083738562-54419b26-a795-42bc-b41f-2b43d084508c.png"></p>
+<h3 id="原因与解决方案-1"><a href="#原因与解决方案-1" class="headerlink" title="原因与解决方案"></a>原因与解决方案</h3><blockquote>
+<p><strong>原因</strong></p>
+</blockquote>
+<ol>
+<li>运行期间生成了大量的代理类，导致方法区被撑爆，无法卸载</li>
+<li>应用长时间运行，没有重启</li>
+<li>元空间内存设置过小</li>
+</ol>
+<blockquote>
+<p><strong>解决方案</strong></p>
+</blockquote>
+<ol>
+<li>检查是否永久代空间或者元空间设置的过小</li>
+<li>检查代码中是否存在大量的反射操作</li>
+<li>dump之后通过mat检查是否存在大量由于反射生成的代理类并进行对应的代码优化</li>
+</ol>
+<blockquote>
+<p>每次是不是可以只加载一个代理类即可，因为我们的需求其实是没有必要如此加载的，所以如上的代码可以这样改：</p>
+<p>enhancer.setUseCache(true);选择为true的话，使用和更新一类具有相同属性生成的类的静态缓存(即使用缓存)，而不会在同一个类文件还继续被动态加载并视为不同的类，这个其实跟类的equals()和hashCode()有关，它们是与cglib内部的class cache的key相关的</p>
+</blockquote>
+<h3 id="详细的分析步骤"><a href="#详细的分析步骤" class="headerlink" title="详细的分析步骤"></a>详细的分析步骤</h3><h4 id="查看监控"><a href="#查看监控" class="headerlink" title="查看监控"></a>查看监控</h4><p><img src="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635084360784-8e254919-d0a1-4b5d-8c73-dd33bf584252.png"></p>
+<h4 id="查看GC状态"><a href="#查看GC状态" class="headerlink" title="查看GC状态"></a>查看GC状态</h4><p><img src="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635084396207-150cd821-fe8b-495e-a3f2-7dcfd65c4348.png"></p>
+<h4 id="查看GC日志"><a href="#查看GC日志" class="headerlink" title="查看GC日志"></a>查看GC日志</h4><p><img src="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635084453297-4018dee9-bc81-4c99-acbd-b09f78d57da5.png"></p>
+<h4 id="分析dump文件"><a href="#分析dump文件" class="headerlink" title="分析dump文件"></a>分析dump文件</h4><blockquote>
+<p><strong>JVisualVM分析</strong></p>
+</blockquote>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635084618556-3c7f1d2b-d20b-40a4-9743-6681deaffc07.png"></p>
+<blockquote>
+<p>MAT分析</p>
+</blockquote>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635084689392-7ab386ff-879b-4852-a1c9-a33ec439ee99.png"></p>
+<h2 id="2-3-情况三：GC-overhead-limit-exceeded"><a href="#2-3-情况三：GC-overhead-limit-exceeded" class="headerlink" title="2.3 情况三：GC overhead limit exceeded"></a>2.3 情况三：GC overhead limit exceeded</h2><h3 id="代码与JVM参数设置-2"><a href="#代码与JVM参数设置-2" class="headerlink" title="代码与JVM参数设置"></a>代码与JVM参数设置</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">###<span class="number">1.0</span> 代码 ###</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">test1</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line">        List&lt;String&gt; list = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">while</span> (<span class="literal">true</span>) &#123;</span><br><span class="line">                list.add(UUID.randomUUID().toString());</span><br><span class="line">                i++;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Throwable e) &#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;************i: &quot;</span> + i);</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">            <span class="keyword">throw</span> e;</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br><span class="line">###<span class="number">2.0</span> JVM参数</span><br><span class="line">-XX:+PrintGCDetails  -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=heap/dumpExceeded.hprof -XX:+PrintGCDateStamps  -Xms10M  -Xmx10M -Xloggc:log/gc-oomExceeded.log</span><br><span class="line">###<span class="number">3.0</span> 错误信息 ###</span><br><span class="line">java.lang.OutOfMemoryError: GC overhead limit exceeded</span><br><span class="line">	at java.lang.String.substring(String.java:<span class="number">1933</span>) ~[na:<span class="number">1.8</span><span class="number">.0_282</span>]</span><br><span class="line">	at java.util.UUID.digits(UUID.java:<span class="number">386</span>) ~[na:<span class="number">1.8</span><span class="number">.0_282</span>]</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635085295430-030669de-7b39-4e47-a3ee-b4b33815b9c5.png"></p>
+<h3 id="原因及解决方案分析"><a href="#原因及解决方案分析" class="headerlink" title="原因及解决方案分析"></a>原因及解决方案分析</h3><blockquote>
+<p><strong>原因</strong></p>
+</blockquote>
+<p>这个是JDK6新加的错误类型，一般都是堆太小导致的。Sun 官方对此的定义：超过98%的时间用来做GC并且回收了不到2%的堆内存时会抛出此异常。本质是一个预判性的异常，抛出该异常时系统没有真正的内存溢出。</p>
+<blockquote>
+<p><strong>解决方案</strong></p>
+</blockquote>
+<ol>
+<li>检查项目中是否有大量的死循环或有使用大内存的代码，优化代码。</li>
+<li>添加参数 <code>-XX:-UseGCOverheadLimit</code> 禁用这个检查，其实这个参数解决不了内存问题，只是把错误的信息延后，最终出现 java.lang.OutOfMemoryError: Java heap space。</li>
+<li>dump内存，检查是否存在内存泄漏，如果没有，加大内存。</li>
+</ol>
+<h3 id="详细的分析步骤-1"><a href="#详细的分析步骤-1" class="headerlink" title="详细的分析步骤"></a>详细的分析步骤</h3><h4 id="定位问题代码"><a href="#定位问题代码" class="headerlink" title="定位问题代码"></a>定位问题代码</h4><blockquote>
+<p>JVisualVM分析</p>
+</blockquote>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635085560524-f0ad9f94-6ac2-45a7-b916-97d6d68dc70e.png"></p>
+<blockquote>
+<p>MAT分析</p>
+</blockquote>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635085625512-f26410dc-ccd2-45c9-8e4e-e3eee579be4b.png"></p>
+<h4 id="分析dump文件直方图"><a href="#分析dump文件直方图" class="headerlink" title="分析dump文件直方图"></a>分析dump文件直方图</h4><p><img src="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635085719276-d49bf91e-90f2-443d-81df-ae8d02239ddb.png"></p>
+<h2 id="2-4-情况四：线程溢出"><a href="#2-4-情况四：线程溢出" class="headerlink" title="2.4 情况四：线程溢出"></a>2.4 情况四：线程溢出</h2><h3 id="代码与错误描述"><a href="#代码与错误描述" class="headerlink" title="代码与错误描述"></a>代码与错误描述</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">###<span class="number">1.0</span> 参数设置 ###</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">TestNativeOutOfMemoryError</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; ; i++) &#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;i = &quot;</span> + i);</span><br><span class="line">            <span class="keyword">new</span> <span class="title class_">Thread</span>(<span class="keyword">new</span> <span class="title class_">HoldThread</span>()).start();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">HoldThread</span> <span class="keyword">extends</span> <span class="title class_">Thread</span> &#123;</span><br><span class="line">    <span class="type">CountDownLatch</span> <span class="variable">cdl</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">CountDownLatch</span>(<span class="number">1</span>);</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">run</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            cdl.await();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">###<span class="number">2.0</span> 错误描述</span><br><span class="line">Exception in thread <span class="string">&quot;main&quot;</span> java.lang.OutOfMemoryError: unable to create <span class="keyword">new</span> <span class="title class_">native</span> thread</span><br><span class="line">        at java.lang.Thread.start0(Native Method)</span><br><span class="line">        at java.lang.Thread.start(Thread.java:<span class="number">717</span>)</span><br><span class="line">        at TestNativeOutOfMemoryError.main(TestNativeOutOfMemoryError.java:<span class="number">9</span>)</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635085936580-39f4250b-00df-41e0-a5c9-69ef00be82a2.png"></p>
+<h3 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h3><ol>
+<li><p><strong>通过 -Xss 设置每个线程栈大小的容量</strong></p>
+<p> <img src="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635086380520-bf11f044-b056-45b3-b18b-c7815253ae44.png"></p>
+</li>
+<li><p><strong>在生产环境下如果需要更多的线程数量，建议使用64位操作系统，如果必须使用32位操作系统，可以通过调整Xss的大小来控制线程数量。</strong></p>
+</li>
+<li><p><strong>线程总数也受到系统空闲内存和操作系统的限制，检查是否该系统下有此限制</strong></p>
+</li>
+</ol>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635086513583-de94a555-c2a1-4c68-af45-fa57158ac729.png"></p>
+<h1 id="3-性能优化案例"><a href="#3-性能优化案例" class="headerlink" title="3 性能优化案例"></a>3 性能优化案例</h1><h2 id="3-1-内存：合理分配堆内存"><a href="#3-1-内存：合理分配堆内存" class="headerlink" title="3.1 内存：合理分配堆内存"></a>3.1 内存：合理分配堆内存</h2><h3 id="3-1-1-官方推荐配置"><a href="#3-1-1-官方推荐配置" class="headerlink" title="3.1.1 官方推荐配置"></a>3.1.1 官方推荐配置</h3><p><strong>为什么要设置一个折中的堆内存空间？</strong></p>
+<p>如果内存过大，那么如果产生FullGC的时候，GC时间会相对比较长，如果内存较小，那么就会频繁的触发GC。</p>
+<p><strong>官方推荐配置</strong></p>
+<ol>
+<li><p>Java整个堆大小设置，Xmx 和 Xms设置为老年代存活对象的3-4倍，即FullGC之后的老年代内存占用的3-4倍。</p>
+<p> 年轻代Xmn的设置为老年代存活对象的1-1.5倍。</p>
+</li>
+</ol>
+<p>老年代的内存大小设置为老年代存活对象的2-3倍。</p>
+<ol start="2">
+<li>方法区（永久代 PermSize和MaxPermSize或元空间 MetaspaceSize 和 MaxMetaspaceSize）设置为老年代存活对象的1.2-1.5倍。</li>
+</ol>
+<p>但是，上面的说法也不是绝对的，也就是说这给的是一个参考值，根据多种调优之后得出的一个结论，大家可以根据这个值来设置一下我们的初始化内存，在保证程序正常运行的情况下，我们还要去查看GC的回收率，GC停顿耗时，内存里的实际数据来判断，Full GC是基本上不能有的，如果有就要做内存Dump分析，然后再去做一个合理的内存分配。</p>
+<h3 id="3-1-2-如何计算老年代存活对象"><a href="#3-1-2-如何计算老年代存活对象" class="headerlink" title="3.1.2 如何计算老年代存活对象"></a>3.1.2 如何计算老年代存活对象</h3><h4 id="方式一（推荐）：查看GC日志"><a href="#方式一（推荐）：查看GC日志" class="headerlink" title="方式一（推荐）：查看GC日志"></a>方式一（推荐）：查看GC日志</h4><p>JVM参数中添加GC日志，GC日志中会记录每次FullGC之后各代的内存大小，观察老年代GC之后的空间大小。可观察一段时间内（比如2天）的FullGC之后的内存情况，根据多次的FullGC之后的老年代的空间大小数据来预估FullGC之后老年代的存活对象大小（可根据多次FullGC之后的内存大小取平均值）。</p>
+<p>参考配置</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">export CATALINA_OPTS=<span class="string">&quot;$CATALINA_OPTS -XX:+UseParallelGC&quot;</span></span><br><span class="line">export CATALINA_OPTS=<span class="string">&quot;$CATALINA_OPTS -XX:+PrintGCDetails&quot;</span></span><br><span class="line">export CATALINA_OPTS=<span class="string">&quot;$CATALINA_OPTS -XX:+PrintGCDateStamps&quot;</span></span><br><span class="line">#将GC日志保存到文件里面##</span><br><span class="line">export CATALINA_OPTS=<span class="string">&quot;$CATALINA_OPTS -Xloggc:/opt/tomcat8.5/logs/gc.log&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="方式二：强制触发GC"><a href="#方式二：强制触发GC" class="headerlink" title="方式二：强制触发GC"></a>方式二：强制触发GC</h4><p>注：强制触发FullGC，会造成线上服务停顿（STW），要谨慎！建议的操作方式为：在强制FullGC前先把服务节点摘除，FullGC之后再将服务挂回可用节点，对外提供服务，在不同时间段触发FullGC，根据多次FullGC之后的老年代内存情况来预估FullGC之后的老年代存活对象大小。</p>
+<p><strong>如何强制触发GC</strong></p>
+<h3 id="服务器环境下"><a href="#服务器环境下" class="headerlink" title="服务器环境下"></a>服务器环境下</h3><ol>
+<li><code>jmap -dump:live,format=b,file=heap.bin &lt;pid&gt;</code> 将当前的存活对象dump到文件。此时会触发FullGC</li>
+<li><code>jmap -histo:live &lt;pid&gt;</code> 打印每个class的实例数目,内存占用,类全名信息.live子参数加上后,只统计活的对象数量。此时会触发FullGC</li>
+<li>在测试环境，可以通过Java监控工具来触发FullGC，比如使用VisualVM和JConsole，VisualVM集成了JConsole，VisualVM或者JConsole上面有一个触发GC的按钮。</li>
+</ol>
+<p>注：点击执行垃圾回收和堆dump按钮都会触发FullGC</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635242283711-819bce0e-38b8-449d-87a6-1e605344eabd.png"></p>
+<h4 id="触发了GC后如何查看老年代大小"><a href="#触发了GC后如何查看老年代大小" class="headerlink" title="触发了GC后如何查看老年代大小"></a>触发了GC后如何查看老年代大小</h4><ol>
+<li>使用<code>jmap -heap pid</code>查看大小</li>
+</ol>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635242692874-ee70d990-5802-406c-af92-25664366f7bf.png"></p>
+<ol start="2">
+<li>使用<code>jstat -gc pid</code>查看</li>
+</ol>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635242679411-3d5ec6c2-605c-4ae3-a82a-8e512ce104df.png"></p>
+<ol start="3">
+<li>直接查看GC日志</li>
+</ol>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635242920699-4dcc7206-75ef-4047-be94-783d5d4d73d2.png"></p>
+<ol start="4">
+<li>调整看下效果</li>
+</ol>
+<p><strong>配置案例</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">-XX:+PrintGCDetails </span><br><span class="line">-XX:MetaspaceSize=64m </span><br><span class="line">-Xss512K </span><br><span class="line">-XX:+HeapDumpOnOutOfMemoryError </span><br><span class="line">-XX:HeapDumpPath=heap/heapdump3.hprof  </span><br><span class="line">-XX:SurvivorRatio=<span class="number">8</span>  </span><br><span class="line">-XX:+PrintGCDateStamps  </span><br><span class="line">-Xms1024M  </span><br><span class="line">-Xmx1024M </span><br><span class="line">-Xloggc:log/gc-oom3.log</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-1-3-案例：调整堆空间大小后的优化效果"><a href="#3-1-3-案例：调整堆空间大小后的优化效果" class="headerlink" title="3.1.3 案例：调整堆空间大小后的优化效果"></a>3.1.3 案例：调整堆空间大小后的优化效果</h3><p><strong>tomcat优化前的配置信息</strong></p>
+<p>说明：生产环境下，Tomcat并不建议直接在catalina.sh里配置变量，而是写在与catalina同级目录（bin目录）下的setenv.sh里。setenv.sh文件中写入（大小根据自己情况修改）：setenv.sh内容如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">###<span class="number">1.0</span> 堆空间大小###</span><br><span class="line">export CATALINA_OPTS=<span class="string">&quot;$CATALINA_OPTS -Xms30m&quot;</span></span><br><span class="line">export CATALINA_OPTS=<span class="string">&quot;$CATALINA_OPTS -Xmx30m&quot;</span></span><br><span class="line">export CATALINA_OPTS=<span class="string">&quot;$CATALINA_OPTS -XX:SurvivorRatio=8&quot;</span></span><br><span class="line"></span><br><span class="line">###<span class="number">2.0</span> 元空间大小配置</span><br><span class="line">export CATALINA_OPTS=<span class="string">&quot;$CATALINA_OPTS -XX:MetaspaceSize=64m&quot;</span></span><br><span class="line">    </span><br><span class="line">###<span class="number">3.0</span> 垃圾回收器配置###</span><br><span class="line">export CATALINA_OPTS=<span class="string">&quot;$CATALINA_OPTS -XX:+UseParallelGC&quot;</span></span><br><span class="line">export CATALINA_OPTS=<span class="string">&quot;$CATALINA_OPTS -XX:+PrintGCDetails&quot;</span></span><br><span class="line">export CATALINA_OPTS=<span class="string">&quot;$CATALINA_OPTS -XX:+PrintGCDateStamps&quot;</span></span><br><span class="line">##打印GC日志##</span><br><span class="line">export CATALINA_OPTS=<span class="string">&quot;$CATALINA_OPTS -Xloggc:/opt/tomcat8.5/logs/gc.log&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>分析过程：查看日志</strong></p>
+<ol>
+<li>通过<code>jps</code>和<code>jstat -gc pid 1000 10</code>综合查看</li>
+<li>通过<code>-Xloggc:/opt/tomcat8.5/logs/gc.log</code>导出命令查看日志</li>
+<li>通过JVisualVM进行查看</li>
+</ol>
+<p><strong>优化后的配置</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">### 核心：增加初始化和最大内存 ###</span><br><span class="line">export CATALINA_OPTS=<span class="string">&quot;$CATALINA_OPTS -Xms120m&quot;</span></span><br><span class="line">export CATALINA_OPTS=<span class="string">&quot;$CATALINA_OPTS -Xmx120m&quot;</span></span><br><span class="line">export CATALINA_OPTS=<span class="string">&quot;$CATALINA_OPTS -XX:SurvivorRatio=8&quot;</span></span><br><span class="line"></span><br><span class="line">export CATALINA_OPTS=<span class="string">&quot;$CATALINA_OPTS -XX:MetaspaceSize=64m&quot;</span></span><br><span class="line">    </span><br><span class="line">export CATALINA_OPTS=<span class="string">&quot;$CATALINA_OPTS -XX:+UseParallelGC&quot;</span></span><br><span class="line">export CATALINA_OPTS=<span class="string">&quot;$CATALINA_OPTS -XX:+PrintGCDetails&quot;</span></span><br><span class="line">export CATALINA_OPTS=<span class="string">&quot;$CATALINA_OPTS -XX:+PrintGCDateStamps&quot;</span></span><br><span class="line">export CATALINA_OPTS=<span class="string">&quot;$CATALINA_OPTS -Xloggc:/opt/tomcat8.5/logs/gc.log&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>效果：可明显感知到，增大了初始化内存和最大内存之后，FullGC的次数有一个明显的减少。</p>
+<h2 id="3-3-内存：新生代和老年代的比例设置说明-UseAdaptiveSizePolicy-SurvivorRatio"><a href="#3-3-内存：新生代和老年代的比例设置说明-UseAdaptiveSizePolicy-SurvivorRatio" class="headerlink" title="3.3 内存：新生代和老年代的比例设置说明(UseAdaptiveSizePolicy|SurvivorRatio)"></a>3.3 内存：新生代和老年代的比例设置说明(UseAdaptiveSizePolicy|SurvivorRatio)</h2><h3 id="背景：使用默认的SurvivorRatio不生效"><a href="#背景：使用默认的SurvivorRatio不生效" class="headerlink" title="背景：使用默认的SurvivorRatio不生效"></a>背景：使用默认的SurvivorRatio不生效</h3><p>已知<code>-XX:SurvivorRatio</code>默认值为8，我们设置虚拟机为如下参数<code>-XX:+PrintGCDetails -XX:+PrintGCDateStamps  -Xms300M  -Xmx300M -Xloggc:log/gc.log</code>，通过查看<code>jmap -heap pid</code>发现，Eden和Survior并非是8：1：1的关系？</p>
+<h3 id="原因与实际推荐用法"><a href="#原因与实际推荐用法" class="headerlink" title="原因与实际推荐用法"></a>原因与实际推荐用法</h3><p>1、这是因为JDK 1.8 默认使用 UseParallelGC 垃圾回收器，该垃圾回收器默认启动了 AdaptiveSizePolicy，会根据GC的情况自动计算计算 Eden、From 和 To 区的大小；所以这是由于JDK1.8的自适应大小策略导致的，除此之外，我们下面观察GC日志发现有很多类似这样的FULLGC（Ergonomics），也是一样的原因。</p>
+<p>开启<code>-XX:+UseAdaptiveSizePolicy</code>关闭：<code> -XX:-UseAdaptiveSizePolicy</code></p>
+<p>2、在 JDK 1.8 中，如果使用 CMS，无论 UseAdaptiveSizePolicy 如何设置，都会将 UseAdaptiveSizePolicy 设置为 false；不过不同版本的JDK存在差异；</p>
+<p><strong>实际推荐用法</strong></p>
+<p>1、由于UseAdaptiveSizePolicy会动态调整 Eden、Survivor 的大小，有些情况存在Survivor 被自动调为很小，比如十几MB甚至几MB的可能，这个时候YGC回收掉 Eden区后，还存活的对象进入Survivor 装不下，就会直接晋升到老年代，导致老年代占用空间逐渐增加，从而触发FULL GC，如果一次FULL GC的耗时很长（比如到达几百毫秒），那么在要求高响应的系统就是不可取的。</p>
+<p><font style="background-color:#FADB14;">结论1：UseAdaptiveSizePolicy不要和SurvivorRatio参数显示设置搭配使用，一起使用会导致UseAdaptiveSizePolicy参数失效，即SurvivorRatio如果不启用，其就不会是默认的值8，如果启用了，其优先级高于UseAdaptiveSizePolicy</font></p>
+<p><font style="background-color:#FADB14;">结论2：对于面向外部的大流量、低延迟系统，不建议启用此参数，建议关闭该参数。即：</font><code>&lt;font style=&quot;background-color:#FADB14;&quot;&gt;XX:-UseAdaptiveSizePolicy&lt;/font&gt;</code></p>
+<p>2、如果不想动态调整内存大小，还有另外一个方法：保持使用 UseParallelGC，显式设置 <code>-XX:SurvivorRatio=8</code>，其也会达到关闭自动调整的目的</p>
+<p>需要注意的一点是：如果垃圾回收器使用的就是ParallelGC ，只要没有手动配置过 <code>-XX:SurvivorRatio=8</code>，即使这时候手动配置了<code>-XX:-UseAdaptiveSizePolicy</code>，那也不会按照8：1：1。同时只要手动配置了</p>
+<p><code>-XX:SurvivorRatio=8</code>，即使这时候又配置了<code>-XX:+UseAdaptiveSizePolicy</code>，那也是按照<code>-XX:SurvivorRatio=8</code>优先生效。</p>
+<p>配置<code>-XX:+PrintGCDateStamps -Xms300M -Xmx300M -XX:SurvivorRatio=4</code>其效果就是严格按照Eden和From、To区4：1：1分配的。</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635246775708-b045139a-ee8e-434f-b070-98b5b5552a0d.png"></p>
+<h2 id="3-3-内存飙高分析"><a href="#3-3-内存飙高分析" class="headerlink" title="3.3 内存飙高分析"></a>3.3 内存飙高分析</h2><p>系统内存飙高，如何查找问题？（面试高频）</p>
+<ol>
+<li>使用线上分析工具：jmap -heap查看堆情况 、jstat统计gc与类的信息、jinfo查看参数配置属性、第三方的分析工具Arthas</li>
+<li>使用线下分析工具：JVisualVM，MAT</li>
+<li>查看dump文件：导出堆存储dump分析，查看线程、类之间的关系</li>
+<li>查看GC文件：查看GC日志文件，FullGC次数等。</li>
+<li>角度：从堆的角度、GC垃圾回收器的角度。</li>
+</ol>
+<h2 id="3-4-CPU飙高分析"><a href="#3-4-CPU飙高分析" class="headerlink" title="3.4 CPU飙高分析"></a>3.4 CPU飙高分析</h2><h3 id="3-4-1-概述"><a href="#3-4-1-概述" class="headerlink" title="3.4.1 概述"></a>3.4.1 概述</h3><p>系统CPU经常100%，如何调优？（面试高频）</p>
+<p>CPU100%的话，一定是有线程占用系统资源。需要注意的是：工作中有时候是工作线程100%占用了CPU，还有可能是垃圾回收线程占用了100%。</p>
+<h3 id="3-4-2-演示代码"><a href="#3-4-2-演示代码" class="headerlink" title="3.4.2 演示代码"></a>3.4.2 演示代码</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//死锁产生类</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">DeadLockHelper</span> &#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 必须有两个可以被加锁的对象才能产生死锁，只有一个不会产生死锁问题</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">Object</span> <span class="variable">obj1</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Object</span>();</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">Object</span> <span class="variable">obj2</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Object</span>();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">testDeadlock</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="type">Thread</span> <span class="variable">t1</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Thread</span>(() -&gt; calLock_Obj1_First());</span><br><span class="line">        t1.setName(<span class="string">&quot;deadLock_01&quot;</span>);</span><br><span class="line">        <span class="type">Thread</span> <span class="variable">t2</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Thread</span>(() -&gt; calLock_Obj2_First());</span><br><span class="line">        t2.setName(<span class="string">&quot;deadLock_02&quot;</span>);</span><br><span class="line">        t1.start();</span><br><span class="line">        t2.start();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 先synchronized  obj1，再synchronized  obj2</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">calLock_Obj1_First</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">synchronized</span> (obj1) &#123;</span><br><span class="line">            sleep();</span><br><span class="line">            System.out.println(<span class="string">&quot;已经拿到obj1的对象锁，接下来等待obj2的对象锁&quot;</span>);</span><br><span class="line">            <span class="keyword">synchronized</span> (obj2) &#123;</span><br><span class="line">                sleep();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 先synchronized  obj2，再synchronized  obj1</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">calLock_Obj2_First</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">synchronized</span> (obj2) &#123;</span><br><span class="line">            sleep();</span><br><span class="line">            System.out.println(<span class="string">&quot;已经拿到obj2的对象锁，接下来等待obj1的对象锁&quot;</span>);</span><br><span class="line">            <span class="keyword">synchronized</span> (obj1) &#123;</span><br><span class="line">                sleep();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 为了便于让两个线程分别锁住其中一个对象，</span></span><br><span class="line"><span class="comment">     * 一个线程锁住obj1，然后一直等待obj2，</span></span><br><span class="line"><span class="comment">     * 另一个线程锁住obj2，然后一直等待obj1，</span></span><br><span class="line"><span class="comment">     * 然后就是一直等待，死锁产生</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">sleep</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            Thread.sleep(<span class="number">100</span>);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//调用</span></span><br><span class="line"><span class="meta">@RestController</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">HomeController</span> &#123;</span><br><span class="line">    <span class="meta">@RequestMapping(&quot;/home/sayhi&quot;)</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">sayHi</span><span class="params">()</span>&#123;</span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">DeadLockHelper</span>().testDeadlock();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-4-3-本地JVisualVM分析"><a href="#3-4-3-本地JVisualVM分析" class="headerlink" title="3.4.3 本地JVisualVM分析"></a>3.4.3 本地JVisualVM分析</h3><p>在执行的过程中，已经发现了CPU忽然骤升，提示<code>检测到死锁</code>此时通过查看线程-&gt;生成线程dump文件进行分析</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635233820516-1249f9d4-7192-4be4-bdbd-3d1d8cb3e806.png"></p>
+<h3 id="3-4-4-服务器远程在线分析"><a href="#3-4-4-服务器远程在线分析" class="headerlink" title="3.4.4 服务器远程在线分析"></a>3.4.4 服务器远程在线分析</h3><h4 id="步骤一：ps-aux得到进程pid（得到具体进程）"><a href="#步骤一：ps-aux得到进程pid（得到具体进程）" class="headerlink" title="步骤一：ps aux得到进程pid（得到具体进程）"></a>步骤一：<code>ps aux</code>得到进程pid（得到具体进程）</h4><p>已知CPU忽然骤升了，此时要得到具体是哪个进程出了问题</p>
+<p>方式一：显示CPU消耗排名前20的进程，索引为2的为CPU，为3的为内存占比</p>
+<p><code>ps -aux | sort -k3,3nr | head -20</code></p>
+<p>方式二：使用ps命令分析占比最高的CPU，排查下具体是哪个进程，Windows可直接使用任务管理器。查看到当前java进程使用cpu、内存、磁盘的情况获取使用量异常的进程。</p>
+<p><code>ps aux | grep java</code></p>
+<p>方式三：Java应用，也可直接使用jps -l得到具体的进程ID</p>
+<p><code>jps -l</code></p>
+<h4 id="步骤二：top-Hp-pid得到该进程下的异常线程nid（得到具体线程）"><a href="#步骤二：top-Hp-pid得到该进程下的异常线程nid（得到具体线程）" class="headerlink" title="步骤二：top -Hp pid得到该进程下的异常线程nid（得到具体线程）"></a>步骤二：<code>top -Hp pid</code>得到该进程下的异常线程nid（得到具体线程）</h4><p>备注：top命令可实时显示 process 的动态。shift+p 按cpu排序，shift+m 按内存排序</p>
+<p>由图可知，当前占用cpu比较高的线程 ID 是1465</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635229943704-57fc0495-5221-4d16-9af6-5f5b18e35e4d.png"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">扩展：top的使用</span><br><span class="line">Linux top命令用于实时显示 process 的动态。</span><br><span class="line"></span><br><span class="line">#案例一：显示进程号为139的进程信息，CPU、内存占用率等</span><br><span class="line">top -p 139</span><br><span class="line"></span><br><span class="line">#案例二：设置更新周期为3秒</span><br><span class="line">top -d 3</span><br></pre></td></tr></table></figure>
+
+<h4 id="步骤三：jstack-pid-grep-A20-tid排查具体日志信息（根据进程和线程得到具体日志）"><a href="#步骤三：jstack-pid-grep-A20-tid排查具体日志信息（根据进程和线程得到具体日志）" class="headerlink" title="步骤三：jstack pid | grep -A20 tid排查具体日志信息（根据进程和线程得到具体日志）"></a>步骤三：<code>jstack pid | grep -A20 tid</code>排查具体日志信息（根据进程和线程得到具体日志）</h4><p>方式一：使用<code>jstack pid | grep -A20 十六进制线程tid</code>在线排查</p>
+<p>先将上面得到的线程tid1456转成十六进制0x5b9，使用<code>jstack pid | grep -A20 0x5b9</code>其中-A20是显示20条代码，能看到具体的nid&#x3D;0x5b9的线程信息</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635237230786-e3f669b3-0628-4555-8338-065531dab790.png"></p>
+<p>方式二：将文件输出到当前目录下并命名为jstack.log，导出本地搜索</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635230507192-94241673-8bfd-49f5-9d5e-ed4fb82bae25.png"></p>
+<h2 id="3-5-垃圾回收器：根据业务场景选择合适的垃圾回收器"><a href="#3-5-垃圾回收器：根据业务场景选择合适的垃圾回收器" class="headerlink" title="3.5 垃圾回收器：根据业务场景选择合适的垃圾回收器"></a>3.5 垃圾回收器：根据业务场景选择合适的垃圾回收器</h2><h3 id="如何选择合适的垃圾回收器？"><a href="#如何选择合适的垃圾回收器？" class="headerlink" title="如何选择合适的垃圾回收器？"></a>如何选择合适的垃圾回收器？</h3><p>Java 垃圾收集器的配置对于 JVM 优化来说是一个很重要的选择，选择合适的垃圾收集器可以让 JVM 的性能有一个很大的提升。</p>
+<p>怎么选择垃圾收集器？</p>
+<ol>
+<li>优先调整堆的大小让 JVM 自适应完成。</li>
+<li>如果内存小于 100M，使用串行收集器</li>
+<li>如果是单核、单机程序，并且没有停顿时间的要求，串行收集器</li>
+<li>如果是多 CPU、需要高吞吐量、允许停顿时间超过 1 秒，选择并行或者 JVM 自己选择</li>
+<li>如果是多 CPU、追求低停顿时间，需快速响应（比如延迟不能超过 1 秒，如互联网应用），使用并发收集器<br>官方推荐 G1，性能高。现在互联网的项目，基本都是使用 G1。</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>组合</th>
+<th align="left"><strong>垃圾收集器</strong></th>
+<th align="left"><strong>分类</strong></th>
+<th align="left"><strong>作用位置</strong></th>
+<th align="left"><strong>使用算法</strong></th>
+<th align="left"><strong>特点</strong></th>
+<th align="left"><strong>适用场景</strong></th>
+<th><strong>历史</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>可组合<br/></td>
+<td align="left">Serial</td>
+<td align="left">串行运行</td>
+<td align="left">作用于新生代</td>
+<td align="left">复制算法</td>
+<td align="left">响应速度优先</td>
+<td align="left">适用于单 CPU 环境下的 client 模式</td>
+<td><font style="background-color:#FFFB8F;">JDK1.3 之前回收新生代唯一的选择。</font><br/><font style="background-color:#FFFB8F;">Serial 收集器作为 HotSpot 中 client 模式下的默认新生代垃圾收集器</font></td>
+</tr>
+<tr>
+<td></td>
+<td align="left">Serial Old</td>
+<td align="left">串行运行</td>
+<td align="left">作用于老年代</td>
+<td align="left">标记-压缩算法</td>
+<td align="left">响应速度优先</td>
+<td align="left">适用于单 CPU 环境下的 Client 模式</td>
+<td><font style="background-color:#FFFB8F;"></font></td>
+</tr>
+<tr>
+<td></td>
+<td align="left">ParNew</td>
+<td align="left">并行运行</td>
+<td align="left">作用于新生代</td>
+<td align="left">复制算法</td>
+<td align="left">响应速度优先</td>
+<td align="left">多 CPU 环境 Server 模式下与 CMS 配合使用</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td align="left">CMS</td>
+<td align="left">并发运行</td>
+<td align="left">作用于老年代</td>
+<td align="left">标记-清除算法</td>
+<td align="left">响应速度优先</td>
+<td align="left">适用于互联网或 B／S 业务</td>
+<td>JDK14 发布。删除 CMS 垃圾回收器</td>
+</tr>
+<tr>
+<td>可组合</td>
+<td align="left">Parallel</td>
+<td align="left">并行运行</td>
+<td align="left">作用于新生代</td>
+<td align="left">复制算法</td>
+<td align="left">吞吐量优先</td>
+<td align="left">适用于后台运算而不需要太多交互的场景</td>
+<td><font style="background-color:#FFFB8F;">Parallel GC 在 JDK6 之后成为 HotSpot 默认 GC</font><br/><font style="background-color:#FFFB8F;">JDK8默认组合就是使用Parallel GC+Parallel Old GC</font></td>
+</tr>
+<tr>
+<td></td>
+<td align="left">Parallel Old</td>
+<td align="left">并行运行</td>
+<td align="left">作用于老年代</td>
+<td align="left">标记-压缩算法</td>
+<td align="left">吞吐量优先</td>
+<td align="left">适用于后台运算而不需要太多交互的场景</td>
+<td></td>
+</tr>
+<tr>
+<td>全功能独立</td>
+<td align="left">G1</td>
+<td align="left">并发、并行运行</td>
+<td align="left">作用于新生代、老年代</td>
+<td align="left">标记-压缩算法、复制算法</td>
+<td align="left">响应速度优先</td>
+<td align="left">面向服务端应用</td>
+<td>JDK7开始引入<br/>JDK9 中 G1 变成默认的垃圾收集器，以替代 CMS</td>
+</tr>
+</tbody></table>
+<p>GC 发展阶段：Serial &#x3D;&gt; Parallel（并行）&#x3D;&gt; CMS（并发）&#x3D;&gt; G1 &#x3D;&gt; ZGC</p>
+<p>最后需要明确一个观点：</p>
+<ol>
+<li>没有最好的收集器，更没有万能的收集</li>
+<li>调优永远是针对特定场景、特定需求，不存在一劳永逸的收集器</li>
+</ol>
+<h3 id="G1垃圾回收器推荐使用"><a href="#G1垃圾回收器推荐使用" class="headerlink" title="G1垃圾回收器推荐使用"></a>G1垃圾回收器推荐使用</h3><p>年轻代大小</p>
+<ul>
+<li>避免使用<code>-Xmn</code>或<code>-XX:NewRatio</code>等相关选项显式设置年轻代大小</li>
+<li>固定年轻代的大小会覆盖暂停时间目标</li>
+</ul>
+<p>暂停时间目标不要太过严苛</p>
+<ul>
+<li>G1 GC 的吞吐量目标是 90%的应用程序时间和 10%的垃圾回收时间</li>
+<li>评估 G1 GC 的吞吐量时，暂停时间目标不要太严苛。目标太过严苛表示你愿意承受更多的垃圾回收开销，而这些会直接影响到吞吐量。</li>
+</ul>
+<h3 id="G1并发执行的线程对性能的影响"><a href="#G1并发执行的线程对性能的影响" class="headerlink" title="G1并发执行的线程对性能的影响"></a>G1并发执行的线程对性能的影响</h3><p>使用指南：G1垃圾收集器的并发标记的线程属性<code>-XX:ConcGCThreads</code>值的设置对于性能具有一定的影响，相对而言，其值增加会使平均响应时间和GC时间都有一个明显的减少了，从而吞吐量将会增大。</p>
+<p>使用G1作为垃圾回收器的JVM参考优化</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">export CATALINA_OPTS=<span class="string">&quot;$CATALINA_OPTS -XX:+UseG1GC&quot;</span></span><br><span class="line">export CATALINA_OPTS=<span class="string">&quot;$CATALINA_OPTS -Xms30m&quot;</span></span><br><span class="line">export CATALINA_OPTS=<span class="string">&quot;$CATALINA_OPTS -Xmx30m&quot;</span></span><br><span class="line">export CATALINA_OPTS=<span class="string">&quot;$CATALINA_OPTS -XX:+PrintGCDetails&quot;</span></span><br><span class="line">export CATALINA_OPTS=<span class="string">&quot;$CATALINA_OPTS -XX:MetaspaceSize=64m&quot;</span></span><br><span class="line">export CATALINA_OPTS=<span class="string">&quot;$CATALINA_OPTS -XX:+PrintGCDateStamps&quot;</span></span><br><span class="line">export CATALINA_OPTS=<span class="string">&quot;$CATALINA_OPTS -Xloggc:/opt/tomcat8.5/logs/gc.log&quot;</span></span><br><span class="line">###</span><br><span class="line">export CATALINA_OPTS=<span class="string">&quot;$CATALINA_OPTS -XX:ConcGCThreads=2&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>辅助参考：G1的JVM参数设置</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">-XX:+UseG1GC：手动指定使用 G1 垃圾收集器执行内存回收任务</span><br><span class="line">-XX:G1HeapRegionSize 设置每个 Region 的大小。值是 <span class="number">2</span> 的幂，范围是 1MB 到 32MB 之间，目标是根据最小的 Java 堆大小划分出约 <span class="number">2048</span> 个区域。默认是堆内存的 <span class="number">1</span>/<span class="number">2000</span>。</span><br><span class="line">-XX:MaxGCPauseMillis 设置期望达到的最大 GC 停顿时间指标（JVM 会尽力实现，但不保证达到）。默认值是 200ms（人的平均反应速度）</span><br><span class="line">-XX:+ParallelGCThread 设置 STW 工作线程数的值。最多设置为 <span class="number">8</span>（上面说过 Parallel 回收器的线程计算公式，当 CPU_Count &gt; <span class="number">8</span> 时，ParallelGCThreads 也会大于 <span class="number">8</span>）</span><br><span class="line">-XX:ConcGCThreads 设置并发标记的线程数。将 n 设置为并行垃圾回收线程数（ParallelGCThreads）的 <span class="number">1</span>/<span class="number">4</span> 左右。</span><br><span class="line">-XX:InitiatingHeapOccupancyPercent 设置触发并发 GC 周期的 Java 堆占用率阈值。超过此值，就触发 GC。默认值是 <span class="number">45</span>。</span><br></pre></td></tr></table></figure>
+
+<h2 id="3-6-JIT的优化"><a href="#3-6-JIT的优化" class="headerlink" title="3.6 JIT的优化"></a>3.6 JIT的优化</h2><p><code>说明：不对JIT进行优化不影响，因为默认开启了标量替换</code></p>
+<p>详见堆文档下面的内容：<a target="_blank" rel="noopener" href="https://www.yuque.com/zhuyufei-x9kmd/npm5bq/gd8hmk/edit#igic3">https://www.yuque.com/zhuyufei-x9kmd/npm5bq/gd8hmk/edit#igic3</a>堆是分配对象的唯一选择么？</p>
+<p><a target="_blank" rel="noopener" href="https://www.yuque.com/zhuyufei-x9kmd/npm5bq/f30535e3b2dbcdf43bc9181b0550d561">06 堆</a></p>
+<h3 id="堆，是分配对象的唯一选择吗？"><a href="#堆，是分配对象的唯一选择吗？" class="headerlink" title="堆，是分配对象的唯一选择吗？"></a>堆，是分配对象的唯一选择吗？</h3><p>阶段一：是</p>
+<p>JVM虚拟机对象就是分配在堆上的。尤其是JDK方法区从永久代变更为了元空间，intern字符串缓存和静态变量并不是被转移到元数据区，而是直接在堆上分配上，可以说吗堆就是分配对象的唯一选择。</p>
+<p>阶段二：不是</p>
+<p>在《深入理解Java虚拟机中》关于Java堆内存有这样一段描述：随着JIT编译期的发展与逃逸分析技术逐渐成熟，栈上分配、标量替换优化技术将会导致一些微妙的变化，所有的对象都分配到堆上也渐渐变得不那么“绝对”了。在Java虚拟机中，对象是在Java堆中分配内存的，这是一个普遍的常识。但是，有一种特殊情况，那就是如果经过逃逸分析(Escape Analysis)后发现，一个对象并没有逃逸出方法的话，那么就可能被优化成栈上分配。这样就无需在堆上分配内存，也无须进行垃圾回收了。这也是最常见的堆外存储技术。此外，前面提到的基于OpenJDK深度定制的TaoBaoVM，其中创新的GCIH（GC invisible heap）技术实现off-heap，将生命周期较长的Java对象从heap中移至heap外，并且GC不能管理GCIH内部的Java对象，以此达到降低GC的回收频率和提升GC的回收效率的目的。</p>
+<p>阶段三：是</p>
+<p>JVM 会在栈上分配那些不会逃逸的对象，这在理论上是可行的，但是取决于 JVM 设计者的选择。而Oracle Hotspot JVM 中并未实现逃逸分析，<font style="background-color:#FADB14;">所以从HotSpot JVM的角度可以明确</font><font style="background-color:#FADB14;">说：所有的对象实例都是创建在堆上</font><font style="background-color:#FADB14;">(性能优化来自于标量替换)。</font></p>
+<h3 id="JIT的性能开销"><a href="#JIT的性能开销" class="headerlink" title="JIT的性能开销"></a>JIT的性能开销</h3><blockquote>
+<p><strong>时间开销</strong></p>
+</blockquote>
+<p>解释器的执行，抽象的看是这样的:</p>
+<p><code>输入的代码 -&gt; [ 解释器 解释执行 ] -&gt; 执行结果</code></p>
+<p>JIT编译然后再执行的话，抽象的看则是:</p>
+<p><code>输入的代码 -&gt; [ 编译器 编译 ] -&gt; 编译后的代码 -&gt; [ 执行 ] -&gt; 执行结果</code></p>
+<p>说明：说JIT比解释快，其实说的是“执行编译后的代码”比“解释器解释执行”要快，并不是说“编译”这个动作比“解释”这个动作快。JIT编译再怎么快，至少也比解释执行一次略慢一些，而要得到最后的执行结果还得再经过一个“执行编译后的代码”的过程。所以，对“只执行一次”的代码而言，解释执行其实总是比JIT编译执行要快。</p>
+<p>怎么算是<code>只执行一次的代码</code>呢？粗略说，下面条件同时满足时就是严格的&#96;只执行一次。</p>
+<ul>
+<li>只被调用一次，例如类的构造器（class initializer，()）</li>
+<li>没有循环，对只执行一次的代码做JIT编译再执行，可以说是得不偿失。</li>
+<li>对只执行少量次数的代码，JIT编译带来的执行速度的提升也未必能抵消掉最初编译带来的开销。</li>
+</ul>
+<p><strong><font style="background-color:#FADB14;">备注：只有对频繁执行的代码（热点代码），JIT编译才能保证有正面的收益。</font></strong></p>
+<blockquote>
+<p><strong>空间开销</strong></p>
+</blockquote>
+<p>对一般的Java方法而言，编译后代码的大小相对于字节码的大小，膨胀比达到10+是很正常的。同上面说的时间开销一样，这里的空间开销也是，只有对执行频繁的代码才值得编译，如果把所有代码都编译则会显著增加代码所占空间，导致代码爆炸。这也就解释了为什么有些JVM会选择不总是做JIT编译，而是选择用解释器+JIT编译器的混合执行引擎。</p>
+<h3 id="JIT的参数配置"><a href="#JIT的参数配置" class="headerlink" title="JIT的参数配置"></a>JIT的参数配置</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">-server -Xmx100m -Xms100m -XX:+DoEscapeAnalysis -XX:+PrintGC -XX:+EliminateAllocations</span><br></pre></td></tr></table></figure>
+
+<p>这里设置参数如下：</p>
+<ul>
+<li>参数<code>-server</code>：启动 Server 模式，因为在 server 模式下，才可以启用逃逸分析。</li>
+<li>参数<code>-XX:+DoEscapeAnalysis</code>：启用逃逸分析（默认打开）</li>
+</ul>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635172702411-2de5e111-94a4-4c98-80ba-1397de1cc296.png"></p>
+<ul>
+<li>参数<code>-Xmx10m</code>：指定了堆空间最大为 10MB</li>
+<li>参数<code>-XX:+PrintGC</code>：将打印 Gc 日志</li>
+<li>参数<code>-XX:+EliminateAllocations</code>：开启了标量替换（默认打开），允许将对象打散分配在栈上，比如对象拥有 id 和 name 两个字段，那么这两个字段将会被视为两个独立的局部变量进行分配</li>
+</ul>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635172766875-529846b7-da9c-4ddb-9932-2a2878d3fad4.png"></p>
+<h2 id="3-10-经典题"><a href="#3-10-经典题" class="headerlink" title="3.10 经典题"></a>3.10 经典题</h2><h3 id="50万PV大堆案例"><a href="#50万PV大堆案例" class="headerlink" title="50万PV大堆案例"></a>50万PV大堆案例</h3><p>说明：有一个50万PV的资料类网站（从磁盘提取文档到内存）原服务器是32位的，1.5G的堆，用户反馈网站比较缓慢。因此公司决定升级，新的服务器为64位，16G的堆内存，结果用户反馈卡顿十分严重，反而比以前效率更低了！</p>
+<p>Q1：为什么原网站慢？</p>
+<p>频繁的GC，STW时间比较长，响应时间慢</p>
+<p>Q2：为什么会更卡顿？</p>
+<p>内存空间越大，出现了大堆，导致FGC时间更长，延迟时间更长</p>
+<p>Q3：怎么处理？</p>
+<blockquote>
+<p>使用并行的垃圾回收器：吞吐量parallel GC ; 低延迟G1</p>
+</blockquote>
+<blockquote>
+<p>配置GC参数：-XX:MaxGCPauseMillis 、 -XX:ConcGCThreads </p>
+</blockquote>
+<blockquote>
+<p>根据log日志、dump文件分析，优化内存空间的比例</p>
+</blockquote>
+<pre><code>jstat   jinfo  jstack  jmap 
+</code></pre>
+<h3 id="百万订单的jvm参数配置"><a href="#百万订单的jvm参数配置" class="headerlink" title="百万订单的jvm参数配置"></a>百万订单的jvm参数配置</h3><p><img src="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1635322268593-10c24be2-1d1b-49d1-8095-dcc5890afa84.png"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/jvm/" rel="tag"><i class="fa fa-tag"></i> jvm</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/09/05/05%20%E5%88%86%E6%9E%90GC%E6%97%A5%E5%BF%97/" rel="prev" title="05 分析GC日志">
+      <i class="fa fa-chevron-left"></i> 05 分析GC日志
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/09/07/Cpu%E4%BD%BF%E7%94%A8%E7%8E%87%E9%A3%99%E5%8D%87%E5%A6%82%E4%BD%95%E6%8E%92%E6%9F%A5%EF%BC%9F/" rel="next" title="Cpu使用率飙升如何排查？">
+      Cpu使用率飙升如何排查？ <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E6%80%A7%E8%83%BD%E8%B0%83%E4%BC%98%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">1 性能调优概述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-OOM%E6%A1%88%E4%BE%8B"><span class="nav-number">2.</span> <span class="nav-text">2 OOM案例</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-%E6%83%85%E5%86%B5%E4%B8%80%EF%BC%9A%E5%A0%86%E6%BA%A2%E5%87%BA%EF%BC%88Java-heap-space%EF%BC%89"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 情况一：堆溢出（Java heap space）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E4%B8%8EJVM%E5%8F%82%E6%95%B0%E8%AE%BE%E7%BD%AE"><span class="nav-number">2.1.1.</span> <span class="nav-text">代码与JVM参数设置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8E%9F%E5%9B%A0%E4%B8%8E%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88"><span class="nav-number">2.1.2.</span> <span class="nav-text">原因与解决方案</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#dump%E6%96%87%E4%BB%B6%E5%88%86%E6%9E%90%E8%BF%87%E7%A8%8B"><span class="nav-number">2.1.3.</span> <span class="nav-text">dump文件分析过程</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-%E6%83%85%E5%86%B5%E4%BA%8C%EF%BC%9A%E5%85%83%E7%A9%BA%E9%97%B4%E6%BA%A2%E5%87%BA"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 情况二：元空间溢出</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E4%B8%8EJVM%E5%8F%82%E6%95%B0%E8%AE%BE%E7%BD%AE-1"><span class="nav-number">2.2.1.</span> <span class="nav-text">代码与JVM参数设置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8E%9F%E5%9B%A0%E4%B8%8E%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88-1"><span class="nav-number">2.2.2.</span> <span class="nav-text">原因与解决方案</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AF%A6%E7%BB%86%E7%9A%84%E5%88%86%E6%9E%90%E6%AD%A5%E9%AA%A4"><span class="nav-number">2.2.3.</span> <span class="nav-text">详细的分析步骤</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E7%9B%91%E6%8E%A7"><span class="nav-number">2.2.3.1.</span> <span class="nav-text">查看监控</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8BGC%E7%8A%B6%E6%80%81"><span class="nav-number">2.2.3.2.</span> <span class="nav-text">查看GC状态</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8BGC%E6%97%A5%E5%BF%97"><span class="nav-number">2.2.3.3.</span> <span class="nav-text">查看GC日志</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%86%E6%9E%90dump%E6%96%87%E4%BB%B6"><span class="nav-number">2.2.3.4.</span> <span class="nav-text">分析dump文件</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-3-%E6%83%85%E5%86%B5%E4%B8%89%EF%BC%9AGC-overhead-limit-exceeded"><span class="nav-number">2.3.</span> <span class="nav-text">2.3 情况三：GC overhead limit exceeded</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E4%B8%8EJVM%E5%8F%82%E6%95%B0%E8%AE%BE%E7%BD%AE-2"><span class="nav-number">2.3.1.</span> <span class="nav-text">代码与JVM参数设置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8E%9F%E5%9B%A0%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E5%88%86%E6%9E%90"><span class="nav-number">2.3.2.</span> <span class="nav-text">原因及解决方案分析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AF%A6%E7%BB%86%E7%9A%84%E5%88%86%E6%9E%90%E6%AD%A5%E9%AA%A4-1"><span class="nav-number">2.3.3.</span> <span class="nav-text">详细的分析步骤</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%9A%E4%BD%8D%E9%97%AE%E9%A2%98%E4%BB%A3%E7%A0%81"><span class="nav-number">2.3.3.1.</span> <span class="nav-text">定位问题代码</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%86%E6%9E%90dump%E6%96%87%E4%BB%B6%E7%9B%B4%E6%96%B9%E5%9B%BE"><span class="nav-number">2.3.3.2.</span> <span class="nav-text">分析dump文件直方图</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-4-%E6%83%85%E5%86%B5%E5%9B%9B%EF%BC%9A%E7%BA%BF%E7%A8%8B%E6%BA%A2%E5%87%BA"><span class="nav-number">2.4.</span> <span class="nav-text">2.4 情况四：线程溢出</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E4%B8%8E%E9%94%99%E8%AF%AF%E6%8F%8F%E8%BF%B0"><span class="nav-number">2.4.1.</span> <span class="nav-text">代码与错误描述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88"><span class="nav-number">2.4.2.</span> <span class="nav-text">解决方案</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E6%A1%88%E4%BE%8B"><span class="nav-number">3.</span> <span class="nav-text">3 性能优化案例</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-%E5%86%85%E5%AD%98%EF%BC%9A%E5%90%88%E7%90%86%E5%88%86%E9%85%8D%E5%A0%86%E5%86%85%E5%AD%98"><span class="nav-number">3.1.</span> <span class="nav-text">3.1 内存：合理分配堆内存</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-1-%E5%AE%98%E6%96%B9%E6%8E%A8%E8%8D%90%E9%85%8D%E7%BD%AE"><span class="nav-number">3.1.1.</span> <span class="nav-text">3.1.1 官方推荐配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-2-%E5%A6%82%E4%BD%95%E8%AE%A1%E7%AE%97%E8%80%81%E5%B9%B4%E4%BB%A3%E5%AD%98%E6%B4%BB%E5%AF%B9%E8%B1%A1"><span class="nav-number">3.1.2.</span> <span class="nav-text">3.1.2 如何计算老年代存活对象</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%96%B9%E5%BC%8F%E4%B8%80%EF%BC%88%E6%8E%A8%E8%8D%90%EF%BC%89%EF%BC%9A%E6%9F%A5%E7%9C%8BGC%E6%97%A5%E5%BF%97"><span class="nav-number">3.1.2.1.</span> <span class="nav-text">方式一（推荐）：查看GC日志</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%96%B9%E5%BC%8F%E4%BA%8C%EF%BC%9A%E5%BC%BA%E5%88%B6%E8%A7%A6%E5%8F%91GC"><span class="nav-number">3.1.2.2.</span> <span class="nav-text">方式二：强制触发GC</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%8E%AF%E5%A2%83%E4%B8%8B"><span class="nav-number">3.1.3.</span> <span class="nav-text">服务器环境下</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%A7%A6%E5%8F%91%E4%BA%86GC%E5%90%8E%E5%A6%82%E4%BD%95%E6%9F%A5%E7%9C%8B%E8%80%81%E5%B9%B4%E4%BB%A3%E5%A4%A7%E5%B0%8F"><span class="nav-number">3.1.3.1.</span> <span class="nav-text">触发了GC后如何查看老年代大小</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-3-%E6%A1%88%E4%BE%8B%EF%BC%9A%E8%B0%83%E6%95%B4%E5%A0%86%E7%A9%BA%E9%97%B4%E5%A4%A7%E5%B0%8F%E5%90%8E%E7%9A%84%E4%BC%98%E5%8C%96%E6%95%88%E6%9E%9C"><span class="nav-number">3.1.4.</span> <span class="nav-text">3.1.3 案例：调整堆空间大小后的优化效果</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-%E5%86%85%E5%AD%98%EF%BC%9A%E6%96%B0%E7%94%9F%E4%BB%A3%E5%92%8C%E8%80%81%E5%B9%B4%E4%BB%A3%E7%9A%84%E6%AF%94%E4%BE%8B%E8%AE%BE%E7%BD%AE%E8%AF%B4%E6%98%8E-UseAdaptiveSizePolicy-SurvivorRatio"><span class="nav-number">3.2.</span> <span class="nav-text">3.3 内存：新生代和老年代的比例设置说明(UseAdaptiveSizePolicy|SurvivorRatio)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%83%8C%E6%99%AF%EF%BC%9A%E4%BD%BF%E7%94%A8%E9%BB%98%E8%AE%A4%E7%9A%84SurvivorRatio%E4%B8%8D%E7%94%9F%E6%95%88"><span class="nav-number">3.2.1.</span> <span class="nav-text">背景：使用默认的SurvivorRatio不生效</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8E%9F%E5%9B%A0%E4%B8%8E%E5%AE%9E%E9%99%85%E6%8E%A8%E8%8D%90%E7%94%A8%E6%B3%95"><span class="nav-number">3.2.2.</span> <span class="nav-text">原因与实际推荐用法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-%E5%86%85%E5%AD%98%E9%A3%99%E9%AB%98%E5%88%86%E6%9E%90"><span class="nav-number">3.3.</span> <span class="nav-text">3.3 内存飙高分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-4-CPU%E9%A3%99%E9%AB%98%E5%88%86%E6%9E%90"><span class="nav-number">3.4.</span> <span class="nav-text">3.4 CPU飙高分析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-4-1-%E6%A6%82%E8%BF%B0"><span class="nav-number">3.4.1.</span> <span class="nav-text">3.4.1 概述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-4-2-%E6%BC%94%E7%A4%BA%E4%BB%A3%E7%A0%81"><span class="nav-number">3.4.2.</span> <span class="nav-text">3.4.2 演示代码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-4-3-%E6%9C%AC%E5%9C%B0JVisualVM%E5%88%86%E6%9E%90"><span class="nav-number">3.4.3.</span> <span class="nav-text">3.4.3 本地JVisualVM分析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-4-4-%E6%9C%8D%E5%8A%A1%E5%99%A8%E8%BF%9C%E7%A8%8B%E5%9C%A8%E7%BA%BF%E5%88%86%E6%9E%90"><span class="nav-number">3.4.4.</span> <span class="nav-text">3.4.4 服务器远程在线分析</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%AD%A5%E9%AA%A4%E4%B8%80%EF%BC%9Aps-aux%E5%BE%97%E5%88%B0%E8%BF%9B%E7%A8%8Bpid%EF%BC%88%E5%BE%97%E5%88%B0%E5%85%B7%E4%BD%93%E8%BF%9B%E7%A8%8B%EF%BC%89"><span class="nav-number">3.4.4.1.</span> <span class="nav-text">步骤一：ps aux得到进程pid（得到具体进程）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%AD%A5%E9%AA%A4%E4%BA%8C%EF%BC%9Atop-Hp-pid%E5%BE%97%E5%88%B0%E8%AF%A5%E8%BF%9B%E7%A8%8B%E4%B8%8B%E7%9A%84%E5%BC%82%E5%B8%B8%E7%BA%BF%E7%A8%8Bnid%EF%BC%88%E5%BE%97%E5%88%B0%E5%85%B7%E4%BD%93%E7%BA%BF%E7%A8%8B%EF%BC%89"><span class="nav-number">3.4.4.2.</span> <span class="nav-text">步骤二：top -Hp pid得到该进程下的异常线程nid（得到具体线程）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%AD%A5%E9%AA%A4%E4%B8%89%EF%BC%9Ajstack-pid-grep-A20-tid%E6%8E%92%E6%9F%A5%E5%85%B7%E4%BD%93%E6%97%A5%E5%BF%97%E4%BF%A1%E6%81%AF%EF%BC%88%E6%A0%B9%E6%8D%AE%E8%BF%9B%E7%A8%8B%E5%92%8C%E7%BA%BF%E7%A8%8B%E5%BE%97%E5%88%B0%E5%85%B7%E4%BD%93%E6%97%A5%E5%BF%97%EF%BC%89"><span class="nav-number">3.4.4.3.</span> <span class="nav-text">步骤三：jstack pid | grep -A20 tid排查具体日志信息（根据进程和线程得到具体日志）</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-5-%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E5%99%A8%EF%BC%9A%E6%A0%B9%E6%8D%AE%E4%B8%9A%E5%8A%A1%E5%9C%BA%E6%99%AF%E9%80%89%E6%8B%A9%E5%90%88%E9%80%82%E7%9A%84%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E5%99%A8"><span class="nav-number">3.5.</span> <span class="nav-text">3.5 垃圾回收器：根据业务场景选择合适的垃圾回收器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E9%80%89%E6%8B%A9%E5%90%88%E9%80%82%E7%9A%84%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E5%99%A8%EF%BC%9F"><span class="nav-number">3.5.1.</span> <span class="nav-text">如何选择合适的垃圾回收器？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#G1%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E5%99%A8%E6%8E%A8%E8%8D%90%E4%BD%BF%E7%94%A8"><span class="nav-number">3.5.2.</span> <span class="nav-text">G1垃圾回收器推荐使用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#G1%E5%B9%B6%E5%8F%91%E6%89%A7%E8%A1%8C%E7%9A%84%E7%BA%BF%E7%A8%8B%E5%AF%B9%E6%80%A7%E8%83%BD%E7%9A%84%E5%BD%B1%E5%93%8D"><span class="nav-number">3.5.3.</span> <span class="nav-text">G1并发执行的线程对性能的影响</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-6-JIT%E7%9A%84%E4%BC%98%E5%8C%96"><span class="nav-number">3.6.</span> <span class="nav-text">3.6 JIT的优化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A0%86%EF%BC%8C%E6%98%AF%E5%88%86%E9%85%8D%E5%AF%B9%E8%B1%A1%E7%9A%84%E5%94%AF%E4%B8%80%E9%80%89%E6%8B%A9%E5%90%97%EF%BC%9F"><span class="nav-number">3.6.1.</span> <span class="nav-text">堆，是分配对象的唯一选择吗？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#JIT%E7%9A%84%E6%80%A7%E8%83%BD%E5%BC%80%E9%94%80"><span class="nav-number">3.6.2.</span> <span class="nav-text">JIT的性能开销</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#JIT%E7%9A%84%E5%8F%82%E6%95%B0%E9%85%8D%E7%BD%AE"><span class="nav-number">3.6.3.</span> <span class="nav-text">JIT的参数配置</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-10-%E7%BB%8F%E5%85%B8%E9%A2%98"><span class="nav-number">3.7.</span> <span class="nav-text">3.10 经典题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#50%E4%B8%87PV%E5%A4%A7%E5%A0%86%E6%A1%88%E4%BE%8B"><span class="nav-number">3.7.1.</span> <span class="nav-text">50万PV大堆案例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%99%BE%E4%B8%87%E8%AE%A2%E5%8D%95%E7%9A%84jvm%E5%8F%82%E6%95%B0%E9%85%8D%E7%BD%AE"><span class="nav-number">3.7.2.</span> <span class="nav-text">百万订单的jvm参数配置</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="139"
+      src="/images/custom/avatar.jpg">
+  <p class="site-author-name" itemprop="name">139</p>
+  <div class="site-description" itemprop="description">一个普通的JAVA开发的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">96</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+  <div class="beian"><a href="https://beian.miit.gov.cn/" rel="noopener" target="_blank">浙ICP备2023004484号-1 </a>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">139</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8335634399768246"
+     crossorigin="anonymous"></script>
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

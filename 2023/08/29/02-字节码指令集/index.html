@@ -1,0 +1,1543 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8335634399768246"
+     crossorigin="anonymous"></script>
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="1. 概述 执行模型">
+<meta property="og:type" content="article">
+<meta property="og:title" content="02-字节码指令集">
+<meta property="og:url" content="http://example.com/2023/08/29/02-%E5%AD%97%E8%8A%82%E7%A0%81%E6%8C%87%E4%BB%A4%E9%9B%86/index.html">
+<meta property="og:site_name" content="进学阁">
+<meta property="og:description" content="1. 概述 执行模型">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1633268280430-8a7718c9-adec-4c67-b265-983562ab41e7.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991020783-2216fd22-0dd7-494d-b2bb-7c246bd519d9.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991020903-b1128f19-59df-4355-8ca0-38205e9cc46a.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991020986-1df075c8-f5ea-4418-96f5-7886869f2927.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991020954-90e0e000-542e-4ffa-8e32-dbdd27f16509.png">
+<meta property="og:image" content="https://gitee.com/vectorx/ImageCloud/raw/master/img/20210424190846.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991021339-9c09df8c-6601-48bd-8804-7e4f957dcc7c.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991021432-d7454e7d-6fd3-4f9a-8d09-88d602d863e5.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991021517-95bc7f05-728c-449e-8813-fba4408cbc1f.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991021847-df347b17-7c06-4817-8747-44d9578a7175.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991021634-b0c0a9ae-a25d-4384-a6e3-295b0a8405cf.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991021853-fd63ff2b-ff43-4332-8200-3e2a7e115db1.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991022033-02eeccc4-746f-4d04-8897-c8eb04aa797b.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991022250-3d25eec1-af6d-4ec3-a169-98ba322367ba.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991022243-9d4d7478-2322-4c53-88d2-9c6ac0460911.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991023068-fa2a97b4-596e-433e-8335-4bf91cae6019.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991023449-d53a0a40-eb46-433e-924f-1d6eceb13fb8.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991023460-51c613e4-166c-479b-893d-bdbe7e15d74b.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991023558-8b2135c3-20b2-4409-9dd5-650002948f65.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991023714-1374b3d5-3d89-4d80-a155-1d09955d12a6.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991023810-e965dbbf-1cb0-4b2a-9222-08d43e1966e2.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/gif/25873401/1719991023765-2b7a1d0f-e674-427a-beba-221ff559490b.gif">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991024186-ac425749-150d-4ee6-9d3c-24ad00ca0554.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991024291-0c624b8d-50e9-41ff-a5dc-bc4e26e85c3f.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1633664012969-df945cde-0716-4d43-9245-39491de098b5.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991024594-5ee71d3c-d5e7-4a7c-a308-2e1e75e3f61b.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991024634-2f37d597-086d-4eba-accf-254b9025eafb.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991025036-5db24784-2011-441e-a5f8-fcacb841d671.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1633688920272-0626ffdb-e929-4b29-a622-e25bdfe5f692.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991025162-2f7701f2-0dc6-4021-aa3f-c7c9c8fdc8ac.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991025382-1e2ed527-b6f9-43fa-8188-e7489da02be3.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991025284-12de1549-faf8-402b-a291-297bf01ed478.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991025485-4f459f4a-bf47-4166-89e8-448158dafe43.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991025790-6bfa5fc6-6da6-411c-a4bb-96a188ff2bb3.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991025896-55a4a49a-5176-4d53-8849-2d0530f11c31.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991025964-495f5dfc-9744-412b-b854-4af1bd7f1be5.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991026230-727eb501-10f2-4e2f-a6c7-a0dd91cd028e.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991026136-016c9d22-5626-4875-aef6-39869f5f9666.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991026303-09e938a4-5fc7-493c-8d85-4c9ce30af426.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991026459-33cda47a-cc28-4078-bb45-7dcc500a0b7f.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991026472-6496836e-6114-4263-8e28-af306007f683.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991026839-3b352b5f-9ec3-4232-aeb7-56f5d351d69f.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991026918-96081cbc-5c53-42c3-a81f-b3392f38a48d.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991026953-075839de-ec2b-4c1d-be72-cec86bdb0388.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991027018-1526237a-8e5f-4663-acda-019d64db1a7d.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991027371-8f7ae5c2-a07f-4de4-9006-2e52ec6a0b16.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991027433-ada85ae1-5b9c-4304-ae50-e44d973f9eae.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991027534-2e9d13d2-326e-40c6-a197-3df3481b59fd.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991027652-891a2fd6-9200-4e28-b03f-53ccc464e48a.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991027723-f0f6c10f-4236-4ee8-b97c-df69e5eb1dc5.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991027868-ead89e3f-afd4-41cb-93a3-8d06b3ffe8d4.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991028014-e87bb91b-f59c-422e-a742-18ebdd434bed.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991028071-32fb67b5-96d2-4baa-8809-e667fb8d75b9.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991028183-424fcdef-8569-44bf-a82b-1211ef29915e.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991028348-f604e67c-3f3d-420b-965b-b29ed29d531d.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991028270-c9d0fcb5-5608-4831-859d-e877482666ef.png">
+<meta property="article:published_time" content="2023-08-29T12:33:29.000Z">
+<meta property="article:modified_time" content="2025-03-14T07:14:17.260Z">
+<meta property="article:author" content="139">
+<meta property="article:tag" content="jvm">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1633268280430-8a7718c9-adec-4c67-b265-983562ab41e7.png">
+
+<link rel="canonical" href="http://example.com/2023/08/29/02-%E5%AD%97%E8%8A%82%E7%A0%81%E6%8C%87%E4%BB%A4%E9%9B%86/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>02-字节码指令集 | 进学阁</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">进学阁</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">业精于勤荒于嬉，行成于思毁于随</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">39</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">13</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">96</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/08/29/02-%E5%AD%97%E8%8A%82%E7%A0%81%E6%8C%87%E4%BB%A4%E9%9B%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          02-字节码指令集
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-08-29 20:33:29" itemprop="dateCreated datePublished" datetime="2023-08-29T20:33:29+08:00">2023-08-29</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-14 15:14:17" itemprop="dateModified" datetime="2025-03-14T15:14:17+08:00">2025-03-14</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/JVM%E4%B8%AD%E7%AF%87%EF%BC%9A%E5%AD%97%E8%8A%82%E7%A0%81%E4%B8%8E%E7%B1%BB%E5%8A%A0%E8%BD%BD/" itemprop="url" rel="index"><span itemprop="name">JVM中篇：字节码与类加载</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="1-概述"><a href="#1-概述" class="headerlink" title="1. 概述"></a>1. 概述</h1><blockquote>
+<p><strong>执行模型</strong></p>
+</blockquote>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1633268280430-8a7718c9-adec-4c67-b265-983562ab41e7.png"></p>
+<span id="more"></span>
+<blockquote>
+<p><strong>字节码与数据类型</strong></p>
+</blockquote>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991020783-2216fd22-0dd7-494d-b2bb-7c246bd519d9.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991020903-b1128f19-59df-4355-8ca0-38205e9cc46a.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991020986-1df075c8-f5ea-4418-96f5-7886869f2927.png"></p>
+<h1 id="2-加载与存储指令"><a href="#2-加载与存储指令" class="headerlink" title="2. 加载与存储指令"></a>2. 加载与存储指令</h1><h2 id="2-0-概览"><a href="#2-0-概览" class="headerlink" title="2.0 概览"></a>2.0 概览</h2><p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991020954-90e0e000-542e-4ffa-8e32-dbdd27f16509.png"></p>
+<p><img src="https://gitee.com/vectorx/ImageCloud/raw/master/img/20210424190846.png"><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991021339-9c09df8c-6601-48bd-8804-7e4f957dcc7c.png"></p>
+<hr>
+<h2 id="2-1-局部变量压栈指令（load）"><a href="#2-1-局部变量压栈指令（load）" class="headerlink" title="2.1. 局部变量压栈指令（load）"></a>2.1. 局部变量压栈指令（load）</h2><blockquote>
+<p><strong>局部变量压栈指令剖析</strong></p>
+</blockquote>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991021432-d7454e7d-6fd3-4f9a-8d09-88d602d863e5.png"></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">load</span><span class="params">(<span class="type">int</span> num, Object obj, <span class="type">long</span> count, <span class="type">boolean</span> flag, <span class="type">short</span>[] arr)</span> &#123;</span><br><span class="line">	System.out.println(num);</span><br><span class="line">    System.out.println(obj);</span><br><span class="line">    System.out.println(count);</span><br><span class="line">    System.out.println(flag);</span><br><span class="line">    System.out.println(arr);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991021517-95bc7f05-728c-449e-8813-fba4408cbc1f.png"></p>
+<blockquote>
+<p><strong>细分指令</strong></p>
+</blockquote>
+<blockquote>
+<p>iload 从局部变量中装载int类型值</p>
+<p>lload 从局部变量中装载long类型值</p>
+<p>fload 从局部变量中装载float类型值</p>
+<p>dload 从局部变量中装载double类型值</p>
+<p>aload 从局部变量中装载引用类型值（refernce）</p>
+<p>iload_0 从局部变量0中装载int类型值</p>
+<p>iload_1 从局部变量1中装载int类型值</p>
+<p>iload_2 从局部变量2中装载int类型值</p>
+<p>iload_3 从局部变量3中装载int类型值</p>
+<p>lload_0 从局部变量0中装载long类型值</p>
+<p>lload_1 从局部变量1中装载long类型值</p>
+<p>lload_2 从局部变量2中装载long类型值</p>
+<p>lload_3 从局部变量3中装载long类型值</p>
+<p>fload_0 从局部变量0中装载float类型值</p>
+<p>fload_1 从局部变量1中装载float类型值</p>
+<p>fload_2 从局部变量2中装载float类型值</p>
+<p>fload_3 从局部变量3中装载float类型值</p>
+<p>dload_0 从局部变量0中装载double类型值</p>
+<p>dload_1 从局部变量1中装载double类型值</p>
+<p>dload_2 从局部变量2中装载double类型值</p>
+<p>dload_3 从局部变量3中装载double类型值</p>
+<p>aload_0 从局部变量0中装载引用类型值</p>
+<p>aload_1 从局部变量1中装载引用类型值</p>
+<p>aload_2 从局部变量2中装载引用类型值</p>
+<p>aload_3 从局部变量3中装载引用类型值</p>
+<p>iaload 从数组中装载int类型值</p>
+<p>laload 从数组中装载long类型值</p>
+<p>faload 从数组中装载float类型值</p>
+<p>daload 从数组中装载double类型值</p>
+<p>aaload 从数组中装载引用类型值</p>
+<p>baload 从数组中装载byte类型或boolean类型值</p>
+<p>caload 从数组中装载char类型值</p>
+<p>saload 从数组中装载short类型值</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th><strong>xload_n</strong></th>
+<th>xload_0</th>
+<th>xload_1</th>
+<th>xload_2</th>
+<th>xload_3</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>iload_n</strong></td>
+<td>iload_0</td>
+<td>iload_1</td>
+<td>iload_2</td>
+<td>iload_3</td>
+</tr>
+<tr>
+<td><strong>lload_n</strong></td>
+<td>lload_0</td>
+<td>lload_1</td>
+<td>lload_2</td>
+<td>lload_3</td>
+</tr>
+<tr>
+<td><strong>fload_n</strong></td>
+<td>fload_0</td>
+<td>fload_1</td>
+<td>fload_2</td>
+<td>fload_3</td>
+</tr>
+<tr>
+<td><strong>dload_n</strong></td>
+<td>dload_0</td>
+<td>dload_1</td>
+<td>dload_2</td>
+<td>dload_3</td>
+</tr>
+<tr>
+<td><strong>aload_n</strong></td>
+<td>aload_0</td>
+<td>aload_1</td>
+<td>aload_2</td>
+<td>aload_3</td>
+</tr>
+</tbody></table>
+<h2 id="2-2-常量入栈指令（const-x2F-push-x2F-ldc）"><a href="#2-2-常量入栈指令（const-x2F-push-x2F-ldc）" class="headerlink" title="2.2. 常量入栈指令（const&#x2F;push&#x2F;ldc）"></a>2.2. 常量入栈指令（const&#x2F;push&#x2F;ldc）</h2><p><strong>常量入栈指令剖析</strong></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991021847-df347b17-7c06-4817-8747-44d9578a7175.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991021634-b0c0a9ae-a25d-4384-a6e3-295b0a8405cf.png"></p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>常数指令</th>
+<th>范围</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>int(boolean,byte,char,short)</td>
+<td>iconst</td>
+<td>[-1, 5]</td>
+</tr>
+<tr>
+<td></td>
+<td>bipush</td>
+<td>[-128, 127]</td>
+</tr>
+<tr>
+<td></td>
+<td>sipush</td>
+<td>[-32768, 32767]</td>
+</tr>
+<tr>
+<td></td>
+<td>ldc</td>
+<td>any int value</td>
+</tr>
+<tr>
+<td>long</td>
+<td>lconst</td>
+<td>0, 1</td>
+</tr>
+<tr>
+<td></td>
+<td>ldc</td>
+<td>any long value</td>
+</tr>
+<tr>
+<td>float</td>
+<td>fconst</td>
+<td>0, 1, 2</td>
+</tr>
+<tr>
+<td></td>
+<td>ldc</td>
+<td>any float value</td>
+</tr>
+<tr>
+<td>double</td>
+<td>dconst</td>
+<td>0, 1</td>
+</tr>
+<tr>
+<td></td>
+<td>ldc</td>
+<td>any double value</td>
+</tr>
+<tr>
+<td>reference</td>
+<td>aconst</td>
+<td>null</td>
+</tr>
+<tr>
+<td></td>
+<td>ldc</td>
+<td>String literal, Class literal</td>
+</tr>
+</tbody></table>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991021853-fd63ff2b-ff43-4332-8200-3e2a7e115db1.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991022033-02eeccc4-746f-4d04-8897-c8eb04aa797b.png"></p>
+<p><strong>细分指令</strong></p>
+<blockquote>
+<p>aconst_null 将null对象引用压入栈</p>
+<p>iconst_m1 将int类型常量-1压入栈</p>
+<p>iconst_0 将int类型常量0压入栈</p>
+<p>iconst_1 将int类型常量1压入栈</p>
+<p>iconst_2 将int类型常量2压入栈</p>
+<p>iconst_3 将int类型常量3压入栈</p>
+<p>iconst_4 将int类型常量4压入栈</p>
+<p>iconst_5 将int类型常量5压入栈</p>
+<p>lconst_0 将long类型常量0压入栈</p>
+<p>lconst_1 将long类型常量1压入栈</p>
+<p>fconst_0 将float类型常量0压入栈</p>
+<p>fconst_1 将float类型常量1压入栈</p>
+<p>dconst_0 将double类型常量0压入栈</p>
+<p>dconst_1 将double类型常量1压入栈</p>
+<p>bipush 将一个8位带符号整数压入栈</p>
+<p>sipush 将16位带符号整数压入栈</p>
+<p>ldc 把常量池中的项压入栈</p>
+<p>ldc_w 把常量池中的项压入栈（使用宽索引）</p>
+<p>ldc2_w 把常量池中long类型或者double类型的项压入栈（使用宽索引）</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th align="center"><strong>xconst_n</strong></th>
+<th>范围</th>
+<th>xconst_null</th>
+<th align="center">xconst_m1</th>
+<th align="center">xconst_0</th>
+<th align="center">xconst_1</th>
+<th align="center">xconst_2</th>
+<th align="center">xconst_3</th>
+<th align="center">xconst_4</th>
+<th align="center">xconst_5</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center"><strong>iconst_n</strong></td>
+<td>[-1, 5]</td>
+<td></td>
+<td align="center">iconst_m1</td>
+<td align="center">iconst_0</td>
+<td align="center">iconst_1</td>
+<td align="center">iconst_2</td>
+<td align="center">iconst_3</td>
+<td align="center">iconst_4</td>
+<td align="center">iconst_5</td>
+</tr>
+<tr>
+<td align="center"><strong>lconst_n</strong></td>
+<td>0, 1</td>
+<td></td>
+<td align="center"></td>
+<td align="center">lconst_0</td>
+<td align="center">lconst_1</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong>fconst_n</strong></td>
+<td>0, 1, 2</td>
+<td></td>
+<td align="center"></td>
+<td align="center">fconst_0</td>
+<td align="center">fconst_1</td>
+<td align="center">fconst_2</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong>dconst_n</strong></td>
+<td>0, 1</td>
+<td></td>
+<td align="center"></td>
+<td align="center">dconst_0</td>
+<td align="center">dconst_1</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong>aconst_n</strong></td>
+<td>null, String literal, Class literal</td>
+<td>aconst_null</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong>bipush</strong></td>
+<td>一个字节，2<sup>8</sup>，[-2<sup>7</sup>, 2<sup>7</sup> - 1]，即[-128, 127]</td>
+<td></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong>sipush</strong></td>
+<td>两个字节，2<sup>16</sup>，[-2<sup>15</sup>, 2<sup>15</sup> - 1]，即[-32768, 32767]</td>
+<td></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong>ldc</strong></td>
+<td>四个字节，2<sup>32</sup>，[-2<sup>31</sup>, 2<sup>31</sup> - 1]</td>
+<td></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong>ldc_w</strong></td>
+<td>宽索引</td>
+<td></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong>ldc2_w</strong></td>
+<td>宽索引，long或double</td>
+<td></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+</tbody></table>
+<h2 id="2-3-出栈装入局部变量表指令（store）"><a href="#2-3-出栈装入局部变量表指令（store）" class="headerlink" title="2.3. 出栈装入局部变量表指令（store）"></a>2.3. 出栈装入局部变量表指令（store）</h2><p><strong>出栈装入局部变量表指令剖析</strong></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991022250-3d25eec1-af6d-4ec3-a169-98ba322367ba.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991022243-9d4d7478-2322-4c53-88d2-9c6ac0460911.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991023068-fa2a97b4-596e-433e-8335-4bf91cae6019.png"></p>
+<p><strong>细分指令</strong></p>
+<blockquote>
+<p>istore 将int类型值存入局部变量</p>
+<p>lstore 将long类型值存入局部变量</p>
+<p>fstore 将float类型值存入局部变量</p>
+<p>dstore 将double类型值存入局部变量</p>
+<p>astore 将将引用类型或returnAddress类型值存入局部变量</p>
+<p>istore_0 将int类型值存入局部变量0</p>
+<p>istore_1 将int类型值存入局部变量1</p>
+<p>istore_2 将int类型值存入局部变量2</p>
+<p>istore_3 将int类型值存入局部变量3</p>
+<p>lstore_0 将long类型值存入局部变量0</p>
+<p>lstore_1 将long类型值存入局部变量1</p>
+<p>lstore_2 将long类型值存入局部变量2</p>
+<p>lstore_3 将long类型值存入局部变量3</p>
+<p>fstore_0 将float类型值存入局部变量0</p>
+<p>fstore_1 将float类型值存入局部变量1</p>
+<p>fstore_2 将float类型值存入局部变量2</p>
+<p>fstore_3 将float类型值存入局部变量3</p>
+<p>dstore_0 将double类型值存入局部变量0</p>
+<p>dstore_1 将double类型值存入局部变量1</p>
+<p>dstore_2 将double类型值存入局部变量2</p>
+<p>dstore_3 将double类型值存入局部变量3</p>
+<p>astore_0 将引用类型或returnAddress类型值存入局部变量0</p>
+<p>astore_1 将引用类型或returnAddress类型值存入局部变量1</p>
+<p>astore_2 将引用类型或returnAddress类型值存入局部变量2</p>
+<p>astore_3 将引用类型或returnAddress类型值存入局部变量3</p>
+<p>iastore 将int类型值存入数组中</p>
+<p>lastore 将long类型值存入数组中</p>
+<p>fastore 将float类型值存入数组中</p>
+<p>dastore 将double类型值存入数组中</p>
+<p>aastore 将引用类型值存入数组中</p>
+<p>bastore 将byte类型或者boolean类型值存入数组中</p>
+<p>castore 将char类型值存入数组中</p>
+<p>sastore 将short类型值存入数组中</p>
+<p>wide指令</p>
+<p>wide 使用附加字节扩展局部变量索引</p>
+</blockquote>
+<p><strong>简表</strong></p>
+<table>
+<thead>
+<tr>
+<th align="center"><strong>xstore_n</strong></th>
+<th align="center">xstore_0</th>
+<th align="center">xstore_1</th>
+<th align="center">xstore_2</th>
+<th align="center">xstore_3</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center"><strong>istore_n</strong></td>
+<td align="center">istore_0</td>
+<td align="center">istore_1</td>
+<td align="center">istore_2</td>
+<td align="center">istore_3</td>
+</tr>
+<tr>
+<td align="center"><strong>lstore_n</strong></td>
+<td align="center">lstore_0</td>
+<td align="center">lstore_1</td>
+<td align="center">lstore_2</td>
+<td align="center">lstore_3</td>
+</tr>
+<tr>
+<td align="center"><strong>fstore_n</strong></td>
+<td align="center">fstore_0</td>
+<td align="center">fstore_1</td>
+<td align="center">fstore_2</td>
+<td align="center">fstore_3</td>
+</tr>
+<tr>
+<td align="center"><strong>dstore_n</strong></td>
+<td align="center">dstore_0</td>
+<td align="center">dstore_1</td>
+<td align="center">dstore_2</td>
+<td align="center">dstore_3</td>
+</tr>
+<tr>
+<td align="center"><strong>astore_n</strong></td>
+<td align="center">astore_0</td>
+<td align="center">astore_1</td>
+<td align="center">astore_2</td>
+<td align="center">astore_3</td>
+</tr>
+</tbody></table>
+<h1 id="3-算术指令"><a href="#3-算术指令" class="headerlink" title="3. 算术指令"></a>3. 算术指令</h1><h2 id="3-1-概述"><a href="#3-1-概述" class="headerlink" title="3.1 概述"></a>3.1 概述</h2><h3 id="整数运算"><a href="#整数运算" class="headerlink" title="整数运算"></a>整数运算</h3><p>iadd 执行int类型的加法</p>
+<p>ladd 执行long类型的加法</p>
+<p>isub 执行int类型的减法</p>
+<p>lsub 执行long类型的减法</p>
+<p>imul 执行int类型的乘法</p>
+<p>lmul 执行long类型的乘法</p>
+<p>idiv 执行int类型的除法</p>
+<p>ldiv 执行long类型的除法</p>
+<p>irem 计算int类型除法的余数</p>
+<p>lrem 计算long类型除法的余数</p>
+<p>ineg 对一个int类型值进行取反操作</p>
+<p>lneg 对一个long类型值进行取反操作</p>
+<p>iinc 把一个常量值加到一个int类型的局部变量上</p>
+<h3 id="逻辑运算"><a href="#逻辑运算" class="headerlink" title="逻辑运算"></a>逻辑运算</h3><table>
+<thead>
+<tr>
+<th>#### 移位操作</th>
+<th>ishl 执行int类型的向左移位操作<br/>lshl 执行long类型的向左移位操作<br/>ishr 执行int类型的向右移位操作<br/>lshr 执行long类型的向右移位操作<br/>iushr 执行int类型的向右逻辑移位操作<br/>lushr 执行long类型的向右逻辑移位操作</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>#### 按位布尔运算</td>
+<td>iand 对int类型值进行“逻辑与”操作<br/>land 对long类型值进行“逻辑与”操作<br/>ior 对int类型值进行“逻辑或”操作<br/>lor 对long类型值进行“逻辑或”操作<br/>ixor 对int类型值进行“逻辑异或”操作<br/>lxor 对long类型值进行“逻辑异或”操作</td>
+</tr>
+<tr>
+<td>#### 浮点运算</td>
+<td>fadd 执行float类型的加法<br/>dadd 执行double类型的加法<br/>fsub 执行float类型的减法<br/>dsub 执行double类型的减法<br/>fmul 执行float类型的乘法<br/>dmul 执行double类型的乘法<br/>fdiv 执行float类型的除法<br/>ddiv 执行double类型的除法<br/>frem 计算float类型除法的余数<br/>drem 计算double类型除法的余数<br/>fneg 将一个float类型的数值取反<br/>dneg 将一个double类型的数值取反</td>
+</tr>
+</tbody></table>
+<h2 id="3-2-算术指令集"><a href="#3-2-算术指令集" class="headerlink" title="3.2 算术指令集"></a>3.2 算术指令集</h2><table>
+<thead>
+<tr>
+<th>算数指令</th>
+<th></th>
+<th>int(boolean,byte,char,short)</th>
+<th>long</th>
+<th>float</th>
+<th>double</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>加法指令</td>
+<td></td>
+<td>iadd</td>
+<td>ladd</td>
+<td>fadd</td>
+<td>dadd</td>
+</tr>
+<tr>
+<td>减法指令</td>
+<td></td>
+<td>isub</td>
+<td>lsub</td>
+<td>fsub</td>
+<td>dsub</td>
+</tr>
+<tr>
+<td>乘法指令</td>
+<td></td>
+<td>imul</td>
+<td>lmul</td>
+<td>fmul</td>
+<td>dmul</td>
+</tr>
+<tr>
+<td>除法指令</td>
+<td></td>
+<td>idiv</td>
+<td>ldiv</td>
+<td>fdiv</td>
+<td>ddiv</td>
+</tr>
+<tr>
+<td>求余指令</td>
+<td></td>
+<td>irem</td>
+<td>lrem</td>
+<td>frem</td>
+<td>drem</td>
+</tr>
+<tr>
+<td>取反指令</td>
+<td></td>
+<td>ineg</td>
+<td>lneg</td>
+<td>fneg</td>
+<td>dneg</td>
+</tr>
+<tr>
+<td>自增指令</td>
+<td></td>
+<td>iinc</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>位运算指令</td>
+<td>按位或指令</td>
+<td>ior</td>
+<td>lor</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>按位或指令</td>
+<td>ior</td>
+<td>lor</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>按位与指令</td>
+<td>iand</td>
+<td>land</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>按位异或指令</td>
+<td>ixor</td>
+<td>lxor</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>比较指令</td>
+<td></td>
+<td></td>
+<td>lcmp</td>
+<td>fcmpg &#x2F; fcmpl</td>
+<td>dcmpg &#x2F; dcmpl</td>
+</tr>
+</tbody></table>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991023449-d53a0a40-eb46-433e-924f-1d6eceb13fb8.png"></p>
+<blockquote>
+<p>注意：NaN(Not a Number)表示不是一个数字</p>
+</blockquote>
+<h2 id="3-3-算术指令举例"><a href="#3-3-算术指令举例" class="headerlink" title="3.3 算术指令举例"></a>3.3 算术指令举例</h2><p><strong>举例1</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="type">int</span> <span class="title function_">bar</span><span class="params">(<span class="type">int</span> i)</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> ((i + <span class="number">1</span>) - <span class="number">2</span>) * <span class="number">3</span> / <span class="number">4</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991023460-51c613e4-166c-479b-893d-bdbe7e15d74b.png"></p>
+<p><strong>举例2</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">add</span><span class="params">()</span> &#123;</span><br><span class="line">	<span class="type">byte</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">15</span>;</span><br><span class="line">	<span class="type">int</span> <span class="variable">j</span> <span class="operator">=</span> <span class="number">8</span>;</span><br><span class="line">	<span class="type">int</span> <span class="variable">k</span> <span class="operator">=</span> i + j;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991023558-8b2135c3-20b2-4409-9dd5-650002948f65.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991023714-1374b3d5-3d89-4d80-a155-1d09955d12a6.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991023810-e965dbbf-1cb0-4b2a-9222-08d43e1966e2.png"><img src="https://cdn.fbbizyy.com/yuque/0/2024/gif/25873401/1719991023765-2b7a1d0f-e674-427a-beba-221ff559490b.gif"></p>
+<p><strong>举例3</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">	<span class="type">int</span> <span class="variable">x</span> <span class="operator">=</span> <span class="number">500</span>;</span><br><span class="line">	<span class="type">int</span> <span class="variable">y</span> <span class="operator">=</span> <span class="number">100</span>;</span><br><span class="line">	<span class="type">int</span> <span class="variable">a</span> <span class="operator">=</span> x / y;</span><br><span class="line">	<span class="type">int</span> <span class="variable">b</span> <span class="operator">=</span> <span class="number">50</span>;</span><br><span class="line">	System.out.println(a + b);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991024186-ac425749-150d-4ee6-9d3c-24ad00ca0554.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991024291-0c624b8d-50e9-41ff-a5dc-bc4e26e85c3f.png"></p>
+<h1 id="4-类型转换指令（x2x）"><a href="#4-类型转换指令（x2x）" class="headerlink" title="4. 类型转换指令（x2x）"></a>4. 类型转换指令（x2x）</h1><h2 id="4-1-概述"><a href="#4-1-概述" class="headerlink" title="4.1 概述"></a>4.1 概述</h2><p><img src="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1633664012969-df945cde-0716-4d43-9245-39491de098b5.png"></p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th align="center"><strong>byte</strong></th>
+<th align="center"><strong>char</strong></th>
+<th align="center"><strong>short</strong></th>
+<th align="center"><strong>int</strong></th>
+<th align="center"><strong>long</strong></th>
+<th align="center"><strong>float</strong></th>
+<th align="center"><strong>double</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>int</strong></td>
+<td align="center">i2b</td>
+<td align="center">i2c</td>
+<td align="center">i2s</td>
+<td align="center">○</td>
+<td align="center">i2l</td>
+<td align="center">i2f</td>
+<td align="center">i2d</td>
+</tr>
+<tr>
+<td><strong>long</strong></td>
+<td align="center">l2i i2b</td>
+<td align="center">l2i i2c</td>
+<td align="center">l2i i2s</td>
+<td align="center">l2i</td>
+<td align="center">○</td>
+<td align="center">l2f</td>
+<td align="center">l2d</td>
+</tr>
+<tr>
+<td><strong>float</strong></td>
+<td align="center">f2i i2b</td>
+<td align="center">f2i i2c</td>
+<td align="center">f2i i2s</td>
+<td align="center">f2i</td>
+<td align="center">f2l</td>
+<td align="center">○</td>
+<td align="center">f2d</td>
+</tr>
+<tr>
+<td><strong>double</strong></td>
+<td align="center">d2i i2b</td>
+<td align="center">d2i i2c</td>
+<td align="center">d2i i2s</td>
+<td align="center">d2i</td>
+<td align="center">d2l</td>
+<td align="center">d2f</td>
+<td align="center">○</td>
+</tr>
+</tbody></table>
+<p>类型转换指令可以将两种不同的数值类型进行相互转换。这些转换操作一般用于实现用户代码中的显式类型转換操作，或者用来处理字节码指令集中数据类型相关指令无法与数据类型一一对应的问题。</p>
+<blockquote>
+<h2 id="宽化类型转换"><a href="#宽化类型转换" class="headerlink" title="宽化类型转换"></a>宽化类型转换</h2><p>i2l 把int类型的数据转化为long类型</p>
+<p>i2f 把int类型的数据转化为float类型</p>
+<p>i2d 把int类型的数据转化为double类型</p>
+<p>l2f 把long类型的数据转化为float类型</p>
+<p>l2d 把long类型的数据转化为double类型</p>
+<p>f2d 把float类型的数据转化为double类型</p>
+<h2 id="窄化类型转换"><a href="#窄化类型转换" class="headerlink" title="窄化类型转换"></a>窄化类型转换</h2><p>i2b 把int类型的数据转化为byte类型</p>
+<p>i2c 把int类型的数据转化为char类型</p>
+<p>i2s 把int类型的数据转化为short类型</p>
+<p>l2i 把long类型的数据转化为int类型</p>
+<p>f2i 把float类型的数据转化为int类型</p>
+<p>f2l 把float类型的数据转化为long类型</p>
+<p>d2i 把double类型的数据转化为int类型</p>
+<p>d2l 把double类型的数据转化为long类型</p>
+<p>d2f 把double类型的数据转化为float类型</p>
+</blockquote>
+<h2 id="4-2-宽化类型转换剖析"><a href="#4-2-宽化类型转换剖析" class="headerlink" title="4.2 宽化类型转换剖析"></a>4.2 宽化类型转换剖析</h2><p>宽化类型转换( Widening Numeric Conversions)</p>
+<p><strong>转换规则</strong></p>
+<p>Java虚拟机直接支持以下数值的宽化类型转换（ widening numeric conversion，小范围类型向大范围类型的安全转换）。也就是说，并不需要指令执行，包括</p>
+<p>从int类型到long、float或者 double类型。对应的指令为：i21、i2f、i2d</p>
+<p>从long类型到float、 double类型。对应的指令为：i2f、i2d</p>
+<p>从float类型到double类型。对应的指令为：f2d</p>
+<p>简化为：int–&gt;long–&gt;float-&gt; double</p>
+<p><strong>精度损失问题</strong></p>
+<ul>
+<li>宽化类型转换是不会因为超过目标类型最大值而丢失信息的，例如，从int转换到long,或者从int转换到double,都不会丢失任何信息，转换前后的值是精确相等的。</li>
+<li>从int、long类型数值转换到float,或者long类型数值转换到double时，将可能发生精度丢失一一可能丢失掉几个最低有效位上的值，转换后的浮点数值是根据IEEE754最接近含入模式所得到的正确整数值。</li>
+</ul>
+<p>尽管宽化类型转换实际上是可能发生精度丢失的，但是这种转换永远不会导致Java虚拟机抛出运行时异常</p>
+<p><strong>补充说明</strong></p>
+<p>从byte、char和 short类型到int类型的宽化类型转换实际上是不存在的。对于byte类型转为int，虚拟机并没有做实质性的转化处理，只是简单地通过操作数栈交換了两个数据。而将byte转为long时，使用的是i2l，可以看到在内部，byte在这里已经等同于int类型处理，类似的还有 short类型，这种处理方式有两个特点：</p>
+<ul>
+<li>一方面可以减少实际的数据类型，如果为 short和byte都准备一套指令，那么指令的数量就会大増，而虚拟机目前的设计上，只愿意使用一个字节表示指令，因此指令总数不能超过256个，为了节省指令资源，将 short和byte当做int处理也在情理之中。</li>
+<li>另一方面，由于局部变量表中的槽位固定为32位，无论是byte或者 short存入局部变量表，都会占用32位空间。从这个角度说，也没有必要特意区分这几种数据类型。</li>
+</ul>
+<h2 id="4-3-窄化类型转换剖析"><a href="#4-3-窄化类型转换剖析" class="headerlink" title="4.3 窄化类型转换剖析"></a>4.3 窄化类型转换剖析</h2><p>窄化类型转换( Narrowing Numeric Conversion)</p>
+<p><strong>转换规则</strong></p>
+<p>Java虚拟机也直接支持以下窄化类型转换：</p>
+<p>从主int类型至byte、 short或者char类型。对应的指令有：i2b、i2c、i2s</p>
+<p>从long类型到int类型。对应的指令有：l2i</p>
+<p>从float类型到int或者long类型。对应的指令有：f2i、f2l</p>
+<p>从double类型到int、long或者float类型。对应的指令有：d2i、d2l、d2f</p>
+<p><strong>精度损失问题</strong></p>
+<p>窄化类型转换可能会导致转换结果具备不同的正负号、不同的数量级，因此，转换过程很可能会导致数值丢失精度。</p>
+<p>尽管数据类型窄化转换可能会发生上限溢出、下限溢出和精度丢失等情况，但是Java虚拟机规范中明确规定数值类型的窄化转换指令永远不可能导致虚拟机抛出运行时异常</p>
+<p><strong>补充说明</strong></p>
+<ul>
+<li><strong>当将一个浮点值窄化转换为整数类型T(T限于int或long类型之一)的时候，将遵循以下转换规则</strong>：<ul>
+<li>如果浮点值是NaN，那转换结果就是int或long类型的0.</li>
+<li>如果浮点值不是无穷大的话，浮点值使用IEEE754的向零含入模式取整，获得整数值Vv如果v在目标类型T(int或long)的表示范围之内，那转换结果就是v。否则，将根据v的符号，转换为T所能表示的最大或者最小正数</li>
+</ul>
+</li>
+<li><strong>当将一个double类型窄化转换为float类型时，将遵循以下转换规则</strong><ul>
+<li>通过向最接近数舍入模式舍入一个可以使用float类型表示的数字。最后结果根据下面这3条规则判断</li>
+<li>如果转换结果的绝对值太小而无法使用float来表示，将返回float类型的正负零</li>
+<li>如果转换结果的绝对值太大而无法使用float来表示，将返回float类型的正负无穷大</li>
+<li>对于double类型的NaN值将按规定转換为float类型的NaN值。</li>
+</ul>
+</li>
+</ul>
+<h1 id="5-对象的创建与访问指令"><a href="#5-对象的创建与访问指令" class="headerlink" title="5. 对象的创建与访问指令"></a>5. 对象的创建与访问指令</h1><h2 id="5-1-概述"><a href="#5-1-概述" class="headerlink" title="5.1 概述"></a>5.1 概述</h2><p><strong>对象操作指令</strong></p>
+<p>new 创建一个新对象</p>
+<p>getfield 从对象中获取字段</p>
+<p>putfield 设置对象中字段的值</p>
+<p>getstatic 从类中获取静态字段</p>
+<p>putstatic 设置类中静态字段的值</p>
+<p>checkcast 确定对象为所给定的类型。后跟目标类，判断栈顶元素是否为目标类 &#x2F; 接口的实例。如果不是便抛出异常</p>
+<p>instanceof 判断对象是否为给定的类型。后跟目标类，判断栈顶元素是否为目标类 &#x2F; 接口的实例。是则压入 1，否则压入 0</p>
+<p><strong>数组操作指令</strong></p>
+<p>newarray 分配数据成员类型为基本上数据类型的新数组</p>
+<p>anewarray 分配数据成员类型为引用类型的新数组</p>
+<p>arraylength 获取数组长度</p>
+<p>multianewarray 分配新的多维数组</p>
+<p>Java是面向对象的程序设计语言，虚拟机平台从字节码层面就对面向对象做了深层次的支持。有一系列指令专门用于对象操作，可进一步细分为创建指令、字段访问指令、数组操作指令、类型检查指令。</p>
+<h2 id="5-2-创建指令-new"><a href="#5-2-创建指令-new" class="headerlink" title="5.2 创建指令(new)"></a>5.2 创建指令(new)</h2><table>
+<thead>
+<tr>
+<th align="left">创建指令</th>
+<th align="left">含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">new</td>
+<td align="left">创建类实例</td>
+</tr>
+<tr>
+<td align="left">newarray</td>
+<td align="left">创建基本类型数组</td>
+</tr>
+<tr>
+<td align="left">anewarray</td>
+<td align="left">创建引用类型数组</td>
+</tr>
+<tr>
+<td align="left">multilanewarra</td>
+<td align="left">创建多维数组</td>
+</tr>
+</tbody></table>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991024594-5ee71d3c-d5e7-4a7c-a308-2e1e75e3f61b.png"></p>
+<h2 id="5-3-字段访问指令-getstatic-x2F-putstatic-x2F-getfield-x2F-putfield"><a href="#5-3-字段访问指令-getstatic-x2F-putstatic-x2F-getfield-x2F-putfield" class="headerlink" title="5.3 字段访问指令(getstatic&#x2F;putstatic&#x2F;getfield&#x2F;putfield)"></a>5.3 字段访问指令(getstatic&#x2F;putstatic&#x2F;getfield&#x2F;putfield)</h2><table>
+<thead>
+<tr>
+<th align="left">字段访问指令</th>
+<th align="left">含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">getstatic、putstatic</td>
+<td align="left">访问类字段（static字段，或者称为类变量）的指令</td>
+</tr>
+<tr>
+<td align="left">getfield、 putfield</td>
+<td align="left">访问类实例字段（非static字段，或者称为实例变量）的指令</td>
+</tr>
+</tbody></table>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991024634-2f37d597-086d-4eba-accf-254b9025eafb.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991025036-5db24784-2011-441e-a5f8-fcacb841d671.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2021/png/696107/1633688920272-0626ffdb-e929-4b29-a622-e25bdfe5f692.png"></p>
+<h2 id="5-4-数组操作指令-load-x2F-store"><a href="#5-4-数组操作指令-load-x2F-store" class="headerlink" title="5.4 数组操作指令(load&#x2F;store)"></a>5.4 数组操作指令(load&#x2F;store)</h2><table>
+<thead>
+<tr>
+<th>数组指令</th>
+<th>byte(boolean)</th>
+<th>char</th>
+<th>short</th>
+<th>long</th>
+<th>long</th>
+<th>float</th>
+<th>double</th>
+<th>reference</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>xaload</strong></td>
+<td>baload</td>
+<td>caload</td>
+<td>saload</td>
+<td>iaload</td>
+<td>laload</td>
+<td>faload</td>
+<td>daload</td>
+<td>aaload</td>
+</tr>
+<tr>
+<td><strong>xastore</strong></td>
+<td>bastore</td>
+<td>castore</td>
+<td>sastore</td>
+<td>iastore</td>
+<td>lastore</td>
+<td>fastore</td>
+<td>dastore</td>
+<td>aastore</td>
+</tr>
+</tbody></table>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991025162-2f7701f2-0dc6-4021-aa3f-c7c9c8fdc8ac.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991025382-1e2ed527-b6f9-43fa-8188-e7489da02be3.png"></p>
+<h2 id="5-5-类型检查指令（instanceof-x2F-checkcast）"><a href="#5-5-类型检查指令（instanceof-x2F-checkcast）" class="headerlink" title="5.5 类型检查指令（instanceof&#x2F;checkcast）"></a>5.5 类型检查指令（instanceof&#x2F;checkcast）</h2><table>
+<thead>
+<tr>
+<th>类型检查指令</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>instanceof</td>
+<td>检查类型强制转换是否可以进行</td>
+</tr>
+<tr>
+<td>checkcast</td>
+<td>判断给定对象是否是某一个类的实例</td>
+</tr>
+</tbody></table>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991025284-12de1549-faf8-402b-a291-297bf01ed478.png"></p>
+<hr>
+<h1 id="6-方法调用与返回指令"><a href="#6-方法调用与返回指令" class="headerlink" title="6. 方法调用与返回指令"></a>6. 方法调用与返回指令</h1><h2 id="6-1-总体概述"><a href="#6-1-总体概述" class="headerlink" title="6.1 总体概述"></a>6.1 总体概述</h2><p><strong>方法调用指令</strong></p>
+<p>invokcvirtual 运行时按照对象的类来调用实例方法</p>
+<p>invokespecial 根据编译时类型来调用实例方法</p>
+<p>invokestatic 调用类（静态）方法</p>
+<p>invokcinterface 调用接口方法</p>
+<p><strong>方法返回指令</strong></p>
+<p>ireturn 从方法中返回int类型的数据</p>
+<p>lreturn 从方法中返回long类型的数据</p>
+<p>freturn 从方法中返回float类型的数据</p>
+<p>dreturn 从方法中返回double类型的数据</p>
+<p>areturn 从方法中返回引用类型的数据</p>
+<p>return 从方法中返回，返回值为void</p>
+<h2 id="6-2-方法调用指令-invoke"><a href="#6-2-方法调用指令-invoke" class="headerlink" title="6.2 方法调用指令(invoke)"></a>6.2 方法调用指令(invoke)</h2><table>
+<thead>
+<tr>
+<th>方法调用指令</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>invokevirtual</td>
+<td>调用对象的实例方法</td>
+</tr>
+<tr>
+<td>invokeinterface</td>
+<td>调用接口方法</td>
+</tr>
+<tr>
+<td>invokespecial</td>
+<td>调用一些需要特殊处理的实例方法，包括实例初始化方法（构造器）、私有方法和父类方法</td>
+</tr>
+<tr>
+<td>invokestatic</td>
+<td>调用命名类中的类方法（static方法）</td>
+</tr>
+<tr>
+<td>invokedynamic</td>
+<td>调用动态绑定的方法</td>
+</tr>
+</tbody></table>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991025485-4f459f4a-bf47-4166-89e8-448158dafe43.png"></p>
+<h2 id="6-3-方法返回指令-return"><a href="#6-3-方法返回指令-return" class="headerlink" title="6.3 方法返回指令(return)"></a>6.3 方法返回指令(return)</h2><table>
+<thead>
+<tr>
+<th>方法返回指令</th>
+<th>void</th>
+<th>int</th>
+<th>long</th>
+<th>float</th>
+<th>double</th>
+<th>reference</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>xreturn</td>
+<td>return</td>
+<td>ireturn</td>
+<td>lreturn</td>
+<td>freutrn</td>
+<td>dreturn</td>
+<td>areturn</td>
+</tr>
+</tbody></table>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991025790-6bfa5fc6-6da6-411c-a4bb-96a188ff2bb3.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991025896-55a4a49a-5176-4d53-8849-2d0530f11c31.png"></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="type">int</span> <span class="title function_">methodReturn</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">500</span>;</span><br><span class="line">    <span class="type">int</span> <span class="variable">j</span> <span class="operator">=</span> <span class="number">200</span>;</span><br><span class="line">    <span class="type">int</span> <span class="variable">k</span> <span class="operator">=</span> <span class="number">50</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> (i + j) / k;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991025964-495f5dfc-9744-412b-b854-4af1bd7f1be5.png"></p>
+<hr>
+<h1 id="7-操作数栈管理指令"><a href="#7-操作数栈管理指令" class="headerlink" title="7. 操作数栈管理指令"></a>7. 操作数栈管理指令</h1><p><strong>通用(无类型）栈操作</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">nop 不做任何操作</span><br><span class="line">pop 弹出栈顶端一个字长的内容</span><br><span class="line">pop2 弹出栈顶端两个字长的内容</span><br><span class="line">dup 复制栈顶部一个字长内容</span><br><span class="line">dup_x1 复制栈顶部一个字长的内容，然后将复制内容及原来弹出的两个字长的内容压入栈</span><br><span class="line">dup_x2 复制栈顶部一个字长的内容，然后将复制内容及原来弹出的三个字长的内容压入栈</span><br><span class="line">dup2 复制栈顶部两个字长内容</span><br><span class="line">dup2_x1 复制栈顶部两个字长的内容，然后将复制内容及原来弹出的三个字长的内容压入栈</span><br><span class="line">dup2_x2 复制栈顶部两个字长的内容，然后将复制内容及原来弹出的四个字长的内容压入栈</span><br><span class="line">swap 交换栈顶部两个字长内容</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991026230-727eb501-10f2-4e2f-a6c7-a0dd91cd028e.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991026136-016c9d22-5626-4875-aef6-39869f5f9666.png"></p>
+<hr>
+<h1 id="8-控制转移指令"><a href="#8-控制转移指令" class="headerlink" title="8. 控制转移指令"></a>8. 控制转移指令</h1><h2 id="8-1-概述"><a href="#8-1-概述" class="headerlink" title="8.1 概述"></a>8.1 概述</h2><table>
+<thead>
+<tr>
+<th>比较指令</th>
+<th>lcmp 比较long类型值<br/>fcmpl 比较float类型值（当遇到NaN时，返回-1）<br/>fcmpg 比较float类型值（当遇到NaN时，返回1）<br/>dcmpl 比较double类型值（当遇到NaN时，返回-1）<br/>dcmpg 比较double类型值（当遇到NaN时，返回1）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>条件分支指令</td>
+<td>ifeq 如果等于0，则跳转<br/>ifne 如果不等于0，则跳转<br/>iflt 如果小于0，则跳转<br/>ifge 如果大于等于0，则跳转<br/>ifgt 如果大于0，则跳转<br/>ifle 如果小于等于0，则跳转</td>
+</tr>
+<tr>
+<td>比较条件分支指令</td>
+<td>if_icmpeq 如果两个int值相等，则跳转<br/>if_icmpne 如果两个int类型值不相等，则跳转<br/>if_icmplt 如果一个int类型值小于另外一个int类型值，则跳转<br/>if_icmpge 如果一个int类型值大于或者等于另外一个int类型值，则跳转<br/>if_icmpgt 如果一个int类型值大于另外一个int类型值，则跳转<br/>if_icmple 如果一个int类型值小于或者等于另外一个int类型值，则跳转<br/>ifnull 如果等于null，则跳转<br/>ifnonnull 如果不等于null，则跳转<br/>if_acmpeq 如果两个对象引用相等，则跳转<br/>if_acmpne 如果两个对象引用不相等，则跳转</td>
+</tr>
+<tr>
+<td>多条件分支跳转指令</td>
+<td>tableswitch 通过索引访问跳转表，并跳转<br/>lookupswitch 通过键值匹配访问跳转表，并执行跳转操作</td>
+</tr>
+<tr>
+<td>无条件跳转指令</td>
+<td>goto 无条件跳转<br/>goto_w 无条件跳转（宽索引）</td>
+</tr>
+</tbody></table>
+<h2 id="8-1-比较指令（cmpg-x2F-cmpl）"><a href="#8-1-比较指令（cmpg-x2F-cmpl）" class="headerlink" title="8.1. 比较指令（cmpg&#x2F;cmpl）"></a>8.1. 比较指令（cmpg&#x2F;cmpl）</h2><p><strong>详见上方的算术指令</strong></p>
+<p>比较指令的作用是比较占栈顶两个元素的大小，并将比较结果入栽。</p>
+<p>比较指令有： dcmpg,dcmpl、 fcmpg、fcmpl、lcmp</p>
+<p>与前面讲解的指令类似，首字符d表示double类型，f表示float,l表示long.</p>
+<p>对于double和float类型的数字，由于NaN的存在，各有两个版本的比较指令。以float为例，有fcmpg和fcmpl两个指令，它们的区别在于在数字比较时，若遇到NaN值，处理结果不同。</p>
+<p>指令dcmpl和 dcmpg也是类似的，根据其命名可以推测其含义，在此不再赘述。</p>
+<p><strong>举例</strong></p>
+<p>指令 fcmp和fcmpl都从中弹出两个操作数，并将它们做比较，设栈顶的元素为v2,顶顺位第2位的元素为v1,若v1&#x3D;v2,则压入0:若v1&gt;v2则压入1:若v1&lt;v2则压入-1.</p>
+<p>两个指令的不同之处在于，如果遇到NaN值， fcmpg会压入1,而fcmpl会压入-1</p>
+<h2 id="8-2-条件跳转指令（if）"><a href="#8-2-条件跳转指令（if）" class="headerlink" title="8.2. 条件跳转指令（if）"></a>8.2. 条件跳转指令（if）</h2><table>
+<thead>
+<tr>
+<th>&lt;</th>
+<th>&lt;&#x3D;</th>
+<th>&#x3D;&#x3D;</th>
+<th>!&#x3D;</th>
+<th>&gt;&#x3D;</th>
+<th>&gt;</th>
+<th>null</th>
+<th>not null</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>iflt</td>
+<td>ifle</td>
+<td>ifeq</td>
+<td>ifng</td>
+<td>ifge</td>
+<td>ifgt</td>
+<td>ifnull</td>
+<td>ifnonnull</td>
+</tr>
+</tbody></table>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991026303-09e938a4-5fc7-493c-8d85-4c9ce30af426.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991026459-33cda47a-cc28-4078-bb45-7dcc500a0b7f.png"></p>
+<h2 id="8-3-比较条件跳转指令（if-icmp-x2F-if-aicmp）"><a href="#8-3-比较条件跳转指令（if-icmp-x2F-if-aicmp）" class="headerlink" title="8.3. 比较条件跳转指令（if-icmp&#x2F;if-aicmp）"></a>8.3. 比较条件跳转指令（if-icmp&#x2F;if-aicmp）</h2><table>
+<thead>
+<tr>
+<th>&lt;</th>
+<th>&lt;&#x3D;</th>
+<th>&#x3D;&#x3D;</th>
+<th>!&#x3D;</th>
+<th>&gt;&#x3D;</th>
+<th>&gt;</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>if_icmplt</td>
+<td>if_icmple</td>
+<td>if_icmpeq、if_acmpeq</td>
+<td>if_icmpne、if_acmpne</td>
+<td>if_icmpge</td>
+<td>if_icmpgt</td>
+</tr>
+</tbody></table>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991026472-6496836e-6114-4263-8e28-af306007f683.png"></p>
+<h2 id="8-4-多条件分支跳转（switch）"><a href="#8-4-多条件分支跳转（switch）" class="headerlink" title="8.4. 多条件分支跳转（switch）"></a>8.4. 多条件分支跳转（switch）</h2><p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991026839-3b352b5f-9ec3-4232-aeb7-56f5d351d69f.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991026918-96081cbc-5c53-42c3-a81f-b3392f38a48d.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991026953-075839de-ec2b-4c1d-be72-cec86bdb0388.png"></p>
+<h2 id="8-5-无条件跳转（goto）"><a href="#8-5-无条件跳转（goto）" class="headerlink" title="8.5. 无条件跳转（goto）"></a>8.5. 无条件跳转（goto）</h2><p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991027018-1526237a-8e5f-4663-acda-019d64db1a7d.png"></p>
+<hr>
+<h1 id="9-异常处理指令"><a href="#9-异常处理指令" class="headerlink" title="9. 异常处理指令"></a>9. 异常处理指令</h1><h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><blockquote>
+<h2 id="异常处理指令"><a href="#异常处理指令" class="headerlink" title="异常处理指令"></a>异常处理指令</h2><p>athrow 抛出异常或错误。将栈顶异常抛出</p>
+<p>jsr 跳转到子例程</p>
+<p>jsr_w 跳转到子例程（宽索引）</p>
+<p>rct 从子例程返回</p>
+</blockquote>
+<h2 id="抛出异常"><a href="#抛出异常" class="headerlink" title="抛出异常"></a>抛出异常</h2><p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991027371-8f7ae5c2-a07f-4de4-9006-2e52ec6a0b16.png"></p>
+<h2 id="捕获异常"><a href="#捕获异常" class="headerlink" title="捕获异常"></a>捕获异常</h2><p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991027433-ada85ae1-5b9c-4304-ae50-e44d973f9eae.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991027534-2e9d13d2-326e-40c6-a197-3df3481b59fd.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991027652-891a2fd6-9200-4e28-b03f-53ccc464e48a.png"></p>
+<hr>
+<h1 id="10-同步控制指令"><a href="#10-同步控制指令" class="headerlink" title="10. 同步控制指令"></a>10. 同步控制指令</h1><blockquote>
+<h3 id="线程同步"><a href="#线程同步" class="headerlink" title="线程同步"></a>线程同步</h3><p>montiorenter 进入并获取对象监视器。即：为栈顶对象加锁</p>
+<p>monitorexit 释放并退出对象监视器。即：为栈顶对象解锁</p>
+</blockquote>
+<p>Java虚拟机支持两种同步结构：方法级的同步和方法内部一段指令序列的同步，这两种同步都是使用monitor来支持的</p>
+<h2 id="10-1-方法级的同步"><a href="#10-1-方法级的同步" class="headerlink" title="10.1. 方法级的同步"></a>10.1. 方法级的同步</h2><p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991027723-f0f6c10f-4236-4ee8-b97c-df69e5eb1dc5.png"></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title function_">add</span><span class="params">()</span> &#123;</span><br><span class="line">	i++;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991027868-ead89e3f-afd4-41cb-93a3-8d06b3ffe8d4.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991028014-e87bb91b-f59c-422e-a742-18ebdd434bed.png"></p>
+<h2 id="10-2-方法内指令指令序列的同步"><a href="#10-2-方法内指令指令序列的同步" class="headerlink" title="10.2. 方法内指令指令序列的同步"></a>10.2. 方法内指令指令序列的同步</h2><p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991028071-32fb67b5-96d2-4baa-8809-e667fb8d75b9.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991028183-424fcdef-8569-44bf-a82b-1211ef29915e.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991028348-f604e67c-3f3d-420b-965b-b29ed29d531d.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719991028270-c9d0fcb5-5608-4831-859d-e877482666ef.png"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/jvm/" rel="tag"><i class="fa fa-tag"></i> jvm</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/08/28/01-class%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84/" rel="prev" title="01-class文件结构">
+      <i class="fa fa-chevron-left"></i> 01-class文件结构
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/08/30/03-%E7%B1%BB%E7%9A%84%E5%8A%A0%E8%BD%BD%E8%BF%87%E7%A8%8B%EF%BC%88%E7%B1%BB%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%EF%BC%89%E8%AF%A6%E8%A7%A3/" rel="next" title="03-类的加载过程（类的生命周期）详解">
+      03-类的加载过程（类的生命周期）详解 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">1. 概述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E5%8A%A0%E8%BD%BD%E4%B8%8E%E5%AD%98%E5%82%A8%E6%8C%87%E4%BB%A4"><span class="nav-number">2.</span> <span class="nav-text">2. 加载与存储指令</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-0-%E6%A6%82%E8%A7%88"><span class="nav-number">2.1.</span> <span class="nav-text">2.0 概览</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-%E5%B1%80%E9%83%A8%E5%8F%98%E9%87%8F%E5%8E%8B%E6%A0%88%E6%8C%87%E4%BB%A4%EF%BC%88load%EF%BC%89"><span class="nav-number">2.2.</span> <span class="nav-text">2.1. 局部变量压栈指令（load）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-%E5%B8%B8%E9%87%8F%E5%85%A5%E6%A0%88%E6%8C%87%E4%BB%A4%EF%BC%88const-x2F-push-x2F-ldc%EF%BC%89"><span class="nav-number">2.3.</span> <span class="nav-text">2.2. 常量入栈指令（const&#x2F;push&#x2F;ldc）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-3-%E5%87%BA%E6%A0%88%E8%A3%85%E5%85%A5%E5%B1%80%E9%83%A8%E5%8F%98%E9%87%8F%E8%A1%A8%E6%8C%87%E4%BB%A4%EF%BC%88store%EF%BC%89"><span class="nav-number">2.4.</span> <span class="nav-text">2.3. 出栈装入局部变量表指令（store）</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E7%AE%97%E6%9C%AF%E6%8C%87%E4%BB%A4"><span class="nav-number">3.</span> <span class="nav-text">3. 算术指令</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-%E6%A6%82%E8%BF%B0"><span class="nav-number">3.1.</span> <span class="nav-text">3.1 概述</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B4%E6%95%B0%E8%BF%90%E7%AE%97"><span class="nav-number">3.1.1.</span> <span class="nav-text">整数运算</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%BB%E8%BE%91%E8%BF%90%E7%AE%97"><span class="nav-number">3.1.2.</span> <span class="nav-text">逻辑运算</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-%E7%AE%97%E6%9C%AF%E6%8C%87%E4%BB%A4%E9%9B%86"><span class="nav-number">3.2.</span> <span class="nav-text">3.2 算术指令集</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-%E7%AE%97%E6%9C%AF%E6%8C%87%E4%BB%A4%E4%B8%BE%E4%BE%8B"><span class="nav-number">3.3.</span> <span class="nav-text">3.3 算术指令举例</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-%E7%B1%BB%E5%9E%8B%E8%BD%AC%E6%8D%A2%E6%8C%87%E4%BB%A4%EF%BC%88x2x%EF%BC%89"><span class="nav-number">4.</span> <span class="nav-text">4. 类型转换指令（x2x）</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-%E6%A6%82%E8%BF%B0"><span class="nav-number">4.1.</span> <span class="nav-text">4.1 概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%BD%E5%8C%96%E7%B1%BB%E5%9E%8B%E8%BD%AC%E6%8D%A2"><span class="nav-number">4.2.</span> <span class="nav-text">宽化类型转换</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AA%84%E5%8C%96%E7%B1%BB%E5%9E%8B%E8%BD%AC%E6%8D%A2"><span class="nav-number">4.3.</span> <span class="nav-text">窄化类型转换</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-%E5%AE%BD%E5%8C%96%E7%B1%BB%E5%9E%8B%E8%BD%AC%E6%8D%A2%E5%89%96%E6%9E%90"><span class="nav-number">4.4.</span> <span class="nav-text">4.2 宽化类型转换剖析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-3-%E7%AA%84%E5%8C%96%E7%B1%BB%E5%9E%8B%E8%BD%AC%E6%8D%A2%E5%89%96%E6%9E%90"><span class="nav-number">4.5.</span> <span class="nav-text">4.3 窄化类型转换剖析</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-%E5%AF%B9%E8%B1%A1%E7%9A%84%E5%88%9B%E5%BB%BA%E4%B8%8E%E8%AE%BF%E9%97%AE%E6%8C%87%E4%BB%A4"><span class="nav-number">5.</span> <span class="nav-text">5. 对象的创建与访问指令</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#5-1-%E6%A6%82%E8%BF%B0"><span class="nav-number">5.1.</span> <span class="nav-text">5.1 概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-2-%E5%88%9B%E5%BB%BA%E6%8C%87%E4%BB%A4-new"><span class="nav-number">5.2.</span> <span class="nav-text">5.2 创建指令(new)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-3-%E5%AD%97%E6%AE%B5%E8%AE%BF%E9%97%AE%E6%8C%87%E4%BB%A4-getstatic-x2F-putstatic-x2F-getfield-x2F-putfield"><span class="nav-number">5.3.</span> <span class="nav-text">5.3 字段访问指令(getstatic&#x2F;putstatic&#x2F;getfield&#x2F;putfield)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-4-%E6%95%B0%E7%BB%84%E6%93%8D%E4%BD%9C%E6%8C%87%E4%BB%A4-load-x2F-store"><span class="nav-number">5.4.</span> <span class="nav-text">5.4 数组操作指令(load&#x2F;store)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-5-%E7%B1%BB%E5%9E%8B%E6%A3%80%E6%9F%A5%E6%8C%87%E4%BB%A4%EF%BC%88instanceof-x2F-checkcast%EF%BC%89"><span class="nav-number">5.5.</span> <span class="nav-text">5.5 类型检查指令（instanceof&#x2F;checkcast）</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#6-%E6%96%B9%E6%B3%95%E8%B0%83%E7%94%A8%E4%B8%8E%E8%BF%94%E5%9B%9E%E6%8C%87%E4%BB%A4"><span class="nav-number">6.</span> <span class="nav-text">6. 方法调用与返回指令</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#6-1-%E6%80%BB%E4%BD%93%E6%A6%82%E8%BF%B0"><span class="nav-number">6.1.</span> <span class="nav-text">6.1 总体概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-2-%E6%96%B9%E6%B3%95%E8%B0%83%E7%94%A8%E6%8C%87%E4%BB%A4-invoke"><span class="nav-number">6.2.</span> <span class="nav-text">6.2 方法调用指令(invoke)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-3-%E6%96%B9%E6%B3%95%E8%BF%94%E5%9B%9E%E6%8C%87%E4%BB%A4-return"><span class="nav-number">6.3.</span> <span class="nav-text">6.3 方法返回指令(return)</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#7-%E6%93%8D%E4%BD%9C%E6%95%B0%E6%A0%88%E7%AE%A1%E7%90%86%E6%8C%87%E4%BB%A4"><span class="nav-number">7.</span> <span class="nav-text">7. 操作数栈管理指令</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#8-%E6%8E%A7%E5%88%B6%E8%BD%AC%E7%A7%BB%E6%8C%87%E4%BB%A4"><span class="nav-number">8.</span> <span class="nav-text">8. 控制转移指令</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#8-1-%E6%A6%82%E8%BF%B0"><span class="nav-number">8.1.</span> <span class="nav-text">8.1 概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-1-%E6%AF%94%E8%BE%83%E6%8C%87%E4%BB%A4%EF%BC%88cmpg-x2F-cmpl%EF%BC%89"><span class="nav-number">8.2.</span> <span class="nav-text">8.1. 比较指令（cmpg&#x2F;cmpl）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-2-%E6%9D%A1%E4%BB%B6%E8%B7%B3%E8%BD%AC%E6%8C%87%E4%BB%A4%EF%BC%88if%EF%BC%89"><span class="nav-number">8.3.</span> <span class="nav-text">8.2. 条件跳转指令（if）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-3-%E6%AF%94%E8%BE%83%E6%9D%A1%E4%BB%B6%E8%B7%B3%E8%BD%AC%E6%8C%87%E4%BB%A4%EF%BC%88if-icmp-x2F-if-aicmp%EF%BC%89"><span class="nav-number">8.4.</span> <span class="nav-text">8.3. 比较条件跳转指令（if-icmp&#x2F;if-aicmp）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-4-%E5%A4%9A%E6%9D%A1%E4%BB%B6%E5%88%86%E6%94%AF%E8%B7%B3%E8%BD%AC%EF%BC%88switch%EF%BC%89"><span class="nav-number">8.5.</span> <span class="nav-text">8.4. 多条件分支跳转（switch）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-5-%E6%97%A0%E6%9D%A1%E4%BB%B6%E8%B7%B3%E8%BD%AC%EF%BC%88goto%EF%BC%89"><span class="nav-number">8.6.</span> <span class="nav-text">8.5. 无条件跳转（goto）</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#9-%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E6%8C%87%E4%BB%A4"><span class="nav-number">9.</span> <span class="nav-text">9. 异常处理指令</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">9.1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E6%8C%87%E4%BB%A4"><span class="nav-number">9.2.</span> <span class="nav-text">异常处理指令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8A%9B%E5%87%BA%E5%BC%82%E5%B8%B8"><span class="nav-number">9.3.</span> <span class="nav-text">抛出异常</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8D%95%E8%8E%B7%E5%BC%82%E5%B8%B8"><span class="nav-number">9.4.</span> <span class="nav-text">捕获异常</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#10-%E5%90%8C%E6%AD%A5%E6%8E%A7%E5%88%B6%E6%8C%87%E4%BB%A4"><span class="nav-number">10.</span> <span class="nav-text">10. 同步控制指令</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E5%90%8C%E6%AD%A5"><span class="nav-number">10.0.1.</span> <span class="nav-text">线程同步</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#10-1-%E6%96%B9%E6%B3%95%E7%BA%A7%E7%9A%84%E5%90%8C%E6%AD%A5"><span class="nav-number">10.1.</span> <span class="nav-text">10.1. 方法级的同步</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#10-2-%E6%96%B9%E6%B3%95%E5%86%85%E6%8C%87%E4%BB%A4%E6%8C%87%E4%BB%A4%E5%BA%8F%E5%88%97%E7%9A%84%E5%90%8C%E6%AD%A5"><span class="nav-number">10.2.</span> <span class="nav-text">10.2. 方法内指令指令序列的同步</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="139"
+      src="/images/custom/avatar.jpg">
+  <p class="site-author-name" itemprop="name">139</p>
+  <div class="site-description" itemprop="description">一个普通的JAVA开发的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">96</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+  <div class="beian"><a href="https://beian.miit.gov.cn/" rel="noopener" target="_blank">浙ICP备2023004484号-1 </a>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">139</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8335634399768246"
+     crossorigin="anonymous"></script>
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
