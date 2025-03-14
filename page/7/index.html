@@ -125,17 +125,17 @@
   </li>
         <li class="menu-item menu-item-tags">
 
-    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">38</span></a>
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">39</span></a>
 
   </li>
         <li class="menu-item menu-item-categories">
 
-    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">9</span></a>
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">10</span></a>
 
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">69</span></a>
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">83</span></a>
 
   </li>
       <li class="menu-item menu-item-search">
@@ -192,7 +192,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2023/06/15/too%20many%20connections%20%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/08/22/08%20%E5%AF%B9%E8%B1%A1%E5%9C%A8%E5%86%85%E5%AD%98%E4%B8%AD%E7%9A%84%E5%8A%A8%E9%9D%99%E5%BD%A2%E6%80%81/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/custom/avatar.jpg">
@@ -206,7 +206,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2023/06/15/too%20many%20connections%20%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/" class="post-title-link" itemprop="url">too many connections 解决方法</a>
+            <a href="/2023/08/22/08%20%E5%AF%B9%E8%B1%A1%E5%9C%A8%E5%86%85%E5%AD%98%E4%B8%AD%E7%9A%84%E5%8A%A8%E9%9D%99%E5%BD%A2%E6%80%81/" class="post-title-link" itemprop="url">08 对象在内存中的动静形态</a>
         </h2>
 
         <div class="post-meta">
@@ -216,14 +216,14 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2023-06-15 00:00:00" itemprop="dateCreated datePublished" datetime="2023-06-15T00:00:00+08:00">2023-06-15</time>
+              <time title="创建时间：2023-08-22 22:01:11" itemprop="dateCreated datePublished" datetime="2023-08-22T22:01:11+08:00">2023-08-22</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-06 17:38:40" itemprop="dateModified" datetime="2025-03-06T17:38:40+08:00">2025-03-06</time>
+                <time title="修改时间：2025-03-14 14:43:10" itemprop="dateModified" datetime="2025-03-14T14:43:10+08:00">2025-03-14</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -231,7 +231,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                  <a href="/categories/JVM%E4%B8%8A%E7%AF%87%EF%BC%9A%E5%86%85%E5%AD%98%E4%B8%8E%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E7%AF%87/" itemprop="url" rel="index"><span itemprop="name">JVM上篇：内存与垃圾回收篇</span></a>
                 </span>
             </span>
 
@@ -246,16 +246,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>mysql -u root -p<font style="color:rgb(77, 77, 77);"> 回车输入密码进入mysql</font></p>
-<p><font style="color:rgb(77, 77, 77);"></font></p>
-<h1 id="too-many-connections-解决方法"><a href="#too-many-connections-解决方法" class="headerlink" title="too many connections 解决方法"></a><font style="color:rgb(38, 38, 38);">too many connections 解决方法</font></h1><p><font style="background-color:rgb(247, 247, 247);">mysql -u root -p</font><font style="color:rgb(77, 77, 77);"> 回车输入密码进入mysql</font></p>
-<font style="color:rgb(38, 38, 38);">  
-</font>
-
-<p><img src="https://cdn.nlark.com/yuque/0/2022/png/25873401/1646018837018-04475fb7-2931-430a-80fc-e6c91d289b2c.png"></p>
+          <h1 id="1-对象实例化的过程"><a href="#1-对象实例化的过程" class="headerlink" title="1 对象实例化的过程"></a>1 对象实例化的过程</h1><h2 id="概览"><a href="#概览" class="headerlink" title="概览"></a>概览</h2><p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719990813210-944f9556-5cff-432e-afc9-2741b812f0f1.png"></p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2023/06/15/too%20many%20connections%20%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/#more" rel="contents">
+              <a class="btn" href="/2023/08/22/08%20%E5%AF%B9%E8%B1%A1%E5%9C%A8%E5%86%85%E5%AD%98%E4%B8%AD%E7%9A%84%E5%8A%A8%E9%9D%99%E5%BD%A2%E6%80%81/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -279,7 +273,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2023/06/15/%E7%B4%A2%E5%BC%95%E5%88%86%E6%9E%90%E4%B8%8E%E4%BC%98%E5%8C%96/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/08/21/07%20%E6%96%B9%E6%B3%95%E5%8C%BA/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/custom/avatar.jpg">
@@ -293,7 +287,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2023/06/15/%E7%B4%A2%E5%BC%95%E5%88%86%E6%9E%90%E4%B8%8E%E4%BC%98%E5%8C%96/" class="post-title-link" itemprop="url">索引分析与优化</a>
+            <a href="/2023/08/21/07%20%E6%96%B9%E6%B3%95%E5%8C%BA/" class="post-title-link" itemprop="url">07 方法区</a>
         </h2>
 
         <div class="post-meta">
@@ -303,14 +297,14 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2023-06-15 00:00:00" itemprop="dateCreated datePublished" datetime="2023-06-15T00:00:00+08:00">2023-06-15</time>
+              <time title="创建时间：2023-08-21 21:32:16" itemprop="dateCreated datePublished" datetime="2023-08-21T21:32:16+08:00">2023-08-21</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-06 17:35:12" itemprop="dateModified" datetime="2025-03-06T17:35:12+08:00">2025-03-06</time>
+                <time title="修改时间：2025-03-14 14:40:01" itemprop="dateModified" datetime="2025-03-14T14:40:01+08:00">2025-03-14</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -318,7 +312,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                  <a href="/categories/JVM%E4%B8%8A%E7%AF%87%EF%BC%9A%E5%86%85%E5%AD%98%E4%B8%8E%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E7%AF%87/" itemprop="url" rel="index"><span itemprop="name">JVM上篇：内存与垃圾回收篇</span></a>
                 </span>
             </span>
 
@@ -333,13 +327,12 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h3 id="EXPLAIN"><a href="#EXPLAIN" class="headerlink" title="EXPLAIN"></a><font style="color:rgb(34, 34, 34);">EXPLAIN</font></h3><p><font style="color:rgb(34, 34, 34);">MySQL 提供了一个 EXPLAIN 命令，它可以对 SELECT 语句进行分析，并输出 SELECT 执行的详细信息，供开发人员有针对性的优化。例如：</font></p>
-<p><font style="color:rgb(34, 34, 34);">EXPLAIN SELECT * from user WHERE id &lt; 3;</font></p>
-<p><font style="color:rgb(34, 34, 34);">EXPLAIN 命令的输出内容大致如下：</font></p>
-<p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1656582561774-3eca4d5a-9d80-402a-9bf5-941d77d94c23.png"></p>
+          <h1 id="1-方法区概述"><a href="#1-方法区概述" class="headerlink" title="1. 方法区概述"></a>1. 方法区概述</h1><h2 id="1-1-在内存中的概览"><a href="#1-1-在内存中的概览" class="headerlink" title="1.1 在内存中的概览"></a>1.1 在内存中的概览</h2><p><img src="https://www.yuque.com/api/filetransfer/images?url=https://img-blog.csdnimg.cn/img_convert/b802b35c3936900c290f8ad123e68b9b.png&sign=17315fbaf650cd673a0379e3980560b72b4a7b47347cb57a0361ea479d29399b"></p>
+<p>从线程共享与否的角度来看</p>
+<p><img src="https://www.yuque.com/api/filetransfer/images?url=https://img-blog.csdnimg.cn/img_convert/f356e103d9f75e3c0086079bba2b28a9.png&sign=bdeb9e8e597b17589e36c323949edfdc95a72918c823be059b76dde4ce6075a5"></p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2023/06/15/%E7%B4%A2%E5%BC%95%E5%88%86%E6%9E%90%E4%B8%8E%E4%BC%98%E5%8C%96/#more" rel="contents">
+              <a class="btn" href="/2023/08/21/07%20%E6%96%B9%E6%B3%95%E5%8C%BA/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -363,7 +356,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2023/06/14/%E7%B4%A2%E5%BC%95/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/08/20/06%20%E5%A0%86/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/custom/avatar.jpg">
@@ -377,7 +370,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2023/06/14/%E7%B4%A2%E5%BC%95/" class="post-title-link" itemprop="url">索引</a>
+            <a href="/2023/08/20/06%20%E5%A0%86/" class="post-title-link" itemprop="url">06 堆</a>
         </h2>
 
         <div class="post-meta">
@@ -387,14 +380,14 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2023-06-14 00:00:00" itemprop="dateCreated datePublished" datetime="2023-06-14T00:00:00+08:00">2023-06-14</time>
+              <time title="创建时间：2023-08-20 22:12:32" itemprop="dateCreated datePublished" datetime="2023-08-20T22:12:32+08:00">2023-08-20</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-06 17:30:53" itemprop="dateModified" datetime="2025-03-06T17:30:53+08:00">2025-03-06</time>
+                <time title="修改时间：2025-03-14 14:38:51" itemprop="dateModified" datetime="2025-03-14T14:38:51+08:00">2025-03-14</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -402,7 +395,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                  <a href="/categories/JVM%E4%B8%8A%E7%AF%87%EF%BC%9A%E5%86%85%E5%AD%98%E4%B8%8E%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E7%AF%87/" itemprop="url" rel="index"><span itemprop="name">JVM上篇：内存与垃圾回收篇</span></a>
                 </span>
             </span>
 
@@ -417,15 +410,23 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p><font style="color:rgb(34, 34, 34);">MySQL官方对索引定义：是存储引擎用于快速查找记录的一种数据结构。需要额外开辟空间和数据维护工作。</font></p>
+          <h1 id="1-堆-Heap-的核心概述"><a href="#1-堆-Heap-的核心概述" class="headerlink" title="1. 堆(Heap)的核心概述"></a>1. 堆(Heap)的核心概述</h1><h2 id="1-1-核心概述"><a href="#1-1-核心概述" class="headerlink" title="1.1 核心概述"></a>1.1 核心概述</h2><p><img src="https://www.yuque.com/api/filetransfer/images?url=https://img-blog.csdnimg.cn/img_convert/0be60cad417bedd46d651f710ae585ce.png&sign=26913cbe6c64b806cf64d9bd818a2941e44f7bd8523012f99cbe148a33beb9c5"></p>
+<p>堆针对一个 JVM 进程来说是唯一的，也就是一个进程只有一个 JVM，但是进程包含多个线程，他们是共享同一堆空间的。</p>
+<p>一个 JVM 实例只存在一个堆内存，堆也是 Java 内存管理的核心区域。</p>
+<p>Java 堆区在 JVM 启动的时候即被创建，其空间大小也就确定了。是 JVM 管理的最大一块内存空间。</p>
 <ul>
-<li><font style="color:rgb(34, 34, 34);">索引是物理数据页存储，在数据文件中（InnoDB，ibd文件），利用数据页(page)存储。</font></li>
-<li><font style="color:rgb(34, 34, 34);">索引可以加快检索速度，但是同时也会降低增删改操作速度，索引维护需要代价。</font></li>
+<li>堆内存的大小是可以调节的。</li>
 </ul>
-<p><font style="color:rgb(34, 34, 34);">索引涉及的理论知识：二分查找法、Hash和B+Tree。</font></p>
+<p>《Java 虚拟机规范》规定，堆可以处于物理上不连续的内存空间中，但在逻辑上它应该被视为连续的。</p>
+<p>所有的线程共享 Java 堆，在这里还可以划分线程私有的缓冲区（Thread Local Allocation Buffer，TLAB）。</p>
+<p>《Java 虚拟机规范》中对 Java 堆的描述是：所有的对象实例以及数组都应当在运行时分配在堆上。（<code>The heap is the run-time data area from which memory for all class instances and arrays is allocated</code>）</p>
+<p>数组和对象可能永远不会存储在栈上，因为栈帧中保存引用，这个引用指向对象或者数组在堆中的位置。</p>
+<p>在方法结束后，堆中的对象不会马上被移除，仅仅在垃圾收集的时候才会被移除。</p>
+<p>堆，是 GC（Garbage Collection，垃圾收集器）执行垃圾回收的重点区域。</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719990752656-96126fb9-bec5-4860-a0e2-3ac682154b39.png"></p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2023/06/14/%E7%B4%A2%E5%BC%95/#more" rel="contents">
+              <a class="btn" href="/2023/08/20/06%20%E5%A0%86/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -449,7 +450,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2023/06/13/%E4%BA%8B%E5%8A%A1%E5%A4%84%E7%90%86/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/08/19/05%20%E6%9C%AC%E5%9C%B0%E6%96%B9%E6%B3%95%E6%8E%A5%E5%8F%A3%E5%92%8C%E6%9C%AC%E5%9C%B0%E6%96%B9%E6%B3%95%E6%A0%88/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/custom/avatar.jpg">
@@ -463,7 +464,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2023/06/13/%E4%BA%8B%E5%8A%A1%E5%A4%84%E7%90%86/" class="post-title-link" itemprop="url">事务处理</a>
+            <a href="/2023/08/19/05%20%E6%9C%AC%E5%9C%B0%E6%96%B9%E6%B3%95%E6%8E%A5%E5%8F%A3%E5%92%8C%E6%9C%AC%E5%9C%B0%E6%96%B9%E6%B3%95%E6%A0%88/" class="post-title-link" itemprop="url">05 本地方法接口和本地方法栈</a>
         </h2>
 
         <div class="post-meta">
@@ -473,14 +474,439 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2023-06-13 00:00:00" itemprop="dateCreated datePublished" datetime="2023-06-13T00:00:00+08:00">2023-06-13</time>
+              <time title="创建时间：2023-08-19 20:56:54" itemprop="dateCreated datePublished" datetime="2023-08-19T20:56:54+08:00">2023-08-19</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-06 17:30:49" itemprop="dateModified" datetime="2025-03-06T17:30:49+08:00">2025-03-06</time>
+                <time title="修改时间：2025-03-14 14:37:21" itemprop="dateModified" datetime="2025-03-14T14:37:21+08:00">2025-03-14</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/JVM%E4%B8%8A%E7%AF%87%EF%BC%9A%E5%86%85%E5%AD%98%E4%B8%8E%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E7%AF%87/" itemprop="url" rel="index"><span itemprop="name">JVM上篇：内存与垃圾回收篇</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="1-什么是本地方法？"><a href="#1-什么是本地方法？" class="headerlink" title="1. 什么是本地方法？"></a>1. 什么是本地方法？</h1><p>简单地讲，一个 Native Method 是一个 Java 调用非 Java 代码的接囗。一个 Native Method 是这样一个 Java 方法：该方法的实现由非 Java 语言实现，比如 C。这个特征并非 Java 所特有，很多其它的编程语言都有这一机制，比如在 C中，你可以用 extern “c” 告知 c编译器去调用一个 c 的函数。</p>
+<blockquote>
+<p>A native method is a Java method whose implementation is provided by non-java code.</p>
+</blockquote>
+<p>在定义一个 native method 时，并不提供实现体（有些像定义一个 Java interface），因为其实现体是由非 java 语言在外面实现的。</p>
+<p>本地接口的作用是融合不同的编程语言为 Java 所用，它的初衷是融合 C&#x2F;C++程序。</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719990737203-78a924b6-df80-4945-b101-50bffb01172f.png"></p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2023/08/19/05%20%E6%9C%AC%E5%9C%B0%E6%96%B9%E6%B3%95%E6%8E%A5%E5%8F%A3%E5%92%8C%E6%9C%AC%E5%9C%B0%E6%96%B9%E6%B3%95%E6%A0%88/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/08/18/04%20%E8%99%9A%E6%8B%9F%E6%9C%BA%E6%A0%88(%E6%A0%88%E7%AE%A1%E8%BF%90%E8%A1%8C%EF%BC%8C%E5%A0%86%E7%AE%A1%E5%AD%98%E5%82%A8)/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/08/18/04%20%E8%99%9A%E6%8B%9F%E6%9C%BA%E6%A0%88(%E6%A0%88%E7%AE%A1%E8%BF%90%E8%A1%8C%EF%BC%8C%E5%A0%86%E7%AE%A1%E5%AD%98%E5%82%A8)/" class="post-title-link" itemprop="url">04 虚拟机栈(栈管运行，堆管存储)</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-08-18 20:26:11" itemprop="dateCreated datePublished" datetime="2023-08-18T20:26:11+08:00">2023-08-18</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-14 14:36:13" itemprop="dateModified" datetime="2025-03-14T14:36:13+08:00">2025-03-14</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/JVM%E4%B8%8A%E7%AF%87%EF%BC%9A%E5%86%85%E5%AD%98%E4%B8%8E%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E7%AF%87/" itemprop="url" rel="index"><span itemprop="name">JVM上篇：内存与垃圾回收篇</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="1-虚拟机栈概述"><a href="#1-虚拟机栈概述" class="headerlink" title="1. 虚拟机栈概述"></a>1. 虚拟机栈概述</h1><h2 id="1-1-虚拟机栈出现的背景"><a href="#1-1-虚拟机栈出现的背景" class="headerlink" title="1.1 虚拟机栈出现的背景"></a>1.1 虚拟机栈出现的背景</h2><p>由于跨平台性的设计，Java 的指令都是根据栈来设计的。不同平台 CPU 架构不同，所以不能设计为基于寄存器的。</p>
+<p>有不少 Java 开发人员一提到 Java 内存结构，就会非常粗粒度地将 JVM 中的内存区理解为仅有 Java 堆（heap）和 Java 栈（stack）？为什么？</p>
+<h2 id="1-2-内存中的栈与堆"><a href="#1-2-内存中的栈与堆" class="headerlink" title="1.2 内存中的栈与堆"></a>1.2 内存中的栈与堆</h2><p>栈是运行时的单位，而堆是存储的单位</p>
+<ul>
+<li>栈解决程序的运行问题，即程序如何执行，或者说如何处理数据。</li>
+<li>堆解决的是数据存储的问题，即数据怎么放，放哪里</li>
+</ul>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719990724048-f9f1a7e4-5287-45d0-bfd1-0743a5195d3b.png"></p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2023/08/18/04%20%E8%99%9A%E6%8B%9F%E6%9C%BA%E6%A0%88(%E6%A0%88%E7%AE%A1%E8%BF%90%E8%A1%8C%EF%BC%8C%E5%A0%86%E7%AE%A1%E5%AD%98%E5%82%A8)/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/08/17/03%20%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA%E5%8F%8A%E7%A8%8B%E5%BA%8F%E8%AE%A1%E6%95%B0%E5%99%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/08/17/03%20%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA%E5%8F%8A%E7%A8%8B%E5%BA%8F%E8%AE%A1%E6%95%B0%E5%99%A8/" class="post-title-link" itemprop="url">03 运行时数据区及程序计数器</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-08-17 19:56:31" itemprop="dateCreated datePublished" datetime="2023-08-17T19:56:31+08:00">2023-08-17</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-14 14:36:21" itemprop="dateModified" datetime="2025-03-14T14:36:21+08:00">2025-03-14</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/JVM%E4%B8%8A%E7%AF%87%EF%BC%9A%E5%86%85%E5%AD%98%E4%B8%8E%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E7%AF%87/" itemprop="url" rel="index"><span itemprop="name">JVM上篇：内存与垃圾回收篇</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="1-运行时数据区"><a href="#1-运行时数据区" class="headerlink" title="1 运行时数据区"></a>1 运行时数据区</h1><h2 id="1-1-概述"><a href="#1-1-概述" class="headerlink" title="1.1 概述"></a>1.1 概述</h2><p>本节主要讲的是运行时数据区，也就是下图这部分，它是在类加载完成后的阶段</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719990707720-a596c82b-2ce6-4227-857e-15067886955e.png"></p>
+<p>当我们通过前面的：类的加载-&gt; 验证 -&gt; 准备 -&gt; 解析 -&gt; 初始化 这几个阶段完成后，就会用到执行引擎对我们的类进行使用，同时执行引擎将会使用到我们运行时数据区</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/25873401/1719990707517-b9e84c47-10a5-4b3c-be24-c0c403ddab7e.png"></p>
+<p>内存是非常重要的系统资源，是硬盘和 CPU 的中间仓库及桥梁，承载着操作系统和应用程序的实时运行 JVM 内存布局规定了 Java 在运行过程中内存申请、分配、管理的策略，保证了 JVM 的高效稳定运行。不同的 JVM 对于内存的划分方式和管理机制存在着部分差异。结合 JVM 虚拟机规范，来探讨一下经典的 JVM 内存布局。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2023/08/17/03%20%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA%E5%8F%8A%E7%A8%8B%E5%BA%8F%E8%AE%A1%E6%95%B0%E5%99%A8/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/08/16/02%20%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%AD%90%E7%B3%BB%E7%BB%9F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/08/16/02%20%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%AD%90%E7%B3%BB%E7%BB%9F/" class="post-title-link" itemprop="url">02 类加载子系统</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-08-16 21:11:23" itemprop="dateCreated datePublished" datetime="2023-08-16T21:11:23+08:00">2023-08-16</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-14 14:36:25" itemprop="dateModified" datetime="2025-03-14T14:36:25+08:00">2025-03-14</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/JVM%E4%B8%8A%E7%AF%87%EF%BC%9A%E5%86%85%E5%AD%98%E4%B8%8E%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E7%AF%87/" itemprop="url" rel="index"><span itemprop="name">JVM上篇：内存与垃圾回收篇</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="1-流程图"><a href="#1-流程图" class="headerlink" title="1. 流程图"></a>1. 流程图</h1><blockquote>
+<p><strong>案例与图示</strong></p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">MainApp</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(string[] args)</span>&#123;</span><br><span class="line">        Customer cust=<span class="keyword">new</span> <span class="title class_">Customer</span>();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Customer</span>&#123;</span><br><span class="line">    <span class="type">int</span> <span class="variable">id</span> <span class="operator">=</span> <span class="number">1001</span>;</span><br><span class="line">    String name;</span><br><span class="line">    Account acct;</span><br><span class="line">    &#123;</span><br><span class="line">        name = <span class="string">&quot;匿名客户&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">Customer</span><span class="params">()</span> &#123;</span><br><span class="line">        acct = <span class="keyword">new</span> <span class="title class_">Account</span>();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2023/08/16/02%20%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%AD%90%E7%B3%BB%E7%BB%9F/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/08/11/01%20JVM%E4%B8%8EJava%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/08/11/01%20JVM%E4%B8%8EJava%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/" class="post-title-link" itemprop="url">01 JVM与Java体系结构</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-08-11 20:10:52" itemprop="dateCreated datePublished" datetime="2023-08-11T20:10:52+08:00">2023-08-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-14 14:31:19" itemprop="dateModified" datetime="2025-03-14T14:31:19+08:00">2025-03-14</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/JVM%E4%B8%8A%E7%AF%87%EF%BC%9A%E5%86%85%E5%AD%98%E4%B8%8E%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E7%AF%87/" itemprop="url" rel="index"><span itemprop="name">JVM上篇：内存与垃圾回收篇</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="1-JVM体系"><a href="#1-JVM体系" class="headerlink" title="1. JVM体系"></a><font style="background-color:#FADB14;"></font>1. JVM体系</h1><h2 id="1-1-JVM概览-javac-exe-java-exe，以-class文件作为纽带"><a href="#1-1-JVM概览-javac-exe-java-exe，以-class文件作为纽带" class="headerlink" title="1.1 JVM概览(javac.exe+java.exe，以.class文件作为纽带)"></a>1.1 JVM概览(javac.exe+java.exe，以.class文件作为纽带)</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">简易记录：javac.exe和java.exe两个程序指令</span><br><span class="line"></span><br><span class="line">javac：Java编译器，负责将Java源代码换成字节码.class字节码。javac编译后得到的class文件是二进制指令，但不是机器指令，而是java虚拟机可识别的指令。这样class文件就有了可移植行。可以把class文件拿到windows、linux或者solaris等不同的系统上去，在jvm上执行。</span><br><span class="line">java：Java解析器，将.class类文件加载到JVM里面执行，由JVM做到跨平台。</span><br><span class="line"></span><br><span class="line">jvm虚拟机是绑定操作系统的，编译器是绑定语言和操作系统的。</span><br><span class="line">jvm是跨语言的平台，java是跨平台的语言。</span><br></pre></td></tr></table></figure>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2023/08/11/01%20JVM%E4%B8%8EJava%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/06/15/Centos7%E5%AE%89%E8%A3%85mysql8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/06/15/Centos7%E5%AE%89%E8%A3%85mysql8/" class="post-title-link" itemprop="url">Centos7安装mysql8</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-06-15 00:00:00" itemprop="dateCreated datePublished" datetime="2023-06-15T00:00:00+08:00">2023-06-15</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-06 17:36:29" itemprop="dateModified" datetime="2025-03-06T17:36:29+08:00">2025-03-06</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -503,12 +929,14 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h4 id="事务的四大特性"><a href="#事务的四大特性" class="headerlink" title="		事务的四大特性"></a><font style="color:rgb(79, 79, 79);">		事务的四大特性</font></h4><ol>
-<li><strong><font style="color:rgba(0, 0, 0, 0.75);">原子性(Atomicity) </font></strong><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">事务是最小的执行单位，不允许分割</font><font style="color:rgba(0, 0, 0, 0.75);">。事务的原子性确保动作要么全部完成，要么完全不起作用；</font></li>
-<li><strong><font style="color:rgba(0, 0, 0, 0.75);">一致性(Consistency) </font></strong><font style="color:rgba(0, 0, 0, 0.75);">一致性是指</font><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">事务必须使数据库从一个一致性状态变换到另一个一致性状态</font><font style="color:rgba(0, 0, 0, 0.75);">，也就是说一个事务执行之前和执行之后都必须处于一致性状态。</font>
+          <h4 id="1-下载mysql8安装包"><a href="#1-下载mysql8安装包" class="headerlink" title="1.下载mysql8安装包"></a>1.下载mysql8安装包</h4><p> 下载安装包需要到官网上直接下载，下载地址：</p>
+<p><a target="_blank" rel="noopener" href="https://www.mysql.com/downloads/">https://www.mysql.com/downloads/</a></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1655968595661-5eabc2f9-9c20-48d7-9b40-ad2981566a92.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1655969188020-f03f92d2-3da0-4999-b075-b024647674f0.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1655969237916-c02ff7c1-1ba2-4c01-bedb-af80b7139851.png"></p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2023/06/13/%E4%BA%8B%E5%8A%A1%E5%A4%84%E7%90%86/#more" rel="contents">
+              <a class="btn" href="/2023/06/15/Centos7%E5%AE%89%E8%A3%85mysql8/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -532,7 +960,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2023/06/11/sql%E8%AF%AD%E6%B3%95%E6%95%B4%E7%90%86/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/06/15/MySQL%E7%94%A8truncate%E5%91%BD%E4%BB%A4%E5%BF%AB%E9%80%9F%E6%B8%85%E7%A9%BA%E4%B8%80%E4%B8%AA%E6%95%B0%E6%8D%AE%E5%BA%93%E4%B8%AD%E7%9A%84%E6%89%80%E6%9C%89%E8%A1%A8/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/custom/avatar.jpg">
@@ -546,7 +974,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2023/06/11/sql%E8%AF%AD%E6%B3%95%E6%95%B4%E7%90%86/" class="post-title-link" itemprop="url">MySQL语法整理</a>
+            <a href="/2023/06/15/MySQL%E7%94%A8truncate%E5%91%BD%E4%BB%A4%E5%BF%AB%E9%80%9F%E6%B8%85%E7%A9%BA%E4%B8%80%E4%B8%AA%E6%95%B0%E6%8D%AE%E5%BA%93%E4%B8%AD%E7%9A%84%E6%89%80%E6%9C%89%E8%A1%A8/" class="post-title-link" itemprop="url">MySQL快速清空数据库中的所有表</a>
         </h2>
 
         <div class="post-meta">
@@ -556,14 +984,14 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2023-06-11 00:00:00" itemprop="dateCreated datePublished" datetime="2023-06-11T00:00:00+08:00">2023-06-11</time>
+              <time title="创建时间：2023-06-15 00:00:00" itemprop="dateCreated datePublished" datetime="2023-06-15T00:00:00+08:00">2023-06-15</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-06 17:16:53" itemprop="dateModified" datetime="2025-03-06T17:16:53+08:00">2025-03-06</time>
+                <time title="修改时间：2025-03-06 17:38:29" itemprop="dateModified" datetime="2025-03-06T17:38:29+08:00">2025-03-06</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -586,351 +1014,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h2 id="SQL通用语法"><a href="#SQL通用语法" class="headerlink" title="SQL通用语法"></a><font style="color:rgb(79, 79, 79);">SQL通用语法</font></h2><ul>
-<li><font style="color:rgb(77, 77, 77);">SQL语句可以单行或多行书写，以分号结尾。</font></li>
-<li><font style="color:rgb(77, 77, 77);">可使用空格和缩进来增强语句的可读性。</font></li>
-<li><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">MySQL数据库的SQL语言不区分大小写，关键字建议使用大写</font><font style="color:rgb(77, 77, 77);">，对所有列和表名使用小写，这样做使代码更容易阅读和调试。</font></li>
-<li><font style="color:rgb(77, 77, 77);">3种注释：</font>
+          <h3 id="先执行sql语句讲要情况的数据库中的数据库变成执行语句"><a href="#先执行sql语句讲要情况的数据库中的数据库变成执行语句" class="headerlink" title="先执行sql语句讲要情况的数据库中的数据库变成执行语句"></a>先执行sql语句讲要情况的数据库中的数据库变成执行语句</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">select CONCAT(&#x27;truncate TABLE &#x27;,table_schema,&#x27;.&#x27;,TABLE_NAME, &#x27;;&#x27;) from INFORMATION_SCHEMA.TABLES where table_schema =&quot;数据库&quot;;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2023/06/11/sql%E8%AF%AD%E6%B3%95%E6%95%B4%E7%90%86/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2023/06/11/%E7%B4%A2%E5%BC%95%E5%A4%B1%E6%95%88%E7%9A%84%E5%9C%BA%E6%99%AF/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/custom/avatar.jpg">
-      <meta itemprop="name" content="139">
-      <meta itemprop="description" content="一个普通的JAVA开发的博客">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="进学阁">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2023/06/11/%E7%B4%A2%E5%BC%95%E5%A4%B1%E6%95%88%E7%9A%84%E5%9C%BA%E6%99%AF/" class="post-title-link" itemprop="url">索引失效场景</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2023-06-11 00:00:00" itemprop="dateCreated datePublished" datetime="2023-06-11T00:00:00+08:00">2023-06-11</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-06 17:31:01" itemprop="dateModified" datetime="2025-03-06T17:31:01+08:00">2025-03-06</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <ol>
-<li>没有遵从最左原则：因为常用的索引是B+树结构的，而B+树是有序的，而这个有序是根据索引最左边的字段排序的，所以相对的组合索引中其他的字段并不是有序的</li>
-<li>范围查询放在最后（这里需要注意并不是在写语句的时候讲范围查询放在最后，而是将索引字段中可能出现范围查询的字段放在最后）</li>
-<li>使用select  from table 聚合索引和非聚合索引的差距就在于聚合索引的根保存的是完整的数据，而非聚合索引保存的是索引的值+聚合索引的Key，所以这里就引出了覆盖索引的概念，当你搜索的值都是索引列，就会用到覆盖索引，直接返回结果，不用再使用聚合索引的key去回表查询，效率就会有所提高。select * 大概率是要回表的。</li>
-<li>索引列上有计算。+ - 等</li>
-<li>索引列上使用了函数  sum  cover</li>
-<li>索引列是字符串的搜索的时候没有加’’ 比如 123 - ‘123’</li>
-<li>在不可为空列中使用is null 和 is not null</li>
-<li>like 左边有%</li>
-<li>or两边的列不一致会导致索引实现  可以使用union</li>
-</ol>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2023/06/11/%E7%B4%A2%E5%BC%95%E5%A4%B1%E6%95%88%E7%9A%84%E5%9C%BA%E6%99%AF/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2023/06/11/%E9%94%81/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/custom/avatar.jpg">
-      <meta itemprop="name" content="139">
-      <meta itemprop="description" content="一个普通的JAVA开发的博客">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="进学阁">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2023/06/11/%E9%94%81/" class="post-title-link" itemprop="url">锁</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2023-06-11 00:00:00" itemprop="dateCreated datePublished" datetime="2023-06-11T00:00:00+08:00">2023-06-11</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-06 18:02:36" itemprop="dateModified" datetime="2025-03-06T18:02:36+08:00">2025-03-06</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p><font style="color:rgb(0, 0, 0);">MySQL中的锁有很多种，各种锁应用在不同的地方。</font><strong><font style="color:rgb(145, 109, 213);">「MySQL依靠锁机制可以让多个事务更新一行数据的时候串行化」</font></strong><font style="color:rgb(0, 0, 0);">。</font></p>
-<h3 id="MySQL中锁总的来说有两种概念：Lock和Latch"><a href="#MySQL中锁总的来说有两种概念：Lock和Latch" class="headerlink" title="MySQL中锁总的来说有两种概念：Lock和Latch"></a><font style="color:black;">MySQL中锁总的来说有两种概念：Lock和Latch</font></h3><h4 id="Latch"><a href="#Latch" class="headerlink" title="Latch"></a><font style="color:black;">Latch</font></h4><p><font style="color:black;">称为闩锁（轻量级的锁），因为Latch要求锁定的时间非常短。其目的是用来保证并发线程操作临界资源的正确性，并且通常没有死锁检测的机制。在InnoDB引擎中，Latch又分为mutex（互斥量）和rwlock（读写锁）。</font></p>
-<p><font style="color:black;">mutex：互斥量；有时候有些资源需要共享和并发，但是又不是分频繁，所以向操作系统申请一个mutex，mutex都是排他的。</font></p>
-<p><font style="color:black;"> RW-LATCH : 读写锁</font></p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2023/06/11/%E9%94%81/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/06/11/Canal/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/custom/avatar.jpg">
-      <meta itemprop="name" content="139">
-      <meta itemprop="description" content="一个普通的JAVA开发的博客">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="进学阁">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/06/11/Canal/" class="post-title-link" itemprop="url">Canal</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2022-06-11 10:10:23" itemprop="dateCreated datePublished" datetime="2022-06-11T10:10:23+08:00">2022-06-11</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2023-03-08 16:22:42" itemprop="dateModified" datetime="2023-03-08T16:22:42+08:00">2023-03-08</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%B7%A5%E5%85%B7/" itemprop="url" rel="index"><span itemprop="name">工具</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="什么是Canal"><a href="#什么是Canal" class="headerlink" title="什么是Canal"></a>什么是Canal</h2><p>canal译意为水道&#x2F;管道&#x2F;沟渠，主要用途是基于 MySQL 数据库增量日志解析，提供增量数据订阅和消费。<br>从这句话理解到了什么？<br>基于MySQL，并且通过MySQL日志进行的增量解析，这也就意味着对原有的业务代码完全是无侵入性的。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2022/06/11/Canal/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/01/11/%E5%AE%89%E8%A3%85RabbitMQ/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/custom/avatar.jpg">
-      <meta itemprop="name" content="139">
-      <meta itemprop="description" content="一个普通的JAVA开发的博客">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="进学阁">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/01/11/%E5%AE%89%E8%A3%85RabbitMQ/" class="post-title-link" itemprop="url">安装RabbitMQ</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2022-01-11 09:10:23" itemprop="dateCreated datePublished" datetime="2022-01-11T09:10:23+08:00">2022-01-11</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2023-03-08 16:22:58" itemprop="dateModified" datetime="2023-03-08T16:22:58+08:00">2023-03-08</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%B7%A5%E5%85%B7/" itemprop="url" rel="index"><span itemprop="name">工具</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="参照官网："><a href="#参照官网：" class="headerlink" title="参照官网："></a>参照官网：</h2><p><a target="_blank" rel="noopener" href="https://www.rabbitmq.com/install-rpm.html#package-cloud">https://www.rabbitmq.com/install-rpm.html#package-cloud</a></p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2022/01/11/%E5%AE%89%E8%A3%85RabbitMQ/#more" rel="contents">
+              <a class="btn" href="/2023/06/15/MySQL%E7%94%A8truncate%E5%91%BD%E4%BB%A4%E5%BF%AB%E9%80%9F%E6%B8%85%E7%A9%BA%E4%B8%80%E4%B8%AA%E6%95%B0%E6%8D%AE%E5%BA%93%E4%B8%AD%E7%9A%84%E6%89%80%E6%9C%89%E8%A1%A8/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -953,7 +1040,7 @@
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/6/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/6/">6</a><span class="page-number current">7</span>
+    <a class="extend prev" rel="prev" href="/page/6/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/6/">6</a><span class="page-number current">7</span><a class="page-number" href="/page/8/">8</a><a class="page-number" href="/page/9/">9</a><a class="extend next" rel="next" href="/page/8/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
   </nav>
 
 
@@ -1021,20 +1108,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">69</span>
+          <span class="site-state-item-count">83</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-count">10</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">38</span>
+        <span class="site-state-item-count">39</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
