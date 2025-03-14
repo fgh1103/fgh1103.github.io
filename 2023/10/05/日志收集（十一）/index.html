@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8335634399768246"
+     crossorigin="anonymous"></script>
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="日志分类在k8s中日志共分为三种类型  容器日志 ：k8s中管理的容器的日志信息 资源事件：调度以及资源消耗的 审计日志：调度入档记录">
+<meta property="og:type" content="article">
+<meta property="og:title" content="日志收集（十一）">
+<meta property="og:url" content="http://example.com/2023/10/05/%E6%97%A5%E5%BF%97%E6%94%B6%E9%9B%86%EF%BC%88%E5%8D%81%E4%B8%80%EF%BC%89/index.html">
+<meta property="og:site_name" content="进学阁">
+<meta property="og:description" content="日志分类在k8s中日志共分为三种类型  容器日志 ：k8s中管理的容器的日志信息 资源事件：调度以及资源消耗的 审计日志：调度入档记录">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1666582555429-5fb0796c-59db-4c36-9714-da85ed3a66fa.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1666582571976-0a56d49e-3523-427a-b6e3-bef35928725b.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1666582780182-ea642ab4-d12d-4049-afb3-22e3282934d6.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1666583118066-5d629720-795c-4274-93fd-6bd4ae16d674.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1666583132193-8cf9e0d6-27d3-4e72-bab2-5c0445502066.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1666583147974-6a84aff2-3ff6-448d-9ece-0180aecca9e5.png">
+<meta property="article:published_time" content="2023-10-05T11:25:51.000Z">
+<meta property="article:modified_time" content="2025-03-14T10:13:50.425Z">
+<meta property="article:author" content="139">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1666582555429-5fb0796c-59db-4c36-9714-da85ed3a66fa.png">
+
+<link rel="canonical" href="http://example.com/2023/10/05/%E6%97%A5%E5%BF%97%E6%94%B6%E9%9B%86%EF%BC%88%E5%8D%81%E4%B8%80%EF%BC%89/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>日志收集（十一） | 进学阁</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">进学阁</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">业精于勤荒于嬉，行成于思毁于随</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">42</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">17</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">117</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/10/05/%E6%97%A5%E5%BF%97%E6%94%B6%E9%9B%86%EF%BC%88%E5%8D%81%E4%B8%80%EF%BC%89/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          日志收集（十一）
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-10-05 19:25:51" itemprop="dateCreated datePublished" datetime="2023-10-05T19:25:51+08:00">2023-10-05</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-14 18:13:50" itemprop="dateModified" datetime="2025-03-14T18:13:50+08:00">2025-03-14</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%9F%BA%E4%BA%8EKubesphere%E6%9E%84%E5%BB%BAk8s%E5%B9%B3%E5%8F%B0/" itemprop="url" rel="index"><span itemprop="name">基于Kubesphere构建k8s平台</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="日志分类"><a href="#日志分类" class="headerlink" title="日志分类"></a>日志分类</h2><p>在k8s中日志共分为三种类型</p>
+<ol>
+<li><font style="color:rgb(154, 154, 154);">容器日志 ：k8s中管理的容器的日志信息</font></li>
+<li><font style="color:rgb(154, 154, 154);">资源事件：调度以及资源消耗的</font></li>
+<li><font style="color:rgb(154, 154, 154);">审计日志：调度入档记录</font><span id="more"></span></li>
+</ol>
+<h2 id="ES外置"><a href="#ES外置" class="headerlink" title="ES外置"></a>ES外置</h2><p><font style="color:rgb(47, 48, 52);">KubeSphere在安装完成时候可以启用日志组件，这样会安装ES组件并可以收集所有部署组件的日志，也可以收集审计日志，然后可以很方便的在KubeSphere平台上进行日志查询。</font></p>
+<p><font style="color:rgb(47, 48, 52);">但是在实际使用过程中发现使用KubeSphere自身的ES会很重，而且官方也建议我们将日志接入到外部的ES中减轻Kubernetes的压力。</font></p>
+<h3 id="前置步骤安装ES"><a href="#前置步骤安装ES" class="headerlink" title="前置步骤安装ES"></a><font style="color:rgb(51, 51, 51);">前置步骤</font>安装ES</h3><p>搭建集群或者单独安装es请参照官网操作</p>
+<h3 id="备份ks-installer"><a href="#备份ks-installer" class="headerlink" title="备份ks-installer"></a><font style="color:rgb(51, 51, 51);">备份ks-installer</font></h3><p><font style="color:rgb(47, 48, 52);">管理员账号登录kubesphere，在平台管理 - 集群管理 - CRD中搜索clusterconfiguration，在</font><strong><font style="color:rgb(47, 48, 52);">自定义资源</font></strong><font style="color:rgb(47, 48, 52);">中，点击 ks-installer 选择</font><strong><font style="color:rgb(47, 48, 52);">编辑 YAML</font></strong><font style="color:rgb(47, 48, 52);"> ，复制备份。</font></p>
+<h3 id="关闭内部ES对接外部ES（如果未开启日志则省略）"><a href="#关闭内部ES对接外部ES（如果未开启日志则省略）" class="headerlink" title="关闭内部ES对接外部ES（如果未开启日志则省略）"></a><font style="color:rgb(51, 51, 51);">关闭内部ES对接外部ES（如果未开启日志则省略）</font></h3><p><font style="color:rgb(47, 48, 52);">集群开启了内部 Elasticsearch，会存在如下系统组件和日志接收器</font></p>
+<ol>
+<li><font style="color:rgb(47, 48, 52);"> 系统组件：</font></li>
+</ol>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1666582555429-5fb0796c-59db-4c36-9714-da85ed3a66fa.png"></p>
+<ol start="2">
+<li><font style="color:rgb(47, 48, 52);"> 日志接收器：</font></li>
+</ol>
+<p><font style="color:rgb(154, 154, 154);">容器日志、资源事件、审计日志（不开启不会有日志接收器）</font></p>
+<p><font style="color:rgb(154, 154, 154);">接收器地址为内部Elasticsearch地址：elasticsearch-logging-data.kubesphere-logging-system.svc:9200</font></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1666582571976-0a56d49e-3523-427a-b6e3-bef35928725b.png"></p>
+<h4 id="一、关闭内部ES并卸载日志相关可插拔组件"><a href="#一、关闭内部ES并卸载日志相关可插拔组件" class="headerlink" title="一、关闭内部ES并卸载日志相关可插拔组件"></a><font style="color:rgb(51, 51, 51);">一、关闭内部ES并卸载日志相关可插拔组件</font></h4><p><strong><font style="color:rgb(47, 48, 52);">执行命令编辑ks-installer</font></strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl edit cc ks-installer -n kubesphere-system</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li><font style="color:rgb(47, 48, 52);">卸载日志系统，将ks-installer 参数的 logging.enabled 字段的值从 true 改为 false。</font></li>
+<li><font style="color:rgb(47, 48, 52);">卸载事件日志系统，将ks-installer 参数的 events.enabled 字段的值从 true 改为 false。</font></li>
+<li><font style="color:rgb(47, 48, 52);">卸载审计日志系统，将 ks-installer 参数的 auditing.enabled 字段的值从 true 改为 false。</font></li>
+<li><font style="color:rgb(47, 48, 52);">配置文件的最后，删除如下内容</font></li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">es:  </span><br><span class="line">    enabledTime: 2022-08-16T10:33:18CST  </span><br><span class="line">    status: enabled  </span><br><span class="line">  events:  </span><br><span class="line">    enabledTime: 2022-04-15T16:22:59CST  </span><br><span class="line">    status: enabled  </span><br><span class="line">  fluentbit:  </span><br><span class="line">    enabledTime: 2022-04-15T16:19:46CST  </span><br><span class="line">    status: enabled  </span><br><span class="line">  logging:  </span><br><span class="line">    enabledTime: 2022-04-15T16:22:59CST  </span><br><span class="line">    status: enabled</span><br></pre></td></tr></table></figure>
+
+<p><strong><font style="color:rgb(47, 48, 52);">执行命令检查安装过程</font></strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">kubectl logs -n kubesphere-system $(kubectl get pod -n kubesphere-system -l app=ks-install -o jsonpath=&#x27;&#123;.items[0].metadata.name&#125;&#x27;) -f</span><br><span class="line"></span><br><span class="line">#日志出现以下内容说明重启成功</span><br><span class="line">​</span><br><span class="line">Collecting installation results ...</span><br><span class="line">#####################################################</span><br><span class="line">###              Welcome to KubeSphere!           ###</span><br><span class="line">#####################################################</span><br><span class="line">​</span><br><span class="line">Console: http://172.30.9.129:30880</span><br><span class="line">Account: admin</span><br><span class="line">Password: P@88w0rd</span><br><span class="line">​</span><br><span class="line">NOTES：</span><br><span class="line">  1. After you log into the console, please check the</span><br><span class="line">     monitoring status of service components in</span><br><span class="line">     &quot;Cluster Management&quot;. If any service is not</span><br><span class="line">     ready, please wait patiently until all components </span><br><span class="line">     are up and running.</span><br><span class="line">  2. Please change the default password after login.</span><br><span class="line">​</span><br><span class="line">#####################################################</span><br><span class="line">https://kubesphere.io             2022-08-04 15:53:14</span><br><span class="line">#####################################################</span><br></pre></td></tr></table></figure>
+
+<p><strong><font style="color:rgb(47, 48, 52);">执行命令卸载相关可插拔组件</font></strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">###### 卸载 KubeSphere 日志系统</span><br><span class="line">kubectl delete inputs.logging.kubesphere.io -n kubesphere-logging-system tail</span><br><span class="line">​</span><br><span class="line">###### 卸载 KubeSphere 事件系统</span><br><span class="line">helm delete ks-events -n kubesphere-logging-system</span><br><span class="line">​</span><br><span class="line">###### 卸载 KubeSphere 审计</span><br><span class="line">helm uninstall kube-auditing -n kubesphere-logging-system</span><br><span class="line">​</span><br><span class="line">kubectl delete crd rules.auditing.kubesphere.io</span><br><span class="line">​</span><br><span class="line">kubectl delete crd webhooks.auditing.kubesphere.io</span><br><span class="line">​</span><br><span class="line">###### 卸载包括 Elasticsearch 的日志系统</span><br><span class="line">kubectl delete crd fluentbitconfigs.logging.kubesphere.io</span><br><span class="line">​</span><br><span class="line">kubectl delete crd fluentbits.logging.kubesphere.io</span><br><span class="line">​</span><br><span class="line">kubectl delete crd inputs.logging.kubesphere.io</span><br><span class="line">​</span><br><span class="line">kubectl delete crd outputs.logging.kubesphere.io</span><br><span class="line">​</span><br><span class="line">kubectl delete crd parsers.logging.kubesphere.io</span><br><span class="line">​</span><br><span class="line">kubectl delete deployments.apps -n kubesphere-logging-system fluentbit-operator</span><br><span class="line">​</span><br><span class="line">helm uninstall elasticsearch-logging --namespace kubesphere-logging-system</span><br><span class="line">​</span><br><span class="line">kubectl delete deployment logsidecar-injector-deploy -n kubesphere-logging-system</span><br><span class="line">​</span><br><span class="line">kubectl delete ns kubesphere-logging-system</span><br></pre></td></tr></table></figure>
+
+<p><strong><font style="color:rgb(47, 48, 52);">卸载过程中可能出现如下异常：</font></strong></p>
+<p><font style="color:rgb(47, 48, 52);">crd 资源删除时出现问题，尝试使用如下命令</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl patch crd/crd名称 -p &#x27;&#123;&quot;metadata&quot;:&#123;&quot;finalizers&quot;:[]&#125;&#125;&#x27; --type=merge</span><br></pre></td></tr></table></figure>
+
+<h4 id="二、创建namespace"><a href="#二、创建namespace" class="headerlink" title="二、创建namespace"></a><font style="color:rgb(51, 51, 51);">二、创建namespace</font></h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl create ns kubesphere-logging-system</span><br></pre></td></tr></table></figure>
+
+<h4 id="三、自定义service负载均衡ES节点"><a href="#三、自定义service负载均衡ES节点" class="headerlink" title="三、自定义service负载均衡ES节点"></a><font style="color:rgb(51, 51, 51);">三、自定义service负载均衡ES节点</font></h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">apiVersion: v1</span><br><span class="line">kind: Service</span><br><span class="line">metadata:</span><br><span class="line">  labels:</span><br><span class="line">    app: es-service</span><br><span class="line">  name: es-service</span><br><span class="line">  namespace: kubesphere-logging-system</span><br><span class="line">spec:</span><br><span class="line">  ports:</span><br><span class="line">  - port: 9200</span><br><span class="line">    name: es</span><br><span class="line">    protocol: TCP</span><br><span class="line">    targetPort: 9200</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(47, 48, 52);"></font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">apiVersion: v1</span><br><span class="line">kind: Endpoints</span><br><span class="line">metadata:</span><br><span class="line">  labels:</span><br><span class="line">    app: es-service</span><br><span class="line">  name: es-service</span><br><span class="line">  namespace: kubesphere-logging-system</span><br><span class="line">subsets:</span><br><span class="line">- addresses:</span><br><span class="line">  - ip: 172.30.10.***</span><br><span class="line">  - ip: 172.30.10.***</span><br><span class="line">  - ip: 172.30.10.***</span><br><span class="line">  ports:</span><br><span class="line">  - port: 9200</span><br><span class="line">    name: es</span><br><span class="line">    protocol: TCP</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(47, 48, 52);">ip地址修改为真实要对接的ES集群节点的IP地址</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">kubectl apply -f es-service.yaml -n kubesphere-logging-system</span><br><span class="line">kubectl apply -f es-endpoints.yaml -n kubesphere-logging-system</span><br><span class="line">​</span><br><span class="line">#查看svc</span><br><span class="line">[root@k8s-master1 ~]# kubectl get svc -n kubesphere-logging-system </span><br><span class="line">NAME                              TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE</span><br><span class="line">es-service                        ClusterIP   109.233.8.178    &lt;none&gt;        9200/TCP   10d</span><br><span class="line">#查看endpoints</span><br><span class="line">[root@k8s-master1 ~]# kubectl get ep -n kubesphere-logging-system </span><br><span class="line">NAME        ENDPOINTS      AGE           es-service                        172.30.10.***:9200,172.30.10.***:9200,172.30.10.***:9200       10d</span><br></pre></td></tr></table></figure>
+
+<p><strong><font style="color:rgb(47, 48, 52);">平台管理-集群管理-应用负载-服务 搜索es-service</font></strong></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1666582780182-ea642ab4-d12d-4049-afb3-22e3282934d6.png"></p>
+<p><strong><font style="color:rgb(47, 48, 52);">es-service服务地址：es-service.kubesphere-logging-system.svc</font></strong></p>
+<h2 id="开启日志功能"><a href="#开启日志功能" class="headerlink" title="开启日志功能"></a>开启日志功能</h2><p>在平台管理 - 集群管理 - CRD中搜索clusterconfiguration，在<strong>自定义资源</strong>中，点击 ks-installer</p>
+<p><strong>修改配置</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">开启容器日志、审计日志分别修改</span><br><span class="line">logging.enabled: true</span><br><span class="line">auditing.enabled: true</span><br><span class="line">修改外部ES配置</span><br><span class="line">es.basicAuth.enabled: true</span><br><span class="line">es.basicAuth.password</span><br><span class="line">es.basicAuth.username</span><br><span class="line">es.externalElasticsearchUrl</span><br><span class="line">es.externalElasticsearchPort</span><br><span class="line">#修改日志保存日期（默认7天）</span><br><span class="line">logMaxAge</span><br><span class="line">#修改日志索引前缀（默认logstash）</span><br><span class="line">elkPrefix（开发：dev，测试：sit，生产：prod）</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">apiVersion: installer.kubesphere.io/v1alpha1</span><br><span class="line">kind: ClusterConfiguration</span><br><span class="line">metadata:</span><br><span class="line">  labels:</span><br><span class="line">    version: v3.2.1</span><br><span class="line">  name: ks-installer</span><br><span class="line">  namespace: kubesphere-system</span><br><span class="line">spec:</span><br><span class="line">  alerting:</span><br><span class="line">    enabled: false</span><br><span class="line">  auditing:</span><br><span class="line">    enabled: true            # false改为true</span><br><span class="line">  ...</span><br><span class="line">    es:</span><br><span class="line">      basicAuth:</span><br><span class="line">        enabled: true          # false改为true</span><br><span class="line">        password: &#x27;****&#x27;       # 密码</span><br><span class="line">        username: &#x27;****&#x27;       # 用户名</span><br><span class="line">      data:</span><br><span class="line">        volumeSize: 20Gi</span><br><span class="line">      elkPrefix: sit           #开发：dev 测试：sit 生产：prod</span><br><span class="line">      externalElasticsearchPort: &#x27;9200&#x27; # 端口</span><br><span class="line">      externalElasticsearchUrl: es-service.kubesphere-logging-system.svc # 修改es-service</span><br><span class="line">      logMaxAge: 7             #默认7天即可          </span><br><span class="line">      master:</span><br><span class="line">        volumeSize: 4Gi</span><br><span class="line">    ...</span><br></pre></td></tr></table></figure>
+
+<p><strong><font style="color:rgb(47, 48, 52);">执行命令检查安装过程</font></strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">kubectl logs -n kubesphere-system $(kubectl get pod -n kubesphere-system -l app=ks-install -o jsonpath=&#x27;&#123;.items[0].metadata.name&#125;&#x27;) -f</span><br><span class="line">​</span><br><span class="line">#日志出现以下内容说明重启成功</span><br><span class="line">​</span><br><span class="line">Collecting installation results ...</span><br><span class="line">#####################################################</span><br><span class="line">###              Welcome to KubeSphere!           ###</span><br><span class="line">#####################################################</span><br><span class="line">​</span><br><span class="line">Console: http://172.30.9.129:30880</span><br><span class="line">Account: admin</span><br><span class="line">Password: P@88w0rd</span><br><span class="line">​</span><br><span class="line">NOTES：</span><br><span class="line">  1. After you log into the console, please check the</span><br><span class="line">     monitoring status of service components in</span><br><span class="line">     &quot;Cluster Management&quot;. If any service is not</span><br><span class="line">     ready, please wait patiently until all components </span><br><span class="line">     are up and running.</span><br><span class="line">  2. Please change the default password after login.</span><br><span class="line">​</span><br><span class="line">#####################################################</span><br><span class="line">https://kubesphere.io             2022-08-04 15:53:14</span><br><span class="line">#####################################################</span><br></pre></td></tr></table></figure>
+
+<p><strong><font style="color:rgb(47, 48, 52);">执行命令，查看对应的 ConfigMap 配置</font></strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">kubectl get configmap kubesphere-config -n kubesphere-system -o yaml  </span><br><span class="line">#重点如下，看es的配置是否已经生效,host是否为自定义SVC，以及用户名密码索引是否正确</span><br><span class="line">    logging:</span><br><span class="line">      host: http://es-service.kubesphere-logging-system.svc:9200</span><br><span class="line">      basicAuth: True</span><br><span class="line">      username: &quot;****&quot;  #此处为你填写的正确用户名</span><br><span class="line">      password: &quot;****&quot;  #此处为你填写的正确密码</span><br><span class="line">      indexPrefix: ks-sit-log  #不同环境对应dev\sit\prod</span><br><span class="line">    auditing:</span><br><span class="line">      enable: true</span><br><span class="line">      webhookURL: https://kube-auditing-webhook-svc.kubesphere-logging-system.svc:6443/audit/webhook/event</span><br><span class="line">      host: http://es-service.kubesphere-logging-system.svc:9200</span><br><span class="line">      basicAuth: True</span><br><span class="line">      username: &quot;****&quot;  #此处为你填写的正确用户名</span><br><span class="line">      password: &quot;****&quot;  #此处为你填写的正确密码</span><br><span class="line">      indexPrefix: ks-sit-auditing #不同环境对应dev\sit\prod</span><br></pre></td></tr></table></figure>
+
+<p><strong><font style="color:rgb(47, 48, 52);">执行命令编辑对应output(如果已自动修改则不需要手动修改)</font></strong></p>
+<ol>
+<li><font style="color:rgb(47, 48, 52);">修改host</font></li>
+<li><font style="color:rgb(47, 48, 52);">修改索引 （开发、测试、生产前缀分别对应ks-dev-、ks-sit-、ks-prod-）</font></li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line">#修改es的output</span><br><span class="line">kubectl edit output es -n kubesphere-logging-system</span><br><span class="line">#修改host 和 logstashPrefix</span><br><span class="line"># host: es-service.kubesphere-logging-system.svc</span><br><span class="line"># logstashPrefix: ks-对应环境-log</span><br><span class="line">#如下：</span><br><span class="line">spec:</span><br><span class="line">  es:</span><br><span class="line">    generateID: true</span><br><span class="line">    host: es-service.kubesphere-logging-system.svc  # host地址</span><br><span class="line">    httpPassword:</span><br><span class="line">      valueFrom:</span><br><span class="line">        secretKeyRef:</span><br><span class="line">          key: password</span><br><span class="line">          name: elasticsearch-credentials</span><br><span class="line">    httpUser:</span><br><span class="line">      valueFrom:</span><br><span class="line">        secretKeyRef:</span><br><span class="line">          key: username</span><br><span class="line">          name: elasticsearch-credentials</span><br><span class="line">    logstashFormat: true</span><br><span class="line">    logstashPrefix: ks-sit-log  # 修改此处为对应环境的日志索引</span><br><span class="line">    port: 9200</span><br><span class="line">    timeKey: &#x27;@timestamp&#x27;</span><br><span class="line">  matchRegex: &#x27;(?:kube|service)\.(.*)&#x27;</span><br><span class="line">​</span><br><span class="line">​</span><br><span class="line">#修改es-auditing的output</span><br><span class="line">kubectl edit output es-auditing -n kubesphere-logging-system</span><br><span class="line">#修改host 和 logstashPrefix</span><br><span class="line"># host: es-service.kubesphere-logging-system.svc</span><br><span class="line"># logstashPrefix: ks-对应环境-auditing</span><br><span class="line">​</span><br><span class="line">#如下</span><br><span class="line">spec:</span><br><span class="line">  es:</span><br><span class="line">    generateID: true</span><br><span class="line">    host: es-service.kubesphere-logging-system.svc  # host地址</span><br><span class="line">    httpPassword:</span><br><span class="line">      valueFrom:</span><br><span class="line">        secretKeyRef:</span><br><span class="line">          key: password</span><br><span class="line">          name: elasticsearch-credentials</span><br><span class="line">    httpUser:</span><br><span class="line">      valueFrom:</span><br><span class="line">        secretKeyRef:</span><br><span class="line">          key: username</span><br><span class="line">          name: elasticsearch-credentials</span><br><span class="line">    logstashFormat: true</span><br><span class="line">    logstashPrefix: ks-sit-auditing   # 修改此处为对应环境的日志索引</span><br><span class="line">    port: 9200</span><br><span class="line">  match: kube_auditing</span><br></pre></td></tr></table></figure>
+
+<p><strong><font style="color:rgb(47, 48, 52);">重启ks-apiserver</font></strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl rollout restart deployment ks-apiserver -n kubesphere-system</span><br></pre></td></tr></table></figure>
+
+<p><strong><font style="color:rgb(51, 51, 51);">验证</font></strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">[root@k8s-master1 ~]# kubectl get po -n kubesphere-logging-system </span><br><span class="line">NAME                                                              READY   STATUS      RESTARTS   AGE</span><br><span class="line">elasticsearch-logging-curator-elasticsearch-curator-276864h2xt2   0/1     Error       0          38h</span><br><span class="line">elasticsearch-logging-curator-elasticsearch-curator-276864wc6bs   0/1     Completed   0          38h</span><br><span class="line">elasticsearch-logging-curator-elasticsearch-curator-276879865wl   0/1     Completed   0          14h</span><br><span class="line">elasticsearch-logging-curator-elasticsearch-curator-276879l7xpf   0/1     Error       0          14h</span><br><span class="line">fluent-bit-4vzq5                                                  1/1     Running     0          47h</span><br><span class="line">fluent-bit-6ckvm                                                  1/1     Running     0          25h</span><br><span class="line">fluent-bit-6jt8d                                                  1/1     Running     0          47h</span><br><span class="line">fluent-bit-88crg                                                  1/1     Running     0          47h</span><br><span class="line">fluent-bit-9ps6z                                                  1/1     Running     0          47h</span><br><span class="line">fluent-bit-djhtx                                                  1/1     Running     0          47h</span><br><span class="line">fluent-bit-dmpfv                                                  1/1     Running     0          47h</span><br><span class="line">fluent-bit-dtr7z                                                  1/1     Running     0          47h</span><br><span class="line">fluent-bit-flxbt                                                  1/1     Running     0          47h</span><br><span class="line">fluent-bit-fnxdk                                                  1/1     Running     0          47h</span><br><span class="line">fluent-bit-gqbrl                                                  1/1     Running     0          47h</span><br><span class="line">fluent-bit-kbzsj                                                  1/1     Running     0          47h</span><br><span class="line">fluent-bit-lbnnh                                                  1/1     Running     0          47h</span><br><span class="line">fluent-bit-nq4g8                                                  1/1     Running     0          47h</span><br><span class="line">fluent-bit-q5shz                                                  1/1     Running     0          47h</span><br><span class="line">fluent-bit-qrb7v                                                  1/1     Running     0          47h</span><br><span class="line">fluent-bit-r26fk                                                  1/1     Running     0          47h</span><br><span class="line">fluent-bit-rfrpd                                                  1/1     Running     0          47h</span><br><span class="line">fluent-bit-s8869                                                  1/1     Running     0          47h</span><br><span class="line">fluent-bit-sp5k4                                                  1/1     Running     0          47h</span><br><span class="line">fluent-bit-vjvhl                                                  1/1     Running     0          47h</span><br><span class="line">fluent-bit-xkksv                                                  1/1     Running     0          47h</span><br><span class="line">fluent-bit-xrlz4                                                  1/1     Running     0          47h</span><br><span class="line">fluentbit-operator-745bf5559f-vnz8w                               1/1     Running     0          47h</span><br><span class="line">kube-auditing-operator-84857bf967-ftbjr                           1/1     Running     0          47h</span><br><span class="line">kube-auditing-webhook-deploy-64cfb8c9f8-hf8g8                     1/1     Running     0          47h</span><br><span class="line">kube-auditing-webhook-deploy-64cfb8c9f8-zf4rd                     1/1     Running     0          47h</span><br><span class="line">logsidecar-injector-deploy-5fb6fdc6dd-fj5vm                       2/2     Running     0          47h</span><br><span class="line">logsidecar-injector-deploy-5fb6fdc6dd-qbhdg                       2/2     Running     0          47h</span><br></pre></td></tr></table></figure>
+
+<h2 id="日志查看"><a href="#日志查看" class="headerlink" title="日志查看"></a>日志查看</h2><p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1666583118066-5d629720-795c-4274-93fd-6bd4ae16d674.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1666583132193-8cf9e0d6-27d3-4e72-bab2-5c0445502066.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1666583147974-6a84aff2-3ff6-448d-9ece-0180aecca9e5.png"></p>
+<p>如果想要更清晰的获取日志，请在业务中加入规范的日志格式</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/k8s/" rel="tag"><i class="fa fa-tag"></i> k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/10/05/%E5%8E%9F%E5%8D%95%E7%8B%AC%E9%83%A8%E7%BD%B2%E7%9A%84%E5%BA%94%E7%94%A8%E4%B8%8A%E4%BA%91%E9%83%A8%E7%BD%B2%EF%BC%88%E5%8D%81%EF%BC%89/" rel="prev" title="原单独部署的应用上云部署（十）">
+      <i class="fa fa-chevron-left"></i> 原单独部署的应用上云部署（十）
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/10/06/%E8%87%AA%E5%AE%9A%E4%B9%89%E7%9B%91%E6%8E%A7%E8%AE%BE%E7%BD%AE%EF%BC%88%E5%8D%81%E4%BA%8C%EF%BC%89/" rel="next" title="自定义监控设置（十二）">
+      自定义监控设置（十二） <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%97%A5%E5%BF%97%E5%88%86%E7%B1%BB"><span class="nav-number">1.</span> <span class="nav-text">日志分类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ES%E5%A4%96%E7%BD%AE"><span class="nav-number">2.</span> <span class="nav-text">ES外置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%89%8D%E7%BD%AE%E6%AD%A5%E9%AA%A4%E5%AE%89%E8%A3%85ES"><span class="nav-number">2.1.</span> <span class="nav-text">前置步骤安装ES</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%87%E4%BB%BDks-installer"><span class="nav-number">2.2.</span> <span class="nav-text">备份ks-installer</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B3%E9%97%AD%E5%86%85%E9%83%A8ES%E5%AF%B9%E6%8E%A5%E5%A4%96%E9%83%A8ES%EF%BC%88%E5%A6%82%E6%9E%9C%E6%9C%AA%E5%BC%80%E5%90%AF%E6%97%A5%E5%BF%97%E5%88%99%E7%9C%81%E7%95%A5%EF%BC%89"><span class="nav-number">2.3.</span> <span class="nav-text">关闭内部ES对接外部ES（如果未开启日志则省略）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E5%85%B3%E9%97%AD%E5%86%85%E9%83%A8ES%E5%B9%B6%E5%8D%B8%E8%BD%BD%E6%97%A5%E5%BF%97%E7%9B%B8%E5%85%B3%E5%8F%AF%E6%8F%92%E6%8B%94%E7%BB%84%E4%BB%B6"><span class="nav-number">2.3.1.</span> <span class="nav-text">一、关闭内部ES并卸载日志相关可插拔组件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E5%88%9B%E5%BB%BAnamespace"><span class="nav-number">2.3.2.</span> <span class="nav-text">二、创建namespace</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%89%E3%80%81%E8%87%AA%E5%AE%9A%E4%B9%89service%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1ES%E8%8A%82%E7%82%B9"><span class="nav-number">2.3.3.</span> <span class="nav-text">三、自定义service负载均衡ES节点</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%80%E5%90%AF%E6%97%A5%E5%BF%97%E5%8A%9F%E8%83%BD"><span class="nav-number">3.</span> <span class="nav-text">开启日志功能</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%97%A5%E5%BF%97%E6%9F%A5%E7%9C%8B"><span class="nav-number">4.</span> <span class="nav-text">日志查看</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="139"
+      src="/images/custom/avatar.jpg">
+  <p class="site-author-name" itemprop="name">139</p>
+  <div class="site-description" itemprop="description">一个普通的JAVA开发的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">117</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">42</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+  <div class="beian"><a href="https://beian.miit.gov.cn/" rel="noopener" target="_blank">浙ICP备2023004484号-1 </a>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">139</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8335634399768246"
+     crossorigin="anonymous"></script>
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

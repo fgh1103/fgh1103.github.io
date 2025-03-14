@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8335634399768246"
+     crossorigin="anonymous"></script>
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="使用ks-install 工具安装kubesphere。1. 下载安装所需要的yaml文件123mkdir ks-installer &amp;&amp; cd ks-installerwget https:&#x2F;&#x2F;github.com&#x2F;kubesphere&#x2F;ks-installer&#x2F;releases&#x2F;download&#x2F;v3.2.1&#x2F;kubesphere-installer.yamlwget http">
+<meta property="og:type" content="article">
+<meta property="og:title" content="安装可视化平台Kubesphere（七）">
+<meta property="og:url" content="http://example.com/2023/10/02/%E5%AE%89%E8%A3%85%E5%8F%AF%E8%A7%86%E5%8C%96%E5%B9%B3%E5%8F%B0Kubesphere%EF%BC%88%E4%B8%83%EF%BC%89/index.html">
+<meta property="og:site_name" content="进学阁">
+<meta property="og:description" content="使用ks-install 工具安装kubesphere。1. 下载安装所需要的yaml文件123mkdir ks-installer &amp;&amp; cd ks-installerwget https:&#x2F;&#x2F;github.com&#x2F;kubesphere&#x2F;ks-installer&#x2F;releases&#x2F;download&#x2F;v3.2.1&#x2F;kubesphere-installer.yamlwget http">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1663309693388-1735fcda-f290-4213-9112-c399bbd364d6.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1663309747957-a7386874-438e-4124-8ae6-6e2b2bd68610.png">
+<meta property="article:published_time" content="2023-10-02T13:23:55.000Z">
+<meta property="article:modified_time" content="2025-03-14T10:10:28.245Z">
+<meta property="article:author" content="139">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1663309693388-1735fcda-f290-4213-9112-c399bbd364d6.png">
+
+<link rel="canonical" href="http://example.com/2023/10/02/%E5%AE%89%E8%A3%85%E5%8F%AF%E8%A7%86%E5%8C%96%E5%B9%B3%E5%8F%B0Kubesphere%EF%BC%88%E4%B8%83%EF%BC%89/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>安装可视化平台Kubesphere（七） | 进学阁</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">进学阁</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">业精于勤荒于嬉，行成于思毁于随</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">42</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">17</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">117</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/10/02/%E5%AE%89%E8%A3%85%E5%8F%AF%E8%A7%86%E5%8C%96%E5%B9%B3%E5%8F%B0Kubesphere%EF%BC%88%E4%B8%83%EF%BC%89/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          安装可视化平台Kubesphere（七）
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-10-02 21:23:55" itemprop="dateCreated datePublished" datetime="2023-10-02T21:23:55+08:00">2023-10-02</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-14 18:10:28" itemprop="dateModified" datetime="2025-03-14T18:10:28+08:00">2025-03-14</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%9F%BA%E4%BA%8EKubesphere%E6%9E%84%E5%BB%BAk8s%E5%B9%B3%E5%8F%B0/" itemprop="url" rel="index"><span itemprop="name">基于Kubesphere构建k8s平台</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="使用ks-install-工具安装kubesphere。"><a href="#使用ks-install-工具安装kubesphere。" class="headerlink" title="使用ks-install 工具安装kubesphere。"></a><font style="color:rgb(47, 48, 52);">使用</font><font style="color:rgb(47, 48, 52);background-color:rgb(240, 240, 240);">ks-install</font><font style="color:rgb(47, 48, 52);"> 工具安装kubesphere。</font></h2><h3 id="1-下载安装所需要的yaml文件"><a href="#1-下载安装所需要的yaml文件" class="headerlink" title="1. 下载安装所需要的yaml文件"></a><font style="color:rgb(47, 48, 52);">1. 下载安装所需要的yaml文件</font></h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mkdir ks-installer &amp;&amp; cd ks-installer</span><br><span class="line">wget https://github.com/kubesphere/ks-installer/releases/download/v3.2.1/kubesphere-installer.yaml</span><br><span class="line">wget https://github.com/kubesphere/ks-installer/releases/download/v3.2.1/cluster-configuration.yaml</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(47, 48, 52);">如果你网络无法wget下载，可以手动下载后传入服务器。</font></p>
+<span id="more"></span>
+<h3 id="2-安装Kubephere"><a href="#2-安装Kubephere" class="headerlink" title="2. 安装Kubephere"></a><font style="color:rgb(47, 48, 52);">2. 安装Kubephere</font></h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">export KKZONE=cn</span><br><span class="line">cd ks-installer</span><br><span class="line">kubectl apply -f kubesphere-installer.yaml</span><br><span class="line">kubectl apply -f cluster-configuration.yaml</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(47, 48, 52);">安装过程中可以通过</font><font style="color:rgb(47, 48, 52);background-color:rgb(240, 240, 240);">kubectl get po -n kubesphere-system</font><font style="color:rgb(47, 48, 52);"> 命令查看pod运行情况，如果某些镜像无法下载可以通过</font><font style="color:rgb(47, 48, 52);background-color:rgb(240, 240, 240);">kubectl describe po xxx -n kubesphere-system</font><font style="color:rgb(47, 48, 52);"> 命令查看pod调度情况，然后登录具体节点手动下载，如：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker pull haproxy:2.0.25-alpine</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-查看安装进度"><a href="#3-查看安装进度" class="headerlink" title="3. 查看安装进度"></a><font style="color:rgb(47, 48, 52);">3. 查看安装进度</font></h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl logs -n kubesphere-system $(kubectl get pod -n kubesphere-system -l app=ks-install -o jsonpath=&#x27;&#123;.items[0].metadata.name&#125;&#x27;) -f</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(47, 48, 52);">如果出现以下日志则说明Kubesphere平台安装成功</font></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1663309693388-1735fcda-f290-4213-9112-c399bbd364d6.png"></p>
+<h3 id="4-登录Kubesphere"><a href="#4-登录Kubesphere" class="headerlink" title="4. 登录Kubesphere"></a><font style="color:rgb(47, 48, 52);">4. 登录Kubesphere</font></h3><p><font style="color:rgb(47, 48, 52);">	浏览器访问 </font><font style="color:rgb(47, 48, 52);background-color:rgb(240, 240, 240);"><a target="_blank" rel="noopener" href="http://172.30.xx.xx:30880/">http://172.30.xx.xx:30880</a></font><font style="color:rgb(47, 48, 52);"> 即可打开Kubesphere平台。（密码可通过上一步的日志查看）</font></p>
+<p><font style="color:rgb(154, 154, 154);">第一次登录后需要重新修改密码！</font></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">Kubesphere 很多功能都是通过组件的形式进行扩展，可以按需开启。接下来我们开启几个常见的组件。</font></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<h2 id="启动组件"><a href="#启动组件" class="headerlink" title="启动组件"></a><font style="color:rgb(47, 48, 52);">启动组件</font></h2><font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">在安装好Kubesphere后可以按需开启相关组件，具体可参考文档 启用可插拔组件 ，下面介绍几个常见组件的开启。</font></p>
+<p><strong><font style="color:rgb(47, 48, 52);">在开启组件过程中，可以通过以下命令查看进度日志</font></strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl logs -n kubesphere-system $(kubectl get pod -n kubesphere-system -l app=ks-install -o jsonpath=&#x27;&#123;.items[0].metadata.name&#125;&#x27;) -f</span><br></pre></td></tr></table></figure>
+
+<h3 id="开启应用商店"><a href="#开启应用商店" class="headerlink" title="开启应用商店"></a><font style="color:rgb(47, 48, 52);">开启应用商店</font></h3><font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);background-color:rgb(240, 240, 240);">OpenPitrix</font><font style="color:rgb(47, 48, 52);"> 是一个开源的 Web 平台，用于打包、部署和管理不同类型的应用。 KubeSphere 在 OpenPitrix 的基础上，为用户提供了一个基于 Helm 的应用商店，用于应用生命周期管理。</font></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">一句话表达就是：通过应用商店我们傻瓜式地安装常见应用，如：redis、rabbitmq、zookeeper…只需要在Kubesphere平台用鼠标点几下中间件就给你装好了。</font></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<ol>
+<li><font style="color:rgb(47, 48, 52);">登录Kubesphere平台，进入集群管理，选择CRD</font></li>
+<li><font style="color:rgb(47, 48, 52);">在CRD中搜索ClusterConfiguration并编辑属性</font></li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">openpitrix:</span><br><span class="line">  store:</span><br><span class="line">    enabled: true</span><br></pre></td></tr></table></figure>
+
+<h3 id="开启devops（重点）"><a href="#开启devops（重点）" class="headerlink" title="开启devops（重点）"></a><font style="color:rgb(47, 48, 52);">开启devops（重点）</font></h3><p><font style="color:rgb(47, 48, 52);">KubeSphere DevOps 项目支持源代码管理工具，例如 GitHub、Git 和 SVN。用户可以通过图形编辑面板 (Jenkinsfile out of SCM) 构建 CI&#x2F;CD 流水线，或者从代码仓库 (Jenkinsfile in SCM) 创建基于 Jenkinsfile 的流水线。</font></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">关于Kubesphere 中Devops的介绍，大家可以通过下面链接查看：</font><a target="_blank" rel="noopener" href="http://kubesphere.com.cn/">Devops概述</a></p>
+<p><font style="color:rgb(154, 154, 154);">其他组件可以不启用，这devops组件是必须要启用的，后面的CICD就是基于这个来做的。</font></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<h4 id="1-规划所有worker节点用于CICD任务，所以我们先需要给worker节点打上对应的标签。"><a href="#1-规划所有worker节点用于CICD任务，所以我们先需要给worker节点打上对应的标签。" class="headerlink" title="1. 规划所有worker节点用于CICD任务，所以我们先需要给worker节点打上对应的标签。"></a><font style="color:rgb(47, 48, 52);">1. 规划所有worker节点用于CICD任务，所以我们先需要给worker节点打上对应的标签。</font></h4><font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">进入节点管理，进入所有worker节点页面，点击</font><strong><font style="color:rgb(47, 48, 52);">更多操作</font></strong><font style="color:rgb(47, 48, 52);">，选择</font><strong><font style="color:rgb(47, 48, 52);">编辑标签</font></strong><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1663309747957-a7386874-438e-4124-8ae6-6e2b2bd68610.png"></p>
+<p><font style="color:rgb(47, 48, 52);">在弹出的对话框中您可以看到一个标签的键是 node-role.kubernetes.io&#x2F;worker。输入 ci 作为此标签的值，然后点击</font><strong><font style="color:rgb(47, 48, 52);">保存</font></strong><font style="color:rgb(47, 48, 52);">。</font></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<h4 id="2-开启devops"><a href="#2-开启devops" class="headerlink" title="2. 开启devops"></a><font style="color:rgb(47, 48, 52);">2. 开启devops</font></h4><font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">进入集群管理CRD，搜索ClusterConfiguration并开启DevOps</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">devops:</span><br><span class="line">  enabled: true</span><br><span class="line">  jenkinsJavaOpts_MaxRAM: 2g</span><br><span class="line">  jenkinsJavaOpts_Xms: 1g</span><br><span class="line">  jenkinsJavaOpts_Xmx: 1g</span><br><span class="line">  jenkinsMemoryLim: 2Gi</span><br><span class="line">  jenkinsMemoryReq: 1500Mi</span><br><span class="line">  jenkinsVolumeSize: 8Gi</span><br></pre></td></tr></table></figure>
+
+<h3 id="开启etcd监控"><a href="#开启etcd监控" class="headerlink" title="开启etcd监控"></a><font style="color:rgb(47, 48, 52);">开启etcd监控</font></h3><font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">安装Kubesphere后默认安装了可视化监控平台，可以监控系统运行状况，但是默认情况下并未开启Etcd监控，需要自行启用。</font></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">进入集群管理CRD，搜索ClusterConfiguration,点击 ks-installer 选择</font><strong><font style="color:rgb(47, 48, 52);">编辑 YAML</font></strong></p>
+<p><font style="color:rgb(170, 85, 0);">#所有master节点IP</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">etcd:</span><br><span class="line">  endpointIps: &#x27;172.30.*.*,172.30.*.*,172.30.*.*&#x27;</span><br><span class="line">  monitoring: true</span><br><span class="line">  port: 2379</span><br><span class="line">  tlsEnable: true</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(47, 48, 52);">其他组件大家根据各自的业务需要自行开启。</font></p>
+<p><font style="color:rgb(47, 48, 52);">Kubesphere平台提供了极简体验，向导式UI，极大的降低了使用Kubenetes的门槛。</font></p>
+<h2 id=""><a href="#" class="headerlink" title=""></a><font style="color:rgb(47, 48, 52);"></h2><p></font><font style="color:rgb(47, 48, 52);">小结</font><br><font style="color:rgb(47, 48, 52);">记不住Kubenetes命令不要紧，不会写Dockerfile也没关系，使用KubeSphere图像界面以后一起都变得简单了，可以快速上手各项功能与服务。</font></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/k8s/" rel="tag"><i class="fa fa-tag"></i> k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/10/02/%E6%9E%84%E5%BB%BA%E5%88%86%E5%B8%83%E5%BC%8F%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F%EF%BC%88%E4%BA%94%EF%BC%89/" rel="prev" title="构建分布式存储系统（五）">
+      <i class="fa fa-chevron-left"></i> 构建分布式存储系统（五）
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/10/03/%E5%AE%89%E8%A3%85Nacos%EF%BC%88%E5%85%AB%EF%BC%89/" rel="next" title="安装Nacos（八）">
+      安装Nacos（八） <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8ks-install-%E5%B7%A5%E5%85%B7%E5%AE%89%E8%A3%85kubesphere%E3%80%82"><span class="nav-number">1.</span> <span class="nav-text">使用ks-install 工具安装kubesphere。</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E4%B8%8B%E8%BD%BD%E5%AE%89%E8%A3%85%E6%89%80%E9%9C%80%E8%A6%81%E7%9A%84yaml%E6%96%87%E4%BB%B6"><span class="nav-number">1.1.</span> <span class="nav-text">1. 下载安装所需要的yaml文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E5%AE%89%E8%A3%85Kubephere"><span class="nav-number">1.2.</span> <span class="nav-text">2. 安装Kubephere</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E6%9F%A5%E7%9C%8B%E5%AE%89%E8%A3%85%E8%BF%9B%E5%BA%A6"><span class="nav-number">1.3.</span> <span class="nav-text">3. 查看安装进度</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E7%99%BB%E5%BD%95Kubesphere"><span class="nav-number">1.4.</span> <span class="nav-text">4. 登录Kubesphere</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E7%BB%84%E4%BB%B6"><span class="nav-number">2.</span> <span class="nav-text">启动组件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BC%80%E5%90%AF%E5%BA%94%E7%94%A8%E5%95%86%E5%BA%97"><span class="nav-number">2.1.</span> <span class="nav-text">开启应用商店</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BC%80%E5%90%AFdevops%EF%BC%88%E9%87%8D%E7%82%B9%EF%BC%89"><span class="nav-number">2.2.</span> <span class="nav-text">开启devops（重点）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E8%A7%84%E5%88%92%E6%89%80%E6%9C%89worker%E8%8A%82%E7%82%B9%E7%94%A8%E4%BA%8ECICD%E4%BB%BB%E5%8A%A1%EF%BC%8C%E6%89%80%E4%BB%A5%E6%88%91%E4%BB%AC%E5%85%88%E9%9C%80%E8%A6%81%E7%BB%99worker%E8%8A%82%E7%82%B9%E6%89%93%E4%B8%8A%E5%AF%B9%E5%BA%94%E7%9A%84%E6%A0%87%E7%AD%BE%E3%80%82"><span class="nav-number">2.2.1.</span> <span class="nav-text">1. 规划所有worker节点用于CICD任务，所以我们先需要给worker节点打上对应的标签。</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E5%BC%80%E5%90%AFdevops"><span class="nav-number">2.2.2.</span> <span class="nav-text">2. 开启devops</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BC%80%E5%90%AFetcd%E7%9B%91%E6%8E%A7"><span class="nav-number">2.3.</span> <span class="nav-text">开启etcd监控</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">3.</span> <span class="nav-text"></span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="139"
+      src="/images/custom/avatar.jpg">
+  <p class="site-author-name" itemprop="name">139</p>
+  <div class="site-description" itemprop="description">一个普通的JAVA开发的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">117</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">42</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+  <div class="beian"><a href="https://beian.miit.gov.cn/" rel="noopener" target="_blank">浙ICP备2023004484号-1 </a>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">139</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8335634399768246"
+     crossorigin="anonymous"></script>
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8335634399768246"
+     crossorigin="anonymous"></script>
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="最近因为一次压测活动，出于好奇想要试一下集群中的自动扩缩容，但是开启自动扩缩容之后，压测统计中出现了额外的错误，经过分析发现是因为微服务的注册中心nacos的上下线和集群中的上下线时机不一致造成的。具体的问题点在于:  k8s服务下线时, svc对应的endpoint已经去掉了该服务的IP地址, 而nacos可能还存在该服务路由. 导致访问失败  k8s服务上线时, 有可能注册完nacos服务启动">
+<meta property="og:type" content="article">
+<meta property="og:title" content="kubernetes探针">
+<meta property="og:url" content="http://example.com/2024/11/06/kubernetes%E6%8E%A2%E9%92%88/index.html">
+<meta property="og:site_name" content="进学阁">
+<meta property="og:description" content="最近因为一次压测活动，出于好奇想要试一下集群中的自动扩缩容，但是开启自动扩缩容之后，压测统计中出现了额外的错误，经过分析发现是因为微服务的注册中心nacos的上下线和集群中的上下线时机不一致造成的。具体的问题点在于:  k8s服务下线时, svc对应的endpoint已经去掉了该服务的IP地址, 而nacos可能还存在该服务路由. 导致访问失败  k8s服务上线时, 有可能注册完nacos服务启动">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-11-06T14:53:07.000Z">
+<meta property="article:modified_time" content="2025-03-14T10:15:30.230Z">
+<meta property="article:author" content="139">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2024/11/06/kubernetes%E6%8E%A2%E9%92%88/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>kubernetes探针 | 进学阁</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">进学阁</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">业精于勤荒于嬉，行成于思毁于随</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">42</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">17</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">117</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/11/06/kubernetes%E6%8E%A2%E9%92%88/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          kubernetes探针
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-11-06 22:53:07" itemprop="dateCreated datePublished" datetime="2024-11-06T22:53:07+08:00">2024-11-06</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-14 18:15:30" itemprop="dateModified" datetime="2025-03-14T18:15:30+08:00">2025-03-14</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/kubernetes%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index"><span itemprop="name">kubernetes基础</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>最近因为一次压测活动，出于好奇想要试一下集群中的自动扩缩容，但是开启自动扩缩容之后，压测统计中出现了额外的错误，经过分析发现是因为微服务的注册中心nacos的上下线和集群中的上下线时机不一致造成的。具体的问题点在于:</p>
+<ol>
+<li>k8s服务下线时, svc对应的endpoint已经去掉了该服务的IP地址, 而nacos可能还存在该服务路由. 导致访问失败 </li>
+<li>k8s服务上线时, 有可能注册完nacos服务启动完成, 这时候, nacos有了路由, 而svc还没有该端点信息</li>
+<li>k8s服务上线时, svc已经有该端点信息，但是nacos服务还未启动完成, 这时候svc已经有了该端点, 但是nacos还没有路由</li>
+</ol>
+<p>在解决这个问题的时候，我们需要先了解kubernetes的探针</p>
+<span id="more"></span>
+<p><font style="color:rgb(34, 34, 34);"></font></p>
+<h3 id="存活探针（Liveness）"><a href="#存活探针（Liveness）" class="headerlink" title="存活探针（Liveness）"></a><font style="color:rgb(34, 34, 34);">存活探针（Liveness）</font></h3><p><font style="color:rgb(77, 77, 77);">kubelet 使用存活探针来确定什么时候要重启容器。 例如，存活探针可以探测到应用死锁（应用程序在运行，但是无法继续执行后面的步骤）情况。 重启这种状态下的容器有助于提高应用的可用性，即使其中存在缺陷。</font></p>
+<h3 id="就绪探针（Readiness）"><a href="#就绪探针（Readiness）" class="headerlink" title="就绪探针（Readiness）"></a><font style="color:rgb(34, 34, 34);">就绪探针（Readiness）</font></h3><p><font style="color:rgb(34, 34, 34);">指示容器是否准备好为请求提供服务。如果就绪态探测失败， 端点控制器将从与 Pod 匹配的所有服务的端点列表中删除该 Pod 的 IP 地址。 初始延迟之前的就绪态的状态值默认为 </font><font style="color:rgb(201, 115, 0);">Failure</font><font style="color:rgb(34, 34, 34);">。 如果容器不提供就绪态探针，则默认状态为 </font><font style="color:rgb(201, 115, 0);">Success</font><font style="color:rgb(34, 34, 34);">。</font></p>
+<h3 id="启动探针（Startup）"><a href="#启动探针（Startup）" class="headerlink" title="启动探针（Startup）"></a><font style="color:rgb(34, 34, 34);">启动探针（Startup）</font></h3><p><font style="color:rgb(34, 34, 34);">指示容器中的应用是否已经启动。如果提供了启动探针，则所有其他探针都会被 禁用，直到此探针成功为止。如果启动探测失败，</font><font style="color:rgb(201, 115, 0);">kubelet</font><font style="color:rgb(34, 34, 34);"> 将杀死容器， 而容器依其</font><a target="_blank" rel="noopener" href="https://kubernetes.io/zh-cn/docs/concepts/workloads/pods/pod-lifecycle/#restart-policy"><font style="color:rgb(77, 77, 77);">重启策略</font></a><font style="color:rgb(34, 34, 34);">进行重启。 如果容器没有提供启动探测，则默认状态为 </font><font style="color:rgb(201, 115, 0);">Success</font><font style="color:rgb(34, 34, 34);">。</font></p>
+<p>:::info<br><font style="color:rgb(34, 34, 34);">注意：</font><font style="color:rgb(34, 34, 34);">就绪和存活探测可以在同一个容器上并行使用。 两者共同使用，可以确保流量不会发给还未就绪的容器，当这些探测失败时容器会被重新启动。</font></p>
+<p>:::</p>
+<h3 id="探测方式"><a href="#探测方式" class="headerlink" title="探测方式"></a><font style="color:rgb(77, 77, 77);">探测方式</font></h3><p><font style="color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);">K8s 探针有四种探测方式，分别是：ExecAction、Grpc、HTTPGetAction 和 TCPSocketAction。</font></p>
+<p><font style="color:rgb(77, 77, 77);">注意，这四种探测方式只能同时使用一种，不能两种或三种同时使用。</font></p>
+<ul>
+<li><strong><font style="color:rgba(0, 0, 0, 0.75);">ExecAction </font></strong><font style="color:rgba(0, 0, 0, 0.75);">在容器中执行指定的命令，如果执行成功，退出码为0则探测成功。</font></li>
+<li><strong><font style="color:rgba(0, 0, 0, 0.75);">Grpc  </font></strong><font style="color:rgb(34, 34, 34);">要使用 gRPC 探针，必须配置 </font><font style="color:rgb(34, 34, 34);">port</font><font style="color:rgb(34, 34, 34);"> 属性。 如果要区分不同类型的探针和不同功能的探针，可以使用 </font><font style="color:rgb(34, 34, 34);">service</font><font style="color:rgb(34, 34, 34);"> 字段。 你可以将 </font><font style="color:rgb(34, 34, 34);">service</font><font style="color:rgb(34, 34, 34);"> 设置为 </font><font style="color:rgb(34, 34, 34);">liveness</font><font style="color:rgb(34, 34, 34);">，并使你的 gRPC 健康检查端点对该请求的响应与将 </font><font style="color:rgb(34, 34, 34);">service</font><font style="color:rgb(34, 34, 34);"> 设置为 </font><font style="color:rgb(34, 34, 34);">readiness</font><font style="color:rgb(34, 34, 34);"> 时不同。</font></li>
+<li><strong><font style="color:rgba(0, 0, 0, 0.75);">HTTPGetAction </font></strong><font style="color:rgba(0, 0, 0, 0.75);">通过容器的IP地址、端口号及路径调用HTTP Get方法，如果响应的状态码大于等于200且小于400，则认为容器健康。</font></li>
+<li><strong><font style="color:rgba(0, 0, 0, 0.75);">TCPSocketAction  </font></strong><font style="color:rgba(0, 0, 0, 0.75);">通过容器的IP地址和端口号执行TCP检查，如果能够建立TCP连接，则表明容器健康。</font></li>
+</ul>
+<h3 id="探测结果"><a href="#探测结果" class="headerlink" title="探测结果"></a><font style="color:rgb(0, 0, 0);">探测结果</font></h3><p><font style="color:rgb(34, 34, 34);">从探测结果来讲主要分为三种：</font></p>
+<ul>
+<li><strong><font style="color:rgb(51, 51, 51);">第一种是 success</font></strong><font style="color:rgb(51, 51, 51);">，当状态是 success 的时候，表示 container 通过了健康检查，也就是 Liveness probe 或 Readiness probe 是正常的一个状态；</font></li>
+<li><strong><font style="color:rgb(51, 51, 51);">第二种是 Failure</font></strong><font style="color:rgb(51, 51, 51);">，Failure 表示的是这个 container 没有通过健康检查，如果没有通过健康检查的话，那么此时就会进行相应的一个处理，那在 Readiness 处理的一个方式就是通过 service。service 层将没有通过 Readiness 的 pod 进行摘除，而 Liveness 就是将这个 pod 进行重新拉起，或者是删除。</font></li>
+<li><strong><font style="color:rgb(51, 51, 51);">第三种状态是 Unknown</font></strong><font style="color:rgb(51, 51, 51);">，Unknown 是表示说当前的执行的机制没有进行完整的一个执行，可能是因为类似像超时或者像一些脚本没有及时返回，那么此时 Readiness-probe 或 Liveness-probe 会不做任何的一个操作，会等待下一次的机制来进行检验。</font></li>
+</ul>
+<p><font style="color:rgb(34, 34, 34);">那在 kubelet 里面有一个叫 ProbeManager 的组件，这个组件里面会包含 Liveness-probe 或 Readiness-probe，这两个 probe 会将相应的 Liveness 诊断和 Readiness 诊断作用在 pod 之上，来实现一个具体的判断。</font></p>
+<h3 id="配置探针"><a href="#配置探针" class="headerlink" title="配置探针"></a><font style="color:rgb(34, 34, 34);">配置探针</font></h3><p><font style="color:rgb(34, 34, 34);">就绪探针的配置和存活探针的配置相似。 唯一区别就是要使用 </font>readinessProbe<font style="color:rgb(34, 34, 34);"> 字段，而不是 </font>livenessProbe<font style="color:rgb(34, 34, 34);"> 字段。</font></p>
+<p><a target="_blank" rel="noopener" href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#probe-v1-core">Probe</a><font style="color:rgb(34, 34, 34);"> </font><font style="color:rgb(34, 34, 34);">有很多配置字段，可以使用这些字段精确地控制启动、存活和就绪检测的行为：</font></p>
+<ul>
+<li>initialDelaySeconds<font style="color:rgb(34, 34, 34);">：容器启动后要等待多少秒后才启动启动、存活和就绪探针。 如果定义了启动探针，则存活探针和就绪探针的延迟将在启动探针已成功之后才开始计算。 如果</font><font style="color:rgb(34, 34, 34);"> </font>periodSeconds<font style="color:rgb(34, 34, 34);"> </font><font style="color:rgb(34, 34, 34);">的值大于</font><font style="color:rgb(34, 34, 34);"> </font>initialDelaySeconds<font style="color:rgb(34, 34, 34);">，则</font><font style="color:rgb(34, 34, 34);"> </font>initialDelaySeconds<font style="color:rgb(34, 34, 34);"> </font><font style="color:rgb(34, 34, 34);">将被忽略。默认是 0 秒，最小值是 0。</font></li>
+<li>periodSeconds<font style="color:rgb(34, 34, 34);">：执行探测的时间间隔（单位是秒）。默认是 10 秒。最小值是 1。</font></li>
+<li>timeoutSeconds<font style="color:rgb(34, 34, 34);">：探测的超时后等待多少秒。默认值是 1 秒。最小值是 1。</font></li>
+<li>successThreshold<font style="color:rgb(34, 34, 34);">：探针在失败后，被视为成功的最小连续成功数。默认值是 1。 存活和启动探测的这个值必须是 1。最小值是 1。</font></li>
+<li>failureThreshold<font style="color:rgb(34, 34, 34);">：探针连续失败了</font><font style="color:rgb(34, 34, 34);"> </font>failureThreshold<font style="color:rgb(34, 34, 34);"> </font><font style="color:rgb(34, 34, 34);">次之后， Kubernetes 认为总体上检查已失败：容器状态未就绪、不健康、不活跃。 对于启动探针或存活探针而言，如果至少有</font><font style="color:rgb(34, 34, 34);"> </font>failureThreshold<font style="color:rgb(34, 34, 34);"> </font><font style="color:rgb(34, 34, 34);">个探针已失败， Kubernetes 会将容器视为不健康并为这个特定的容器触发重启操作。 kubelet 遵循该容器的</font><font style="color:rgb(34, 34, 34);"> </font>terminationGracePeriodSeconds<font style="color:rgb(34, 34, 34);"> </font><font style="color:rgb(34, 34, 34);">设置。 对于失败的就绪探针，kubelet 继续运行检查失败的容器，并继续运行更多探针； 因为检查失败，kubelet 将 Pod 的</font><font style="color:rgb(34, 34, 34);"> </font>Ready<font style="color:rgb(34, 34, 34);"> </font><a target="_blank" rel="noopener" href="https://kubernetes.io/zh-cn/docs/concepts/workloads/pods/pod-lifecycle/#pod-conditions">状况</a><font style="color:rgb(34, 34, 34);">设置为</font><font style="color:rgb(34, 34, 34);"> </font>false<font style="color:rgb(34, 34, 34);">。</font></li>
+<li>terminationGracePeriodSeconds<font style="color:rgb(34, 34, 34);">：为 kubelet 配置从为失败的容器触发终止操作到强制容器运行时停止该容器之前等待的宽限时长。 默认值是继承 Pod 级别的 </font>terminationGracePeriodSeconds<font style="color:rgb(34, 34, 34);"> 值（如果不设置则为 30 秒），最小值为 1。 更多细节请参见</font><a target="_blank" rel="noopener" href="https://kubernetes.io/zh-cn/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#probe-level-terminationgraceperiodseconds">探针级别terminationGracePeriodSeconds</a><font style="color:rgb(34, 34, 34);">。</font></li>
+</ul>
+<p><strong><font style="color:rgb(0, 0, 0);">注意：</font></strong></p>
+<p><font style="color:rgb(0, 0, 0);">如果就绪态探针的实现不正确，可能会导致容器中进程的数量不断上升。 如果不对其采取措施，很可能导致资源枯竭的状况。</font></p>
+<h4 id="定义存活命令"><a href="#定义存活命令" class="headerlink" title="定义存活命令"></a><font style="color:rgb(34, 34, 34);">定义存活命令</font></h4><p><font style="color:rgb(34, 34, 34);">许多长时间运行的应用最终会进入损坏状态，除非重新启动，否则无法被恢复。 Kubernetes 提供了存活探针来发现并处理这种情况。</font></p>
+<p><font style="color:rgb(34, 34, 34);">在本练习中，你会创建一个 Pod，其中运行一个基于 </font>registry.k8s.io&#x2F;busybox<font style="color:rgb(34, 34, 34);"> 镜像的容器。 下面是这个 Pod 的配置文件。</font></p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Pod</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">test:</span> <span class="string">liveness</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">liveness-exec</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">containers:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">liveness</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">registry.k8s.io/busybox</span></span><br><span class="line">    <span class="attr">args:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">/bin/sh</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">-c</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">touch</span> <span class="string">/tmp/healthy;</span> <span class="string">sleep</span> <span class="number">30</span><span class="string">;</span> <span class="string">rm</span> <span class="string">-f</span> <span class="string">/tmp/healthy;</span> <span class="string">sleep</span> <span class="number">600</span></span><br><span class="line">    <span class="attr">livenessProbe:</span></span><br><span class="line">      <span class="attr">exec:</span></span><br><span class="line">        <span class="attr">command:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">cat</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">/tmp/healthy</span></span><br><span class="line">      <span class="attr">initialDelaySeconds:</span> <span class="number">5</span></span><br><span class="line">      <span class="attr">periodSeconds:</span> <span class="number">5</span></span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(34, 34, 34);">在这个配置文件中，可以看到 Pod 中只有一个</font><font style="color:rgb(34, 34, 34);"> </font>Container<font style="color:rgb(34, 34, 34);">。</font><font style="color:rgb(34, 34, 34);"> </font>periodSeconds<font style="color:rgb(34, 34, 34);"> </font><font style="color:rgb(34, 34, 34);">字段指定了 kubelet 应该每 5 秒执行一次存活探测。</font><font style="color:rgb(34, 34, 34);"> </font>initialDelaySeconds<font style="color:rgb(34, 34, 34);"> </font><font style="color:rgb(34, 34, 34);">字段告诉 kubelet 在执行第一次探测前应该等待 5 秒。 kubelet 在容器内执行命令</font><font style="color:rgb(34, 34, 34);"> </font>cat &#x2F;tmp&#x2F;healthy<font style="color:rgb(34, 34, 34);"> </font><font style="color:rgb(34, 34, 34);">来进行探测。 如果命令执行成功并且返回值为 0，kubelet 就会认为这个容器是健康存活的。 如果这个命令返回非 0 值，kubelet 会杀死这个容器并重新启动它。</font></p>
+<p><font style="color:rgb(34, 34, 34);">当容器启动时，执行如下的命令：</font></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/bin/sh -c &quot;touch /tmp/healthy; sleep 30; rm -f /tmp/healthy; sleep 600&quot;</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(34, 34, 34);">这个容器生命的前 30 秒，</font>&#x2F;tmp&#x2F;healthy<font style="color:rgb(34, 34, 34);"> </font><font style="color:rgb(34, 34, 34);">文件是存在的。 所以在这最开始的 30 秒内，执行命令</font><font style="color:rgb(34, 34, 34);"> </font>cat &#x2F;tmp&#x2F;healthy<font style="color:rgb(34, 34, 34);"> </font><font style="color:rgb(34, 34, 34);">会返回成功代码。 30 秒之后，执行命令</font><font style="color:rgb(34, 34, 34);"> </font>cat &#x2F;tmp&#x2F;healthy<font style="color:rgb(34, 34, 34);"> </font><font style="color:rgb(34, 34, 34);">就会返回失败代码。</font></p>
+<p><font style="color:rgb(34, 34, 34);">创建 Pod：</font></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl apply -f https://k8s.io/examples/pods/probe/exec-liveness.yaml</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(34, 34, 34);">在 30 秒内，查看 Pod 的事件：</font></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl describe pod liveness-exec</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(34, 34, 34);">输出结果表明还没有存活探针失败：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Type    Reason     Age   From               Message</span><br><span class="line">----    ------     ----  ----               -------</span><br><span class="line">Normal  Scheduled  11s   default-scheduler  Successfully assigned default/liveness-exec to node01</span><br><span class="line">Normal  Pulling    9s    kubelet, node01    Pulling image &quot;registry.k8s.io/busybox&quot;</span><br><span class="line">Normal  Pulled     7s    kubelet, node01    Successfully pulled image &quot;registry.k8s.io/busybox&quot;</span><br><span class="line">Normal  Created    7s    kubelet, node01    Created container liveness</span><br><span class="line">Normal  Started    7s    kubelet, node01    Started container liveness</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(34, 34, 34);">35 秒之后，再来看 Pod 的事件：</font></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl describe pod liveness-exec</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(34, 34, 34);">在输出结果的最下面，有信息显示存活探针失败了，这个失败的容器被杀死并且被重建了。</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">Type     Reason     Age                From               Message</span><br><span class="line">----     ------     ----               ----               -------</span><br><span class="line">Normal   Scheduled  57s                default-scheduler  Successfully assigned default/liveness-exec to node01</span><br><span class="line">Normal   Pulling    55s                kubelet, node01    Pulling image &quot;registry.k8s.io/busybox&quot;</span><br><span class="line">Normal   Pulled     53s                kubelet, node01    Successfully pulled image &quot;registry.k8s.io/busybox&quot;</span><br><span class="line">Normal   Created    53s                kubelet, node01    Created container liveness</span><br><span class="line">Normal   Started    53s                kubelet, node01    Started container liveness</span><br><span class="line">Warning  Unhealthy  10s (x3 over 20s)  kubelet, node01    Liveness probe failed: cat: can&#x27;t open &#x27;/tmp/healthy&#x27;: No such file or directory</span><br><span class="line">Normal   Killing    10s                kubelet, node01    Container liveness failed liveness probe, will be restarted</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(34, 34, 34);">再等 30 秒，确认这个容器被重启了：</font></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl get pod liveness-exec</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(34, 34, 34);">输出结果显示</font><font style="color:rgb(34, 34, 34);"> </font>RESTARTS<font style="color:rgb(34, 34, 34);"> </font><font style="color:rgb(34, 34, 34);">的值增加了 1。 请注意，一旦失败的容器恢复为运行状态，</font>RESTARTS<font style="color:rgb(34, 34, 34);"> </font><font style="color:rgb(34, 34, 34);">计数器就会增加 1：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">NAME            READY     STATUS    RESTARTS   AGE</span><br><span class="line">liveness-exec   1/1       Running   1          1m</span><br></pre></td></tr></table></figure>
+
+<h4 id="定义一个存活态-HTTP-请求接口"><a href="#定义一个存活态-HTTP-请求接口" class="headerlink" title="定义一个存活态 HTTP 请求接口"></a><font style="color:rgb(34, 34, 34);">定义一个存活态 HTTP 请求接口</font></h4><p><font style="color:rgb(34, 34, 34);">另外一种类型的存活探测方式是使用 HTTP GET 请求。 下面是一个 Pod 的配置文件，其中运行一个基于 </font>registry.k8s.io&#x2F;liveness<font style="color:rgb(34, 34, 34);"> 镜像的容器。</font></p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Pod</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">test:</span> <span class="string">liveness</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">liveness-http</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">containers:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">liveness</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">registry.k8s.io/liveness</span></span><br><span class="line">    <span class="attr">args:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">/server</span></span><br><span class="line">    <span class="attr">livenessProbe:</span></span><br><span class="line">      <span class="attr">httpGet:</span></span><br><span class="line">        <span class="attr">path:</span> <span class="string">/healthz</span></span><br><span class="line">        <span class="attr">port:</span> <span class="number">8080</span></span><br><span class="line">        <span class="attr">httpHeaders:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Custom-Header</span></span><br><span class="line">          <span class="attr">value:</span> <span class="string">Awesome</span></span><br><span class="line">      <span class="attr">initialDelaySeconds:</span> <span class="number">3</span></span><br><span class="line">      <span class="attr">periodSeconds:</span> <span class="number">3</span></span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(34, 34, 34);">在这个配置文件中，你可以看到 Pod 也只有一个容器。</font><font style="color:rgb(34, 34, 34);"> </font>periodSeconds<font style="color:rgb(34, 34, 34);"> </font><font style="color:rgb(34, 34, 34);">字段指定了 kubelet 每隔 3 秒执行一次存活探测。</font><font style="color:rgb(34, 34, 34);"> </font>initialDelaySeconds<font style="color:rgb(34, 34, 34);"> </font><font style="color:rgb(34, 34, 34);">字段告诉 kubelet 在执行第一次探测前应该等待 3 秒。 kubelet 会向容器内运行的服务（服务在监听 8080 端口）发送一个 HTTP GET 请求来执行探测。 如果服务器上</font><font style="color:rgb(34, 34, 34);"> </font>&#x2F;healthz<font style="color:rgb(34, 34, 34);"> </font><font style="color:rgb(34, 34, 34);">路径下的处理程序返回成功代码，则 kubelet 认为容器是健康存活的。 如果处理程序返回失败代码，则 kubelet 会杀死这个容器并将其重启。</font></p>
+<p><font style="color:rgb(34, 34, 34);">返回大于或等于 200 并且小于 400 的任何代码都标示成功，其它返回代码都标示失败。</font></p>
+<p><font style="color:rgb(34, 34, 34);">你可以访问</font><font style="color:rgb(34, 34, 34);"> </font><a target="_blank" rel="noopener" href="https://github.com/kubernetes/kubernetes/blob/master/test/images/agnhost/liveness/server.go">server.go</a><font style="color:rgb(34, 34, 34);"> </font><font style="color:rgb(34, 34, 34);">阅读服务的源码。 容器存活期间的最开始 10 秒中，</font>&#x2F;healthz<font style="color:rgb(34, 34, 34);"> </font><font style="color:rgb(34, 34, 34);">处理程序返回 200 的状态码。 之后处理程序返回 500 的状态码。</font></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">http.HandleFunc(<span class="string">&quot;/healthz&quot;</span>, <span class="function"><span class="keyword">func</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">    duration := time.Now().Sub(started)</span><br><span class="line">    <span class="keyword">if</span> duration.Seconds() &gt; <span class="number">10</span> &#123;</span><br><span class="line">        w.WriteHeader(<span class="number">500</span>)</span><br><span class="line">        w.Write([]<span class="type">byte</span>(fmt.Sprintf(<span class="string">&quot;error: %v&quot;</span>, duration.Seconds())))</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        w.WriteHeader(<span class="number">200</span>)</span><br><span class="line">        w.Write([]<span class="type">byte</span>(<span class="string">&quot;ok&quot;</span>))</span><br><span class="line">    &#125;</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(34, 34, 34);">kubelet 在容器启动之后 3 秒开始执行健康检测。所以前几次健康检查都是成功的。 但是 10 秒之后，健康检查会失败，并且 kubelet 会杀死容器再重新启动容器。</font></p>
+<p><font style="color:rgb(34, 34, 34);">创建一个 Pod 来测试 HTTP 的存活检测：</font></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl apply -f https://k8s.io/examples/pods/probe/http-liveness.yaml</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(34, 34, 34);">10 秒之后，通过查看 Pod 事件来确认存活探针已经失败，并且容器被重新启动了。</font></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl describe pod liveness-http</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(34, 34, 34);">在 1.13 之后的版本中，设置本地的 HTTP 代理环境变量不会影响 HTTP 的存活探测。</font></p>
+<h4 id="定义-TCP-的存活探测"><a href="#定义-TCP-的存活探测" class="headerlink" title="定义 TCP 的存活探测"></a><font style="color:rgb(34, 34, 34);">定义 TCP 的存活探测</font></h4><p><font style="color:rgb(34, 34, 34);">第三种类型的存活探测是使用 TCP 套接字。 使用这种配置时，kubelet 会尝试在指定端口和容器建立套接字链接。 如果能建立连接，这个容器就被看作是健康的，如果不能则这个容器就被看作是有问题的。</font></p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Pod</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">goproxy</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">goproxy</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">containers:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">goproxy</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">registry.k8s.io/goproxy:0.1</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">containerPort:</span> <span class="number">8080</span></span><br><span class="line">    <span class="attr">readinessProbe:</span></span><br><span class="line">      <span class="attr">tcpSocket:</span></span><br><span class="line">        <span class="attr">port:</span> <span class="number">8080</span></span><br><span class="line">      <span class="attr">initialDelaySeconds:</span> <span class="number">15</span></span><br><span class="line">      <span class="attr">periodSeconds:</span> <span class="number">10</span></span><br><span class="line">    <span class="attr">livenessProbe:</span></span><br><span class="line">      <span class="attr">tcpSocket:</span></span><br><span class="line">        <span class="attr">port:</span> <span class="number">8080</span></span><br><span class="line">      <span class="attr">initialDelaySeconds:</span> <span class="number">15</span></span><br><span class="line">      <span class="attr">periodSeconds:</span> <span class="number">20</span></span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(34, 34, 34);">如你所见，TCP 检测的配置和 HTTP 检测非常相似。 下面这个例子同时使用就绪和存活探针。kubelet 会在容器启动 15 秒后发送第一个就绪探针。 探针会尝试连接</font><font style="color:rgb(34, 34, 34);"> </font>goproxy<font style="color:rgb(34, 34, 34);"> </font><font style="color:rgb(34, 34, 34);">容器的 8080 端口。 如果探测成功，这个 Pod 会被标记为就绪状态，kubelet 将继续每隔 10 秒运行一次探测。</font></p>
+<p><font style="color:rgb(34, 34, 34);">除了就绪探针，这个配置包括了一个存活探针。 kubelet 会在容器启动 15 秒后进行第一次存活探测。 与就绪探针类似，存活探针会尝试连接</font><font style="color:rgb(34, 34, 34);"> </font>goproxy<font style="color:rgb(34, 34, 34);"> </font><font style="color:rgb(34, 34, 34);">容器的 8080 端口。 如果存活探测失败，容器会被重新启动。</font></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl apply -f https://k8s.io/examples/pods/probe/tcp-liveness-readiness.yaml</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(34, 34, 34);">15 秒之后，通过看 Pod 事件来检测存活探针：</font></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl describe pod goproxy</span><br></pre></td></tr></table></figure>
+
+<h4 id="定义-gRPC-存活探针"><a href="#定义-gRPC-存活探针" class="headerlink" title="定义 gRPC 存活探针"></a><font style="color:rgb(34, 34, 34);">定义 gRPC 存活探针</font></h4><p><strong><font style="color:rgb(34, 34, 34);">特性状态：</font></strong><font style="color:rgb(34, 34, 34);"> </font><font style="color:rgb(201, 115, 0);">Kubernetes v1.27 [stable]</font></p>
+<p><font style="color:rgb(34, 34, 34);">如果你的应用实现了</font><font style="color:rgb(34, 34, 34);"> </font><a target="_blank" rel="noopener" href="https://github.com/grpc/grpc/blob/master/doc/health-checking.md">gRPC 健康检查协议</a><font style="color:rgb(34, 34, 34);">， kubelet 可以配置为使用该协议来执行应用存活性检查。 你必须启用</font><font style="color:rgb(34, 34, 34);"> </font>GRPCContainerProbe<font style="color:rgb(34, 34, 34);"> </font><a target="_blank" rel="noopener" href="https://kubernetes.io/zh-cn/docs/reference/command-line-tools-reference/feature-gates/">特性门控</a><font style="color:rgb(34, 34, 34);"> </font><font style="color:rgb(34, 34, 34);">才能配置依赖于 gRPC 的检查机制。</font></p>
+<p><font style="color:rgb(34, 34, 34);">这个例子展示了如何配置 Kubernetes 以将其用于应用的存活性检查。 类似地，你可以配置就绪探针和启动探针。</font></p>
+<p><font style="color:rgb(34, 34, 34);">下面是一个示例清单：</font></p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Pod</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">etcd-with-grpc</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">containers:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">etcd</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">registry.k8s.io/etcd:3.5.1-0</span></span><br><span class="line">    <span class="attr">command:</span> [ <span class="string">&quot;/usr/local/bin/etcd&quot;</span>, <span class="string">&quot;--data-dir&quot;</span>,  <span class="string">&quot;/var/lib/etcd&quot;</span>, <span class="string">&quot;--listen-client-urls&quot;</span>, <span class="string">&quot;http://0.0.0.0:2379&quot;</span>, <span class="string">&quot;--advertise-client-urls&quot;</span>, <span class="string">&quot;http://127.0.0.1:2379&quot;</span>, <span class="string">&quot;--log-level&quot;</span>, <span class="string">&quot;debug&quot;</span>]</span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">containerPort:</span> <span class="number">2379</span></span><br><span class="line">    <span class="attr">livenessProbe:</span></span><br><span class="line">      <span class="attr">grpc:</span></span><br><span class="line">        <span class="attr">port:</span> <span class="number">2379</span></span><br><span class="line">      <span class="attr">initialDelaySeconds:</span> <span class="number">10</span></span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(34, 34, 34);">要使用 gRPC 探针，必须配置</font><font style="color:rgb(34, 34, 34);"> </font>port<font style="color:rgb(34, 34, 34);"> </font><font style="color:rgb(34, 34, 34);">属性。 如果要区分不同类型的探针和不同功能的探针，可以使用</font><font style="color:rgb(34, 34, 34);"> </font>service<font style="color:rgb(34, 34, 34);"> </font><font style="color:rgb(34, 34, 34);">字段。 你可以将</font><font style="color:rgb(34, 34, 34);"> </font>service<font style="color:rgb(34, 34, 34);"> </font><font style="color:rgb(34, 34, 34);">设置为</font><font style="color:rgb(34, 34, 34);"> </font>liveness<font style="color:rgb(34, 34, 34);">，并使你的 gRPC 健康检查端点对该请求的响应与将</font><font style="color:rgb(34, 34, 34);"> </font>service<font style="color:rgb(34, 34, 34);"> </font><font style="color:rgb(34, 34, 34);">设置为</font><font style="color:rgb(34, 34, 34);"> </font>readiness<font style="color:rgb(34, 34, 34);"> </font><font style="color:rgb(34, 34, 34);">时不同。 这使你可以使用相同的端点进行不同类型的容器健康检查而不是监听两个不同的端口。 如果你想指定自己的自定义服务名称并指定探测类型，Kubernetes 项目建议你使用使用一个可以关联服务和探测类型的名称来命名。 例如：</font>myservice-liveness<font style="color:rgb(34, 34, 34);">（使用</font><font style="color:rgb(34, 34, 34);"> </font>-<font style="color:rgb(34, 34, 34);"> </font><font style="color:rgb(34, 34, 34);">作为分隔符）。</font></p>
+<p><strong><font style="color:rgb(0, 0, 0);">说明：</font></strong></p>
+<p><strong><font style="color:rgb(0, 0, 0);">与 HTTP 和 TCP 探针不同，gRPC 探测不能使用按名称指定端口， 也不能自定义主机名。</font></strong></p>
+<p><font style="color:rgb(34, 34, 34);">配置问题（例如：错误的</font><font style="color:rgb(34, 34, 34);"> </font>port<font style="color:rgb(34, 34, 34);"> </font><font style="color:rgb(34, 34, 34);">或</font><font style="color:rgb(34, 34, 34);"> </font>service<font style="color:rgb(34, 34, 34);">、未实现健康检查协议） 都被认作是探测失败，这一点与 HTTP 和 TCP 探针类似。</font></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl apply -f https://k8s.io/examples/pods/probe/grpc-liveness.yaml</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(34, 34, 34);">15 秒钟之后，查看 Pod 事件确认存活性检查并未失败：</font></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl describe pod etcd-with-grpc</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(34, 34, 34);">当使用 gRPC 探针时，需要注意以下一些技术细节：</font></p>
+<ul>
+<li><font style="color:rgb(34, 34, 34);">这些探针运行时针对的是 Pod 的 IP 地址或其主机名。 请一定配置你的 gRPC 端点使之监听于 Pod 的 IP 地址之上。</font></li>
+<li><font style="color:rgb(34, 34, 34);">这些探针不支持任何身份认证参数（例如</font><font style="color:rgb(34, 34, 34);"> </font>-tls<font style="color:rgb(34, 34, 34);">）。</font></li>
+<li><font style="color:rgb(34, 34, 34);">对于内置的探针而言，不存在错误代码。所有错误都被视作探测失败。</font></li>
+<li><font style="color:rgb(34, 34, 34);">如果 </font>ExecProbeTimeout<font style="color:rgb(34, 34, 34);"> 特性门控被设置为 </font>false<font style="color:rgb(34, 34, 34);">，则 </font>grpc-health-probe<font style="color:rgb(34, 34, 34);"> 不会考虑 </font>timeoutSeconds<font style="color:rgb(34, 34, 34);"> 设置状态（默认值为 1s）， 而内置探针则会在超时时返回失败。</font></li>
+</ul>
+<p><font style="color:rgb(34, 34, 34);"></font></p>
+<p><font style="color:rgb(34, 34, 34);"></font></p>
+<p><font style="color:rgb(34, 34, 34);"></font></p>
+<h4 id=""><a href="#" class="headerlink" title=""></a></h4><h3 id="言归正传——解决问题"><a href="#言归正传——解决问题" class="headerlink" title="言归正传——解决问题"></a>言归正传——解决问题</h3><p>问题点在于:</p>
+<ol>
+<li>k8s服务下线时, svc对应的endpoint已经去掉了该服务的IP地址, 而nacos可能还存在该服务路由. 导致访问失败 </li>
+<li>k8s服务上线时, 注册完nacos服务启动完成, 这时候, nacos有了路由, 而svc还没有该端点信息</li>
+<li>k8s服务上线时, svc已经有该端点信息，但是nacos服务还未启动完成, 这时候svc已经有了该端点, 但是nacos还没有路由</li>
+</ol>
+<p>这里我们可以简单的将问题归结为两点，下线时和上线时，想要处理这两种情况并不一致，我们现在先讲上线时：</p>
+<p>上线时的问题的解决其实就是探针：</p>
+<p>以spring boot项目为例，解决这个问题只使用就绪探针：使两边的状态快速达到一致</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">readinessProbe:</span><br><span class="line">    tcpSocket:</span><br><span class="line">      port: 7083</span><br><span class="line">    initialDelaySeconds: 3</span><br><span class="line">    timeoutSeconds: 1</span><br><span class="line">    periodSeconds: 5</span><br><span class="line">    successThreshold: 1</span><br><span class="line">    failureThreshold: 3</span><br></pre></td></tr></table></figure>
+
+<p>下线时的步骤会多一些，具体的思路就是在svc对应的endpoint已经去掉了该服务的IP地址，也就是在老 POD 状态设置为Terminating后，<font style="color:rgb(36, 41, 46);">在 pod prestop里设置执行摘除服务注册信息。这里我们需要在服务中增加一个接口用于端口的优雅下线。我们以spring cloud alibaba nacos为例，增加接口</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">@Slf4j</span><br><span class="line">@RestController</span><br><span class="line">public class NacosController &#123;</span><br><span class="line">    @Resource</span><br><span class="line">    private NacosServiceRegistry nacosServiceRegistry;</span><br><span class="line">    @Resource</span><br><span class="line">    private NacosRegistration nacosRegistration;</span><br><span class="line">    @GetMapping(value = &quot;/api/nacos/deregister&quot;)</span><br><span class="line">    public void deregisterInstance() &#123;</span><br><span class="line">        nacosServiceRegistry.deregister(nacosRegistration);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<p>然后在<font style="color:rgb(47, 48, 52);">Deployment脚本中</font><font style="color:rgb(36, 41, 46);">prestop设置访问接口</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">lifecycle:</span><br><span class="line">  preStop:</span><br><span class="line">        exec:</span><br><span class="line">          command: [&quot;/bin/sh&quot;,&quot;-c&quot;,&quot;curl http://localhost:7083(你的服务端口)/api/nacos/deregister&amp;&amp;sleep 25&quot;]</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<p><font style="color:rgb(36, 41, 46);"></font></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/k8s/" rel="tag"><i class="fa fa-tag"></i> k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2024/11/06/Docker%E5%AE%89%E8%A3%85Redis%E5%B9%B6%E5%90%AF%E5%8A%A8/" rel="prev" title="Docker安装Redis并启动">
+      <i class="fa fa-chevron-left"></i> Docker安装Redis并启动
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/01/15/%E9%A1%B9%E7%9B%AE%E5%8F%AF%E7%94%A8%E6%80%A7%E6%8F%90%E5%8D%87%E6%80%9D%E8%80%83/" rel="next" title="项目可用性提升思考">
+      项目可用性提升思考 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AD%98%E6%B4%BB%E6%8E%A2%E9%92%88%EF%BC%88Liveness%EF%BC%89"><span class="nav-number">1.</span> <span class="nav-text">存活探针（Liveness）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B0%B1%E7%BB%AA%E6%8E%A2%E9%92%88%EF%BC%88Readiness%EF%BC%89"><span class="nav-number">2.</span> <span class="nav-text">就绪探针（Readiness）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E6%8E%A2%E9%92%88%EF%BC%88Startup%EF%BC%89"><span class="nav-number">3.</span> <span class="nav-text">启动探针（Startup）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8E%A2%E6%B5%8B%E6%96%B9%E5%BC%8F"><span class="nav-number">4.</span> <span class="nav-text">探测方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8E%A2%E6%B5%8B%E7%BB%93%E6%9E%9C"><span class="nav-number">5.</span> <span class="nav-text">探测结果</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E6%8E%A2%E9%92%88"><span class="nav-number">6.</span> <span class="nav-text">配置探针</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%9A%E4%B9%89%E5%AD%98%E6%B4%BB%E5%91%BD%E4%BB%A4"><span class="nav-number">6.1.</span> <span class="nav-text">定义存活命令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%9A%E4%B9%89%E4%B8%80%E4%B8%AA%E5%AD%98%E6%B4%BB%E6%80%81-HTTP-%E8%AF%B7%E6%B1%82%E6%8E%A5%E5%8F%A3"><span class="nav-number">6.2.</span> <span class="nav-text">定义一个存活态 HTTP 请求接口</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%9A%E4%B9%89-TCP-%E7%9A%84%E5%AD%98%E6%B4%BB%E6%8E%A2%E6%B5%8B"><span class="nav-number">6.3.</span> <span class="nav-text">定义 TCP 的存活探测</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%9A%E4%B9%89-gRPC-%E5%AD%98%E6%B4%BB%E6%8E%A2%E9%92%88"><span class="nav-number">6.4.</span> <span class="nav-text">定义 gRPC 存活探针</span></a></li><li class="nav-item nav-level-4"><a class="nav-link"><span class="nav-number">6.5.</span> <span class="nav-text"></span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A8%80%E5%BD%92%E6%AD%A3%E4%BC%A0%E2%80%94%E2%80%94%E8%A7%A3%E5%86%B3%E9%97%AE%E9%A2%98"><span class="nav-number">7.</span> <span class="nav-text">言归正传——解决问题</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="139"
+      src="/images/custom/avatar.jpg">
+  <p class="site-author-name" itemprop="name">139</p>
+  <div class="site-description" itemprop="description">一个普通的JAVA开发的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">117</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">42</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+  <div class="beian"><a href="https://beian.miit.gov.cn/" rel="noopener" target="_blank">浙ICP备2023004484号-1 </a>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">139</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8335634399768246"
+     crossorigin="anonymous"></script>
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

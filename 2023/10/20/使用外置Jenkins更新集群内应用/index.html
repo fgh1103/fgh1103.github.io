@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8335634399768246"
+     crossorigin="anonymous"></script>
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="为什么要使用外置Jenkins云上部署的项目少或者使用云环境的开发团队少，用原生的方式基本没问题。但随着你上云的项目越来越多和上云的团队越来越多，再使用这种方式一定会碰到这样一个问题： Jenkins的调度时间越来越长，流水线执行越来越慢。 我们甚至出现过执行一个流水线需要等上10分钟才开始调度的情况，极大影响了开发效率。而我们使用云平台还有一个原则，就是要让云平台尽可能的轻量化。基于上述2个原因">
+<meta property="og:type" content="article">
+<meta property="og:title" content="使用外置Jenkins更新集群内应用">
+<meta property="og:url" content="http://example.com/2023/10/20/%E4%BD%BF%E7%94%A8%E5%A4%96%E7%BD%AEJenkins%E6%9B%B4%E6%96%B0%E9%9B%86%E7%BE%A4%E5%86%85%E5%BA%94%E7%94%A8/index.html">
+<meta property="og:site_name" content="进学阁">
+<meta property="og:description" content="为什么要使用外置Jenkins云上部署的项目少或者使用云环境的开发团队少，用原生的方式基本没问题。但随着你上云的项目越来越多和上云的团队越来越多，再使用这种方式一定会碰到这样一个问题： Jenkins的调度时间越来越长，流水线执行越来越慢。 我们甚至出现过执行一个流水线需要等上10分钟才开始调度的情况，极大影响了开发效率。而我们使用云平台还有一个原则，就是要让云平台尽可能的轻量化。基于上述2个原因">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668493277184-a0c52a5a-2241-46bc-8612-15cd53da0374.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668493463263-f3fe8404-8354-49f0-80e8-bcf629c123ad.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668493746989-dd45eea6-7295-4ffa-88bd-eda179e5e81e.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668493832289-ef31d14e-5199-4aed-afde-eb4bdcf354d5.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668493838871-37015664-29cf-4c98-8705-3de4d993c5fc.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668493822474-842f2e53-fa35-43ad-80d7-47d62a11e52c.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668484390484-c994b829-c28a-4602-9cc7-2988721be16f.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668491957779-f47dc383-03aa-4543-90cf-226f7b89a3c8.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668492000656-34aa3f2c-3788-4b66-8548-b86cf69b60fb.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668492785671-ba2917fc-13bb-4fb6-b4ff-e862ae2c0aed.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668492811427-d443be37-7598-4a31-9df9-24442c0cf54a.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668492867517-40cc3f23-648d-41bb-afd8-8c9ef38fa051.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668492881467-d301481b-0fa9-4ec7-8a7b-b60f4e0c5a74.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668494033020-a7da63ff-b076-494c-a0d9-bb6d427b0fbf.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668494075530-4b5635eb-6c69-4553-946a-357b5fb7bcc9.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668494134463-b83d48a0-c39e-44f4-8d9b-8f212976f616.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668494266694-e76a8e4a-d2af-4972-b6b6-6204413e9a20.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668494283108-56772f5d-e342-4a3d-b491-cec06af1ed61.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668494316093-990189e7-12cd-45f5-bd83-cf4c6c9e204f.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668494353711-5c602ed6-4cd1-427e-a2d9-cea6a71cd0af.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668494451542-fb437665-3325-4e36-938a-6e139b50b956.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668494495416-06f176c4-9148-4db4-94cc-875420f78a2d.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668494516183-c4b8be88-67ac-41d6-a436-3bfbf661f7ba.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668494866541-58002720-8090-4bd8-8688-c721106f21a8.png">
+<meta property="article:published_time" content="2023-10-20T09:55:39.000Z">
+<meta property="article:modified_time" content="2025-03-14T10:17:18.655Z">
+<meta property="article:author" content="139">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668493277184-a0c52a5a-2241-46bc-8612-15cd53da0374.png">
+
+<link rel="canonical" href="http://example.com/2023/10/20/%E4%BD%BF%E7%94%A8%E5%A4%96%E7%BD%AEJenkins%E6%9B%B4%E6%96%B0%E9%9B%86%E7%BE%A4%E5%86%85%E5%BA%94%E7%94%A8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>使用外置Jenkins更新集群内应用 | 进学阁</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">进学阁</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">业精于勤荒于嬉，行成于思毁于随</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">42</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">17</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">117</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/10/20/%E4%BD%BF%E7%94%A8%E5%A4%96%E7%BD%AEJenkins%E6%9B%B4%E6%96%B0%E9%9B%86%E7%BE%A4%E5%86%85%E5%BA%94%E7%94%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          使用外置Jenkins更新集群内应用
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-10-20 17:55:39" itemprop="dateCreated datePublished" datetime="2023-10-20T17:55:39+08:00">2023-10-20</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-14 18:17:18" itemprop="dateModified" datetime="2025-03-14T18:17:18+08:00">2025-03-14</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%9F%BA%E4%BA%8EKubesphere%E6%9E%84%E5%BB%BAk8s%E5%B9%B3%E5%8F%B0/" itemprop="url" rel="index"><span itemprop="name">基于Kubesphere构建k8s平台</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="为什么要使用外置Jenkins"><a href="#为什么要使用外置Jenkins" class="headerlink" title="为什么要使用外置Jenkins"></a>为什么要使用外置Jenkins</h2><p><font style="color:rgb(47, 48, 52);">云上部署的项目少或者使用云环境的开发团队少，用原生的方式基本没问题。但随着你上云的项目越来越多和上云的团队越来越多，再使用这种方式一定会碰到这样一个问题： </font><strong><font style="color:rgb(47, 48, 52);">Jenkins的调度时间越来越长，流水线执行越来越慢。</font></strong><font style="color:rgb(47, 48, 52);"> 我们甚至出现过执行一个流水线需要等上10分钟才开始调度的情况，极大影响了开发效率。而我们使用云平台还有一个原则，</font><strong><font style="color:rgb(47, 48, 52);">就是要让云平台尽可能的轻量化。</font><strong>基于上述2个原因我们最终选择了将流水线中的</strong>CI部分</strong>外置，通过外置的Jenkins来实现编译、构建、推送镜像功能，在流水线中只保留<strong>持续部署CD</strong>的功能。</p>
+<span id="more"></span>
+<h2 id="核心思想"><a href="#核心思想" class="headerlink" title="核心思想"></a>核心思想</h2><p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668493277184-a0c52a5a-2241-46bc-8612-15cd53da0374.png"></p>
+<p><font style="color:rgb(47, 48, 52);">如上图所示我们将流水线一分为二，拆成CI 和CD 两部分。CI 部分利用外部的Jenkins集群实现，在CI的最后一步通过命令修改了远程配置仓库的镜像版本，而后利用webhook触发钩子实现集群的自动部署。</font></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><strong><font style="color:rgb(47, 48, 52);">当然这里在最后一步实际还是用的推模式，最后还是利用kubectl命令将应用部署到集群中。</font></strong></p>
+<h2 id="GitOps"><a href="#GitOps" class="headerlink" title="GitOps"></a><strong><font style="color:rgb(51, 51, 51);">GitOps</font></strong></h2><p><font style="color:rgb(47, 48, 52);">GitOps在2017年被提出作为Kubernetes集群管理和应用交付的一种方式，利用Git作为</font><strong><font style="color:rgb(47, 48, 52);">声明性基础设施和应用程序的单一真实源（single source of truth）</font></strong><font style="color:rgb(47, 48, 52);">。在GitOps中，集群中运行的软件代理可以在运行状态和Git发生任何差异时发出告警，Kubernetes协调器会根据情况自动更新或回滚集群。Git作为交付流水线的中心，开发人员可以使用熟悉的工具发出pull request，从而加速和简化Kubernetes的应用部署和操作任务。</font></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">GitOps 基于拉模式构建交付流水线。此时，开发人员发布一个新功能的流程如下：</font></p>
+<ol>
+<li><font style="color:rgb(47, 48, 52);">通过 pull request 向主分支提交包含新功能的代码。</font></li>
+<li><font style="color:rgb(47, 48, 52);">代码审核通过后将被合并至主分支。</font></li>
+<li><font style="color:rgb(47, 48, 52);">合并行为将触发 CI 系统进行构建和一系列的测试，并将新生成的镜像推送至镜像仓库。</font></li>
+<li><font style="color:rgb(47, 48, 52);">GitOps 检测到有新的镜像，会提取最新的镜像标记，然后同步到 Git 配置仓库的清单中。</font></li>
+<li><font style="color:rgb(47, 48, 52);">GitOps 检测到集群状态过期，会从配置仓库中拉取更新后的清单，并将包含新功能的镜像部署到集群里。</font></li>
+</ol>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">GitOps的核心思想是有一个</font><strong><font style="color:rgb(47, 48, 52);">操作器</font></strong><font style="color:rgb(47, 48, 52);">，我们利用Git作为声明性基础设施，在git中声明我们期望的状态，比如副本数设置为3同时镜像版本为1000。操作器会将存储库中的期望状态与所部署基础架构的实际状态进行比较。每当注意到实际状态与存储库中的期望状态存在差异时，操作器便会更新部署的应用，将其副本数调整为3，同时将镜像版本调整为1000。</font></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(154, 154, 154);">与拉模式相对应的就是推（push）模式了，比如前面文章中基于KubeSphere实现的流水线就是推模式。 这种模式一般都会在 CI 流水线运行完成后执行一个命令（比如 kubectl）将应用部署到目标环境中。</font></p>
+<h2 id="Git仓库分离"><a href="#Git仓库分离" class="headerlink" title="Git仓库分离"></a><font style="color:rgb(51, 51, 51);">Git仓库分离</font></h2><p><font style="color:rgb(47, 48, 52);">之前我们是将部署的配置文件</font><a target="_blank" rel="noopener" href="http://deploy.yml/">Deploy.yml</a><font style="color:rgb(47, 48, 52);">与代码仓库放置在一起，基于GitOps的思想我们会准备一个单独的配置仓库，用于存放部署文件。</font></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">CI部分使用的是代码仓库，CD部分拉取的是配置仓库。</font></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668493463263-f3fe8404-8354-49f0-80e8-bcf629c123ad.png"></p>
+<p><font style="color:rgb(47, 48, 52);">将Jenkinsfile以及模块中的</font><a target="_blank" rel="noopener" href="http://deploy.yml/">Deploy.yml</a><font style="color:rgb(47, 48, 52);">全部迁移到配置仓库中。</font></p>
+<h3 id="修改Jenkinsfile"><a href="#修改Jenkinsfile" class="headerlink" title="修改Jenkinsfile"></a><strong><font style="color:rgb(51, 51, 51);">修改Jenkinsfile</font></strong></h3><p><font style="color:rgb(47, 48, 52);">在git配置仓库创建文件Jenkinsfile，文件内容如下</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">pipeline &#123;</span><br><span class="line">  agent &#123;</span><br><span class="line">    node &#123;</span><br><span class="line">      label &#x27;maven&#x27;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  stages &#123;</span><br><span class="line">      stage(&#x27;发布到测试环境&#x27;) &#123;</span><br><span class="line">        agent none</span><br><span class="line">        steps &#123;</span><br><span class="line">          container(&#x27;maven&#x27;) &#123;</span><br><span class="line">            sh &#x27;kubectl version --short --client&#x27;</span><br><span class="line">            withCredentials([kubeconfigFile(credentialsId: &quot;$KUBECONFIG_CREDENTIAL_ID&quot;, variable: &#x27;KUBECONFIG&#x27;)]) &#123;</span><br><span class="line">            script &#123;</span><br><span class="line">              sh &quot;ls&quot;</span><br><span class="line">              services_str = &quot;koalas-payment&quot;   //将要发布的服务</span><br><span class="line">              def  services = services_str.split(&quot;,&quot;)</span><br><span class="line">              for (int i = 0; i &lt; services.size(); ++i)&#123;</span><br><span class="line">                service_name = services[i].replaceAll(&quot;\&quot;&quot;, &quot;&quot;)</span><br><span class="line">                echo &quot;选择的服务：$&#123;service_name&#125;&quot;</span><br><span class="line">                sh &quot;envsubst &lt; $&#123;service_name&#125;/deploy.yml | kubectl apply -f -&quot;</span><br><span class="line">              &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            &#125;</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">  environment &#123;</span><br><span class="line">    DOCKER_CREDENTIAL_ID = &#x27;harbor&#x27; //平台中的harbor凭证ID</span><br><span class="line">    KUBECONFIG_CREDENTIAL_ID = &#x27;demo-kubeconfig&#x27;   //kube凭证ID</span><br><span class="line">    REGISTRY = &quot;192.168.1.121:8098&quot; //harbor地址</span><br><span class="line">    DOCKERHUB_NAMESPACE =&quot;koalas-cloud&quot; //工作空间</span><br><span class="line">    TAG = &quot;develop-15&quot; //标签</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>然后将每个服务的<a target="_blank" rel="noopener" href="http://deploy.yml/">Deploy.yml</a>独立存放，项目结构为</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668493746989-dd45eea6-7295-4ffa-88bd-eda179e5e81e.png"></p>
+<h3 id="创建CD流水线"><a href="#创建CD流水线" class="headerlink" title="创建CD流水线"></a><strong><font style="color:rgb(51, 51, 51);">创建CD流水线</font></strong></h3><p><font style="color:rgb(47, 48, 52);">在KubeSphere中通过基于代码仓库生成流水线，这样在git配置仓库中修改镜像版本时可以通过webhook触发钩子运行CD流水线。</font></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668493832289-ef31d14e-5199-4aed-afde-eb4bdcf354d5.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668493838871-37015664-29cf-4c98-8705-3de4d993c5fc.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668493822474-842f2e53-fa35-43ad-80d7-47d62a11e52c.png"></p>
+<p><font style="color:rgb(47, 48, 52);">记住这里生成的webhook，等下需要用到。</font></p>
+<h2 id="安装Jenkins"><a href="#安装Jenkins" class="headerlink" title="安装Jenkins"></a>安装Jenkins</h2><h3 id="基于Docker安装Jenkins"><a href="#基于Docker安装Jenkins" class="headerlink" title="基于Docker安装Jenkins"></a>基于Docker安装Jenkins</h3><h4 id="下载镜像"><a href="#下载镜像" class="headerlink" title="下载镜像"></a>下载镜像</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker pull jenkins/jenkins</span><br></pre></td></tr></table></figure>
+
+<h4 id="创建-jenkins-工作目录并赋予权限"><a href="#创建-jenkins-工作目录并赋予权限" class="headerlink" title="创建 jenkins 工作目录并赋予权限"></a>创建 jenkins 工作目录并赋予权限</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mkdir -p /home/admin/docker_app/jenkins</span><br><span class="line">chmod 777 /home/admin/docker_app/jenkins</span><br></pre></td></tr></table></figure>
+
+<h4 id="启动容器"><a href="#启动容器" class="headerlink" title="启动容器"></a>启动容器</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">docker run -d -p 8080:8080 -p 50000:50000 -u root -v</span><br><span class="line">/home/admin/docker_app/jenkins:/var/jenkins_home -v</span><br><span class="line">/var/run/docker.sock:/var/run/docker.sock -v $(which docker):/usr/bin/docker</span><br><span class="line">-v /home/admin/docker_app/maven/apache-maven-3.8.5:/usr/local/maven -v</span><br><span class="line">/etc/localtime:/etc/localtime --name jenkins121 jenkins/jenkins</span><br></pre></td></tr></table></figure>
+
+<p>-v &#x2F;home&#x2F;admin&#x2F;docker_app&#x2F;maven&#x2F;apache-maven-3.8.5 这里是你本地的maven路径</p>
+<h4 id="启动成功后修改镜像加速"><a href="#启动成功后修改镜像加速" class="headerlink" title="启动成功后修改镜像加速"></a>启动成功后修改镜像加速</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">vim hudson.model.UpdateCenter.xml</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&lt;?xml version=&#x27;1.1&#x27; encoding=&#x27;UTF-8&#x27;?&gt;</span><br><span class="line">&lt;sites&gt;</span><br><span class="line">&lt;site&gt;</span><br><span class="line">&lt;id&gt;default&lt;/id&gt;</span><br><span class="line">&lt;url&gt;https://mirrors.tuna.tsinghua.edu.cn/jenkins/updates/updatecenter.json&lt;/url&gt;</span><br><span class="line">&lt;/site&gt;</span><br><span class="line">&lt;/sites&gt;</span><br></pre></td></tr></table></figure>
+
+<h4 id="访问页面，并输入初始化的密码"><a href="#访问页面，并输入初始化的密码" class="headerlink" title="访问页面，并输入初始化的密码"></a>访问页面，并输入初始化的密码</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">vim secrets/initialAdminPassword</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h4 id="选择社区推荐的插件安装即可"><a href="#选择社区推荐的插件安装即可" class="headerlink" title="选择社区推荐的插件安装即可"></a>选择社区推荐的插件安装即可</h4><h4 id="版本升级"><a href="#版本升级" class="headerlink" title="版本升级"></a>版本升级</h4><p> 去开源社区下载 jenkins 稳定版本的 war 包</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wget http://ftp-nyc.osuosl.org/pub/jenkins/warstable/2.277.3/jenkins.war /home/admin/docker_app/jenkins </span><br></pre></td></tr></table></figure>
+
+<p>进入容器内部，并替换容器内的 war 包</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker exec -it -u root jenkins121 bash cd /usr/share/jenkins cp jenkins.war jenkins.war.backup mv /var/jenkins_home/jenkins.war /usr/share/jenkins/jenkins.war </span><br></pre></td></tr></table></figure>
+
+<p>重启容器 </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker restart jenkins121  </span><br></pre></td></tr></table></figure>
+
+<h4 id=""><a href="#" class="headerlink" title=""></a></h4><h2 id="配置Jenkins插件"><a href="#配置Jenkins插件" class="headerlink" title="配置Jenkins插件"></a>配置Jenkins插件</h2><h3 id="安装默认插件"><a href="#安装默认插件" class="headerlink" title="安装默认插件"></a>安装默认插件</h3><p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668484390484-c994b829-c28a-4602-9cc7-2988721be16f.png"></p>
+<p>这里建议直接安装推荐的插件</p>
+<h3 id="安装Extended-Choice-Parameter"><a href="#安装Extended-Choice-Parameter" class="headerlink" title="安装Extended Choice Parameter"></a>安装Extended Choice Parameter</h3><h4 id="为什么要使用Extended-Choice-Parameter"><a href="#为什么要使用Extended-Choice-Parameter" class="headerlink" title="为什么要使用Extended Choice Parameter"></a>为什么要使用Extended Choice Parameter</h4><p><font style="color:rgb(18, 18, 18);">使用参数化构建发布可以在构建的时候自由选择要更新哪些服务构建，方便我们精确控制项目中需要更新的服务。还可以在后面的其他配置项目里面使用，甚至可以用来当作Shell脚本的参数。通过设计更多的参数可以实现更加复杂的发布配置，大家可以根据自己的情况设计。</font></p>
+<h4 id="怎么使用Extended-Choice-Parameter"><a href="#怎么使用Extended-Choice-Parameter" class="headerlink" title="怎么使用Extended Choice Parameter"></a><font style="color:rgb(18, 18, 18);">怎么使用</font>Extended Choice Parameter</h4><p>进入Jenkins——系统管理——插件管理——可选插件——搜索Extended Choice Parameter——选中——install</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668491957779-f47dc383-03aa-4543-90cf-226f7b89a3c8.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668492000656-34aa3f2c-3788-4b66-8548-b86cf69b60fb.png"></p>
+<p><font style="color:rgb(18, 18, 18);"></font></p>
+<h3 id="安装Git-Parameter"><a href="#安装Git-Parameter" class="headerlink" title="安装Git  Parameter"></a>安装Git  Parameter</h3><h4 id="为什么要使用Git-Parameter"><a href="#为什么要使用Git-Parameter" class="headerlink" title="为什么要使用Git  Parameter"></a>为什么要使用Git  Parameter</h4><p><font style="color:rgb(18, 18, 18);">使用参数化构建发布可以在构建的时候自由选择要更新到哪个分支,方便准确的更新到版本分支，以及快速回滚</font></p>
+<h4 id="怎么使用Git-Parameter"><a href="#怎么使用Git-Parameter" class="headerlink" title="怎么使用Git  Parameter"></a>怎么使用Git  Parameter</h4><p>进入Jenkins——系统管理——插件管理——可选插件——搜索Git  Parameter——选中——install</p>
+<h3 id="安装JDK-Parameter"><a href="#安装JDK-Parameter" class="headerlink" title="安装JDK Parameter"></a>安装JDK Parameter</h3><p>为什么要使用JDK Parameter</p>
+<p>使用docker安装的Jenkins默认的jdk版本为 openjdk11，如果你本地环境为8或者其他版本的时候，就需要额外的增加jdk版本然后以参数的形式使用</p>
+<h4 id="怎么使用JDK-Parameter"><a href="#怎么使用JDK-Parameter" class="headerlink" title="怎么使用JDK Parameter"></a>怎么使用JDK Parameter</h4><p>进入Jenkins——系统管理——插件管理——可选插件——搜索JDK   Parameter——选中——install</p>
+<h2 id="配置凭证"><a href="#配置凭证" class="headerlink" title="配置凭证"></a>配置凭证</h2><p>首先选中用户名</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668492785671-ba2917fc-13bb-4fb6-b4ff-e862ae2c0aed.png"></p>
+<p>选择凭证</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668492811427-d443be37-7598-4a31-9df9-24442c0cf54a.png"></p>
+<p>然后选中全局凭证</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668492867517-40cc3f23-648d-41bb-afd8-8c9ef38fa051.png"></p>
+<p>添加凭证</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668492881467-d301481b-0fa9-4ec7-8a7b-b60f4e0c5a74.png"></p>
+<p>类型说明</p>
+<ul>
+<li><font style="color:rgb(18, 18, 18);">Secret text - API token之类的token (如GitHub个人访问token)  </font></li>
+<li><font style="color:rgb(18, 18, 18);">Username and password - 可以为独立的字段，也可以为冒号分隔的字符串：username:password(更多信息请参照 处理 credentials)  </font></li>
+<li><font style="color:rgb(18, 18, 18);">Secret file - 保存在文件中的加密内容  </font></li>
+<li><font style="color:rgb(18, 18, 18);">SSH Username with private key - SSH 公钥&#x2F;私钥对  </font></li>
+<li><font style="color:rgb(18, 18, 18);">Certificate - a PKCS#12 证书文件 和可选密码  </font></li>
+<li><font style="color:rgb(18, 18, 18);">Docker Host Certificate Authentication credentials.</font></li>
+</ul>
+<p>我们这里选择<font style="color:rgb(18, 18, 18);">Username and password  然后将你的账户密码写进去，ID可以自己写，也可以自动生成</font></p>
+<h2 id="增加git仓库用户密码或者ssh"><a href="#增加git仓库用户密码或者ssh" class="headerlink" title="增加git仓库用户密码或者ssh"></a>增加git仓库用户密码或者ssh</h2><p>依照上面的步骤添加git仓库信息</p>
+<h2 id="增加harbor仓库密码"><a href="#增加harbor仓库密码" class="headerlink" title="增加harbor仓库密码"></a>增加harbor仓库密码</h2><p>依照上面的步骤添加harbor仓库信息</p>
+<h2 id="添加流水线脚本"><a href="#添加流水线脚本" class="headerlink" title="添加流水线脚本"></a>添加流水线脚本</h2><h3 id="添加流水线"><a href="#添加流水线" class="headerlink" title="添加流水线"></a>添加流水线</h3><p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668494033020-a7da63ff-b076-494c-a0d9-bb6d427b0fbf.png"></p>
+<h3 id="设置参数"><a href="#设置参数" class="headerlink" title="设置参数"></a>设置参数</h3><p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668494075530-4b5635eb-6c69-4553-946a-357b5fb7bcc9.png"></p>
+<h4 id="丢弃旧构造"><a href="#丢弃旧构造" class="headerlink" title="丢弃旧构造"></a>丢弃旧构造</h4><p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668494134463-b83d48a0-c39e-44f4-8d9b-8f212976f616.png"></p>
+<p>建议最大个数根据自己主机以及实际情况设置一下，个人建议设置为5</p>
+<h4 id="添加Extended-Choice-Parameter"><a href="#添加Extended-Choice-Parameter" class="headerlink" title="添加Extended Choice Parameter"></a>添加Extended Choice Parameter</h4><p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668494266694-e76a8e4a-d2af-4972-b6b6-6204413e9a20.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668494283108-56772f5d-e342-4a3d-b491-cec06af1ed61.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668494316093-990189e7-12cd-45f5-bd83-cf4c6c9e204f.png"></p>
+<p>根据你的需要填写 有下拉框 多选框 单选框 </p>
+<h4 id="添加布尔值参数"><a href="#添加布尔值参数" class="headerlink" title="添加布尔值参数"></a>添加布尔值参数</h4><p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668494353711-5c602ed6-4cd1-427e-a2d9-cea6a71cd0af.png"></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668494451542-fb437665-3325-4e36-938a-6e139b50b956.png"></p>
+<p>用于是否重新构造</p>
+<h4 id="添加Git-Parameter"><a href="#添加Git-Parameter" class="headerlink" title="添加Git Parameter"></a>添加Git Parameter</h4><p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668494495416-06f176c4-9148-4db4-94cc-875420f78a2d.png"></p>
+<p>类型可以选择多种类型，标签 分支 等</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668494516183-c4b8be88-67ac-41d6-a436-3bfbf661f7ba.png"></p>
+<h3 id="编写pipeline-script脚本"><a href="#编写pipeline-script脚本" class="headerlink" title="编写pipeline script脚本"></a>编写pipeline script脚本</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br></pre></td><td class="code"><pre><span class="line">pipeline &#123;</span><br><span class="line">    agent any</span><br><span class="line">    environment &#123;</span><br><span class="line">        PROJECT_NAME = &quot;项目的命名空间&quot;</span><br><span class="line">        HARBOR_URL = &quot;habor地址信息&quot;</span><br><span class="line">        HARBOR_ID = &quot;jenkins的harbor凭证ID&quot;</span><br><span class="line">        PROJECT_HOME = &quot;/var/jenkins_home/workspace/你的job名称&quot;</span><br><span class="line">        BRANCH_TAG = &quot;$&#123;BRANCH_TAG&#125;&quot;</span><br><span class="line">    &#125;</span><br><span class="line">    stages &#123;</span><br><span class="line"></span><br><span class="line">        //拉取代码</span><br><span class="line">        stage(&#x27;拉取代码Gitea&#x27;) &#123;</span><br><span class="line">            steps &#123;</span><br><span class="line">                echo &#x27;Gitea 拉取代码 Checkout&#x27;</span><br><span class="line">                script&#123;</span><br><span class="line">                   </span><br><span class="line">                    println(&quot;$&#123;BRANCH_TAG&#125;&quot;)	</span><br><span class="line">                </span><br><span class="line">                    checkout([$class: &#x27;GitSCM&#x27;, branches: [[name: &quot;$&#123;BRANCH_TAG&#125;&quot;]], </span><br><span class="line">                              doGenerateSubmoduleConfigurations: false, </span><br><span class="line">                              extensions: [], </span><br><span class="line">                              submoduleCfg: [], </span><br><span class="line">                              userRemoteConfigs: [[credentialsId: &#x27;你的git代码凭证ID&#x27;, </span><br><span class="line">                              url: &quot;你的代码地址http地址&quot;]]])</span><br><span class="line"></span><br><span class="line">                &#125;  </span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        // 代码编译</span><br><span class="line">        stage(&#x27;Maven编译代码&#x27;) &#123;</span><br><span class="line">            when &#123;</span><br><span class="line">                expression &#123;</span><br><span class="line">                    return (params.IS_BUILD_AND_PACKAGE == true)</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            steps &#123;</span><br><span class="line">                sh &#x27;&#x27;&#x27;</span><br><span class="line">                    /usr/local/maven/bin/mvn clean package -Dmaven.test.skip=true</span><br><span class="line">                &#x27;&#x27;&#x27;</span><br><span class="line">            &#125;</span><br><span class="line">            post &#123;</span><br><span class="line">                success &#123;</span><br><span class="line">                    echo &#x27;编译代码成功!&#x27;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        // 上传镜像</span><br><span class="line">        stage(&#x27;打包镜像并上传到Harbor仓库&#x27;)&#123;</span><br><span class="line">            when &#123;</span><br><span class="line">                expression &#123;</span><br><span class="line">                    return (params.IS_BUILD_AND_PACKAGE == true)</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            steps &#123;</span><br><span class="line">                script &#123;</span><br><span class="line">                    def chooses = &quot;$&#123;SERVICES&#125;&quot;</span><br><span class="line">                    echo &quot;选择的服务：$&#123;SERVICES&#125;&quot;</span><br><span class="line">                &#125;</span><br><span class="line">                withCredentials([usernamePassword(credentialsId: &quot;$&#123;HARBOR_ID&#125;&quot;, passwordVariable: &#x27;password&#x27;, usernameVariable: &#x27;username&#x27;)]) &#123;</span><br><span class="line">                    //登录 Harbor</span><br><span class="line">                    sh &quot;docker login -u $&#123;username&#125; -p $&#123;password&#125; $&#123;HARBOR_URL&#125;&quot;</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                script &#123;</span><br><span class="line">                    services_str = &quot;$&#123;SERVICES&#125;&quot;</span><br><span class="line">                    def  services = services_str.split(&quot;,&quot;)</span><br><span class="line">                    for (int i = 0; i &lt; services.size(); ++i)&#123;</span><br><span class="line">                        service_name = services[i].replaceAll(&quot;\&quot;&quot;, &quot;&quot;)</span><br><span class="line">                        echo &quot;选择的服务：$&#123;service_name&#125;&quot;</span><br><span class="line"></span><br><span class="line">                        // 制作镜像</span><br><span class="line">                        if(&quot;$&#123;service_name&#125;&quot;.contains(&quot;koalas-gateway&quot;) || &quot;$&#123;service_name&#125;&quot;.contains(&quot;koalas-auth&quot;))&#123;</span><br><span class="line">                            //基础镜像构建</span><br><span class="line">                            sh &quot; docker build -t $&#123;service_name&#125;:$&#123;BRANCH_TAG&#125;-$BUILD_NUMBER $&#123;PROJECT_HOME&#125;/$&#123;service_name&#125;/ &quot;</span><br><span class="line">                        &#125;else&#123;</span><br><span class="line">                            sh &quot; docker build -t $&#123;service_name&#125;:$&#123;BRANCH_TAG&#125;-$BUILD_NUMBER $&#123;PROJECT_HOME&#125;/koalas-modules/$&#123;service_name&#125;/ &quot;</span><br><span class="line">                        &#125;</span><br><span class="line">                        // 镜像标签</span><br><span class="line">                        sh &quot; docker tag $&#123;service_name&#125;:$&#123;BRANCH_TAG&#125;-$BUILD_NUMBER $&#123;HARBOR_URL&#125;/$&#123;PROJECT_NAME&#125;/$&#123;service_name&#125;:$&#123;BRANCH_TAG&#125;-$BUILD_NUMBER &quot;</span><br><span class="line">                        // // 上传镜像</span><br><span class="line">                        sh &quot; docker push $&#123;HARBOR_URL&#125;/$&#123;PROJECT_NAME&#125;/$&#123;service_name&#125;:$&#123;BRANCH_TAG&#125;-$BUILD_NUMBER &quot;</span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    //删除悬虚镜像</span><br><span class="line">                    sh &quot;docker image prune -a -f&quot;</span><br><span class="line"></span><br><span class="line">                    // 登出私有仓库</span><br><span class="line">                    sh &quot;docker logout $&#123;HARBOR_URL&#125;&quot;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            post &#123;</span><br><span class="line">                success &#123;</span><br><span class="line">                    echo &#x27;镜像打包并上传成功!&#x27;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        // 执行目标服务器脚本</span><br><span class="line">        stage(&#x27;部署服务&#x27;)&#123;</span><br><span class="line">            steps &#123;</span><br><span class="line">			 dir(path: &quot;./project&quot;)&#123;</span><br><span class="line">                echo &#x27;Gitea 拉取代码 &#x27;</span><br><span class="line">                //拉取代码</span><br><span class="line">                git url: &quot;你的脚本代码仓库地址&quot;,</span><br><span class="line">					credentialsId: &quot;脚本代码仓库git凭证ID&quot;,</span><br><span class="line">					branch: &quot;master&quot;</span><br><span class="line">							  </span><br><span class="line">				withCredentials([usernamePassword(credentialsId:&quot;脚本代码仓库git凭证ID&quot;,</span><br><span class="line">                                          usernameVariable: &quot;GIT_USERNAME&quot;, </span><br><span class="line">                                          passwordVariable: &quot;GIT_PASSWORD&quot;)])&#123;</span><br><span class="line">					sh &quot;&quot;&quot;</span><br><span class="line">					ls</span><br><span class="line">					git config --local --replace-all credential.helper &quot;!p() &#123; echo username=\\$GIT_USERNAME; echo password=\\$GIT_PASSWORD; &#125;; p&quot;</span><br><span class="line">					git config --global user.email &quot;fengbb@neusensetech.com&quot;</span><br><span class="line">					git config --global user.name &quot;fengbb&quot;</span><br><span class="line">					git branch -a</span><br><span class="line">					git pull -p --rebase origin master</span><br><span class="line">					git add *</span><br><span class="line">                    sed -i &#x27;s/services_str =.*/services_str = &quot;$&#123;SERVICES&#125;&quot;/g&#x27; Jenkinsfile</span><br><span class="line">					sed -i &#x27;s/REGISTRY =.*/REGISTRY = &quot;$&#123;HARBOR_URL&#125;&quot;/g&#x27; Jenkinsfile</span><br><span class="line">					sed -i &#x27;s/DOCKERHUB_NAMESPACE =.*/DOCKERHUB_NAMESPACE =&quot;$&#123;PROJECT_NAME&#125;&quot;/g&#x27; Jenkinsfile</span><br><span class="line">					sed -i &#x27;s/TAG =.*/TAG = &quot;$&#123;BRANCH_TAG&#125;-$BUILD_NUMBER&quot;/g&#x27; Jenkinsfile</span><br><span class="line">					cat Jenkinsfile</span><br><span class="line">					git commit -am &quot;update tag: $&#123;BRANCH_TAG&#125;-$BUILD_NUMBER&quot; &amp;&amp; git push -u origin master</span><br><span class="line">					curl 上文中cd最后的webhook地址</span><br><span class="line">					&quot;&quot;&quot;</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br><span class="line">            &#125;</span><br><span class="line">            post &#123;</span><br><span class="line">                success &#123;</span><br><span class="line">                    echo &#x27;部署服务成功!&#x27;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="效果展示"><a href="#效果展示" class="headerlink" title="效果展示"></a>效果展示</h2><p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1668494866541-58002720-8090-4bd8-8688-c721106f21a8.png"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/k8s/" rel="tag"><i class="fa fa-tag"></i> k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/10/07/Kubernetes%E4%BA%91%E5%8E%9F%E7%94%9F%E5%AE%9E%E6%88%98%20%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B8%8A%E4%BA%91%E5%90%8E%E6%9C%AC%E5%9C%B0%E5%A6%82%E4%BD%95%E8%81%94%E8%B0%83%EF%BC%9F/" rel="prev" title="微服务上云后本地如何联调？">
+      <i class="fa fa-chevron-left"></i> 微服务上云后本地如何联调？
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/10/21/Kubernetes%E6%A6%82%E5%BF%B5service/" rel="next" title="Kubernetes概念">
+      Kubernetes概念 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E4%BD%BF%E7%94%A8%E5%A4%96%E7%BD%AEJenkins"><span class="nav-number">1.</span> <span class="nav-text">为什么要使用外置Jenkins</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A0%B8%E5%BF%83%E6%80%9D%E6%83%B3"><span class="nav-number">2.</span> <span class="nav-text">核心思想</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#GitOps"><span class="nav-number">3.</span> <span class="nav-text">GitOps</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Git%E4%BB%93%E5%BA%93%E5%88%86%E7%A6%BB"><span class="nav-number">4.</span> <span class="nav-text">Git仓库分离</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BF%AE%E6%94%B9Jenkinsfile"><span class="nav-number">4.1.</span> <span class="nav-text">修改Jenkinsfile</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BACD%E6%B5%81%E6%B0%B4%E7%BA%BF"><span class="nav-number">4.2.</span> <span class="nav-text">创建CD流水线</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85Jenkins"><span class="nav-number">5.</span> <span class="nav-text">安装Jenkins</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9F%BA%E4%BA%8EDocker%E5%AE%89%E8%A3%85Jenkins"><span class="nav-number">5.1.</span> <span class="nav-text">基于Docker安装Jenkins</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%8B%E8%BD%BD%E9%95%9C%E5%83%8F"><span class="nav-number">5.1.1.</span> <span class="nav-text">下载镜像</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA-jenkins-%E5%B7%A5%E4%BD%9C%E7%9B%AE%E5%BD%95%E5%B9%B6%E8%B5%8B%E4%BA%88%E6%9D%83%E9%99%90"><span class="nav-number">5.1.2.</span> <span class="nav-text">创建 jenkins 工作目录并赋予权限</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E5%AE%B9%E5%99%A8"><span class="nav-number">5.1.3.</span> <span class="nav-text">启动容器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E6%88%90%E5%8A%9F%E5%90%8E%E4%BF%AE%E6%94%B9%E9%95%9C%E5%83%8F%E5%8A%A0%E9%80%9F"><span class="nav-number">5.1.4.</span> <span class="nav-text">启动成功后修改镜像加速</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%AE%BF%E9%97%AE%E9%A1%B5%E9%9D%A2%EF%BC%8C%E5%B9%B6%E8%BE%93%E5%85%A5%E5%88%9D%E5%A7%8B%E5%8C%96%E7%9A%84%E5%AF%86%E7%A0%81"><span class="nav-number">5.1.5.</span> <span class="nav-text">访问页面，并输入初始化的密码</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%80%89%E6%8B%A9%E7%A4%BE%E5%8C%BA%E6%8E%A8%E8%8D%90%E7%9A%84%E6%8F%92%E4%BB%B6%E5%AE%89%E8%A3%85%E5%8D%B3%E5%8F%AF"><span class="nav-number">5.1.6.</span> <span class="nav-text">选择社区推荐的插件安装即可</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%89%88%E6%9C%AC%E5%8D%87%E7%BA%A7"><span class="nav-number">5.1.7.</span> <span class="nav-text">版本升级</span></a></li><li class="nav-item nav-level-4"><a class="nav-link"><span class="nav-number">5.1.8.</span> <span class="nav-text"></span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AEJenkins%E6%8F%92%E4%BB%B6"><span class="nav-number">6.</span> <span class="nav-text">配置Jenkins插件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E9%BB%98%E8%AE%A4%E6%8F%92%E4%BB%B6"><span class="nav-number">6.1.</span> <span class="nav-text">安装默认插件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%89%E8%A3%85Extended-Choice-Parameter"><span class="nav-number">6.2.</span> <span class="nav-text">安装Extended Choice Parameter</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E4%BD%BF%E7%94%A8Extended-Choice-Parameter"><span class="nav-number">6.2.1.</span> <span class="nav-text">为什么要使用Extended Choice Parameter</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%80%8E%E4%B9%88%E4%BD%BF%E7%94%A8Extended-Choice-Parameter"><span class="nav-number">6.2.2.</span> <span class="nav-text">怎么使用Extended Choice Parameter</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%89%E8%A3%85Git-Parameter"><span class="nav-number">6.3.</span> <span class="nav-text">安装Git  Parameter</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E4%BD%BF%E7%94%A8Git-Parameter"><span class="nav-number">6.3.1.</span> <span class="nav-text">为什么要使用Git  Parameter</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%80%8E%E4%B9%88%E4%BD%BF%E7%94%A8Git-Parameter"><span class="nav-number">6.3.2.</span> <span class="nav-text">怎么使用Git  Parameter</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%89%E8%A3%85JDK-Parameter"><span class="nav-number">6.4.</span> <span class="nav-text">安装JDK Parameter</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%80%8E%E4%B9%88%E4%BD%BF%E7%94%A8JDK-Parameter"><span class="nav-number">6.4.1.</span> <span class="nav-text">怎么使用JDK Parameter</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E5%87%AD%E8%AF%81"><span class="nav-number">7.</span> <span class="nav-text">配置凭证</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A2%9E%E5%8A%A0git%E4%BB%93%E5%BA%93%E7%94%A8%E6%88%B7%E5%AF%86%E7%A0%81%E6%88%96%E8%80%85ssh"><span class="nav-number">8.</span> <span class="nav-text">增加git仓库用户密码或者ssh</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A2%9E%E5%8A%A0harbor%E4%BB%93%E5%BA%93%E5%AF%86%E7%A0%81"><span class="nav-number">9.</span> <span class="nav-text">增加harbor仓库密码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B7%BB%E5%8A%A0%E6%B5%81%E6%B0%B4%E7%BA%BF%E8%84%9A%E6%9C%AC"><span class="nav-number">10.</span> <span class="nav-text">添加流水线脚本</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B7%BB%E5%8A%A0%E6%B5%81%E6%B0%B4%E7%BA%BF"><span class="nav-number">10.1.</span> <span class="nav-text">添加流水线</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%BE%E7%BD%AE%E5%8F%82%E6%95%B0"><span class="nav-number">10.2.</span> <span class="nav-text">设置参数</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%A2%E5%BC%83%E6%97%A7%E6%9E%84%E9%80%A0"><span class="nav-number">10.2.1.</span> <span class="nav-text">丢弃旧构造</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B7%BB%E5%8A%A0Extended-Choice-Parameter"><span class="nav-number">10.2.2.</span> <span class="nav-text">添加Extended Choice Parameter</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B7%BB%E5%8A%A0%E5%B8%83%E5%B0%94%E5%80%BC%E5%8F%82%E6%95%B0"><span class="nav-number">10.2.3.</span> <span class="nav-text">添加布尔值参数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B7%BB%E5%8A%A0Git-Parameter"><span class="nav-number">10.2.4.</span> <span class="nav-text">添加Git Parameter</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BC%96%E5%86%99pipeline-script%E8%84%9A%E6%9C%AC"><span class="nav-number">10.3.</span> <span class="nav-text">编写pipeline script脚本</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%88%E6%9E%9C%E5%B1%95%E7%A4%BA"><span class="nav-number">11.</span> <span class="nav-text">效果展示</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="139"
+      src="/images/custom/avatar.jpg">
+  <p class="site-author-name" itemprop="name">139</p>
+  <div class="site-description" itemprop="description">一个普通的JAVA开发的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">117</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">42</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+  <div class="beian"><a href="https://beian.miit.gov.cn/" rel="noopener" target="_blank">浙ICP备2023004484号-1 </a>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">139</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8335634399768246"
+     crossorigin="anonymous"></script>
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

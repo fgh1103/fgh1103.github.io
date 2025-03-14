@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8335634399768246"
+     crossorigin="anonymous"></script>
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="我们可以使用Dockfile构建一个镜像，然后直接在docker中运行。Dockerfile文件为一个文本文件，里面包含构建镜像所需的所有的命令，首先我们来认识一下Dockerfile文件中几个重要的指令。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Dockerfile">
+<meta property="og:url" content="http://example.com/2023/09/24/Dockerfile/index.html">
+<meta property="og:site_name" content="进学阁">
+<meta property="og:description" content="我们可以使用Dockfile构建一个镜像，然后直接在docker中运行。Dockerfile文件为一个文本文件，里面包含构建镜像所需的所有的命令，首先我们来认识一下Dockerfile文件中几个重要的指令。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1647423911512-0a4aadf5-b4fc-40da-b1d4-e815598357b5.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1647423911832-02ffb3ba-7649-4a7a-835f-bf2226c3e5bb.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1647423911564-5ac6f4b4-1d33-4f95-8615-3388647ebd30.png">
+<meta property="article:published_time" content="2023-09-24T13:15:51.000Z">
+<meta property="article:modified_time" content="2025-03-14T10:02:11.829Z">
+<meta property="article:author" content="139">
+<meta property="article:tag" content="docker">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1647423911512-0a4aadf5-b4fc-40da-b1d4-e815598357b5.png">
+
+<link rel="canonical" href="http://example.com/2023/09/24/Dockerfile/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Dockerfile | 进学阁</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">进学阁</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">业精于勤荒于嬉，行成于思毁于随</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">42</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">17</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">117</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/09/24/Dockerfile/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Dockerfile
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-09-24 21:15:51" itemprop="dateCreated datePublished" datetime="2023-09-24T21:15:51+08:00">2023-09-24</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-14 18:02:11" itemprop="dateModified" datetime="2025-03-14T18:02:11+08:00">2025-03-14</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Docker/" itemprop="url" rel="index"><span itemprop="name">Docker</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><font style="color:rgb(58, 58, 58);">我们可以使用Dockfile构建一个镜像，然后直接在docker中运行。Dockerfile文件为一个文本文件，里面包含构建镜像所需的所有的命令，首先我们来认识一下Dockerfile文件中几个重要的指令。</font></p>
+<span id="more"></span>
+<h3 id="指令详解"><a href="#指令详解" class="headerlink" title="指令详解"></a><font style="color:rgb(81, 81, 81);">指令详解</font></h3><ul>
+<li><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">FROM</font><font style="color:rgb(58, 58, 58);"><br></font><font style="color:rgb(58, 58, 58);">选择一个基础镜像，然后在基础镜像上进行修改，比如构建一个SpringBoot项目的镜像，就需要选择java这个基础镜像，FROM需要作为Dockerfile中的第一条指令 如：</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">FROM openjdk:8-jdk-alpine</font><font style="color:rgb(58, 58, 58);"> </font><font style="color:rgb(58, 58, 58);">基础镜像如果可以的话最好使用alpine版本的，采用alpline版本的基础镜像构建出来的镜像会小很多。</font></li>
+<li><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">RUN</font><font style="color:rgb(58, 58, 58);"><br></font><font style="color:rgb(58, 58, 58);">RUN指令用来执行命令行命令的。它有以下两种格式：</font><ul>
+<li><font style="color:rgb(1, 1, 1);">shell 格式：RUN &lt;命令&gt;，就像直接在命令行中输入的命令一样。</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">RUN echo ‘<h1>Hello, Docker!</h1>‘ &gt; &#x2F;usr&#x2F;share&#x2F;nginx&#x2F;html&#x2F;index.html</font></li>
+<li><font style="color:rgb(1, 1, 1);">exec 格式：RUN [“可执行文件”, “参数1”, “参数2”]，这更像是函数调用中的格式。</font></li>
+</ul>
+</li>
+<li><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">CMD</font><font style="color:rgb(58, 58, 58);"><br></font><font style="color:rgb(58, 58, 58);">此指令就是用于指定默认的容器主进程的启动命令的。CMD指令格式和RUN相似，也是两种格式</font><ul>
+<li><font style="color:rgb(1, 1, 1);">shell 格式：CMD &lt;命令&gt;</font></li>
+<li><font style="color:rgb(1, 1, 1);">exec 格式：CMD [“可执行文件”, “参数1”, “参数2”…]</font></li>
+<li><font style="color:rgb(1, 1, 1);">参数列表格式：CMD [“参数1”, “参数2”…]。在指定了 ENTRYPOINT 指令后，用 CMD 指定具体的参数。</font></li>
+</ul>
+</li>
+<li><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">ENTRYPOINT</font><font style="color:rgb(58, 58, 58);"><br></font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">ENTRYPOINT</font><font style="color:rgb(58, 58, 58);"> 的格式和</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">RUN</font><font style="color:rgb(58, 58, 58);">指令格式一样，分为 exec 格式和 shell 格式。 </font><font style="color:rgb(58, 58, 58);"> </font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">ENTRYPOINT</font><font style="color:rgb(58, 58, 58);"> 的目的和 </font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">CMD</font><font style="color:rgb(58, 58, 58);"> 一样，都是在指定容器启动程序及参数。</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">ENTRYPOINT</font><font style="color:rgb(58, 58, 58);"> 在运行时也可以替代，不过比 </font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">CMD</font><font style="color:rgb(58, 58, 58);"> </font><font style="color:rgb(58, 58, 58);">要略显繁琐，需要通过 </font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker run</font><font style="color:rgb(58, 58, 58);"> 的参数 </font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">–entrypoint</font><font style="color:rgb(58, 58, 58);"> 来指定。当指定了 </font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">ENTRYPOINT</font><font style="color:rgb(58, 58, 58);"> 后，</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">CMD</font><font style="color:rgb(58, 58, 58);"> 的含义就发生了改变，不再是直接的运行其命令，而是将 </font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">CMD</font><font style="color:rgb(58, 58, 58);"> 的内容作为参数传给 </font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">ENTRYPOINT</font><font style="color:rgb(58, 58, 58);">指令，换句话说实际执行时，将变为：</font><font style="color:rgb(1, 1, 1);"><ENTRYPOINT> “<CMD>“  </font></li>
+<li><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">COPY &amp; ADD</font><font style="color:rgb(58, 58, 58);"><br></font><font style="color:rgb(58, 58, 58);">这2个指令都是复制文件，它将从构建上下文目录中 &lt;源路径&gt; 的文件&#x2F;目录 复制到新的一层的镜像内的 &lt;目标路径&gt; 位置。比如：</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">COPY demo-test.jar app.jar</font><font style="color:rgb(58, 58, 58);"> </font><font style="color:rgb(58, 58, 58);">或</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">ADD demo-test.jar app.jar</font><font style="color:rgb(58, 58, 58);">。</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">ADD</font><font style="color:rgb(58, 58, 58);">指令比</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">COPY</font><font style="color:rgb(58, 58, 58);">高级点，可以指定一个URL地址，这样Docker引擎会去下载这个URL的文件，如果</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">ADD</font><font style="color:rgb(58, 58, 58);">后面是一个</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">tar</font><font style="color:rgb(58, 58, 58);">文件的话，Dokcer引擎还会去解压缩。<br></font><strong><font style="color:black;">我们在构建镜像时尽可能使用 </font><strong><strong><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">COPY</font></strong></strong><font style="color:black;">，因为 </font><strong><strong><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">COPY</font></strong></strong><font style="color:black;"> 的语义很明确，就是复制文件而已，而 </font><strong><strong><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">ADD</font></strong></strong><font style="color:black;"> 则包含了更复杂的功能，其行为也不一定很清晰。</font></strong></li>
+<li><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">EXPOSE</font><font style="color:rgb(58, 58, 58);"><br></font><font style="color:rgb(58, 58, 58);">声明容器运行时的端口，这只是一个声明，在运行时并不会因为这个声明应用就会开启这个端口的服务。在 Dockerfile 中写入这样的声明有两个好处，一个是帮助镜像使用者理解这个镜像服务的守护端口，以方便配置映射；另一个用处则是在运行时使用随机端口映射时，也就是 </font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker run -P</font><font style="color:rgb(58, 58, 58);"> </font><font style="color:rgb(58, 58, 58);">时，会自动随机映射 EXPOSE 的端口。要将 </font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">EXPOSE</font><font style="color:rgb(58, 58, 58);"> 和在运行时使用</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">-p &lt;宿主端口&gt;:&lt;容器端口&gt;</font><font style="color:rgb(58, 58, 58);"> 区分开来。</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">-p</font><font style="color:rgb(58, 58, 58);">，是映射宿主端口和容器端口，换句话说，就是将容器的对应端口服务公开给外界访问，而 </font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">EXPOSE</font><font style="color:rgb(58, 58, 58);"> 仅仅是声明容器打算使用什么端口而已，并不会自动在宿主进行端口映射。</font></li>
+<li><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">ENV</font><font style="color:rgb(58, 58, 58);"><br></font><font style="color:rgb(58, 58, 58);">这个指令很简单，就是设置环境变量，无论是后面的其它指令，如 RUN，还是运行时的应用，都可以直接使用这里定义的环境变量。它有如下两种格式：</font><ul>
+<li><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">ENV <key> <value></font></li>
+<li><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">ENV <key1>&#x3D;<value1> <key2>&#x3D;<value2>…</font></li>
+</ul>
+</li>
+<li><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">VOLUME</font><font style="color:rgb(58, 58, 58);"><br></font><font style="color:rgb(58, 58, 58);">该指令使容器中的一个目录具有持久化存储的功能，该目录可被容器本身使用，也可共享给其他容器。当容器中的应用有持久化数据的需求时可以在Dockerfile中使用该指令。如</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">VOLUME &#x2F;tmp</font><font style="color:rgb(58, 58, 58);">这里的 &#x2F;tmp 目录就会在运行时自动挂载为匿名卷，任何向 &#x2F;tmp 中写入的信息都不会记录进容器存储层，从而保证了容器存储层的无状态化。当然，运行时可以覆盖这个挂载设置。比如：</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker run -d -v mydata:&#x2F;tmp xxxx</font></li>
+<li><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">LABEL</font><font style="color:rgb(58, 58, 58);"><br></font><font style="color:rgb(58, 58, 58);">你可以为你的镜像添加labels，用来组织镜像，记录版本描述，或者其他原因，对应每个label，增加以LABEL开头的行，和一个或者多个键值对。如下所示：</font><font style="color:rgb(1, 1, 1);">LABEL version&#x3D;”1.0”<br></font><font style="color:rgb(1, 1, 1);">LABEL description&#x3D;”test”  </font></li>
+</ul>
+<h3 id="Dockerfile实战"><a href="#Dockerfile实战" class="headerlink" title="Dockerfile实战"></a><font style="color:rgb(81, 81, 81);">Dockerfile实战</font></h3><p><font style="color:rgb(58, 58, 58);">我们以一个简单的SpringBoot项目为例构建基于SpringBoot应用的镜像。功能很简单，只是对外提供了一个</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">say</font><font style="color:rgb(58, 58, 58);">接口，在进入这个方法的时候打印出一行日志，并将日志写入日志文件。</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">@SpringBootApplication</span><br><span class="line">@RestController</span><br><span class="line">@Log4j2</span><br><span class="line">publicclass DockerApplication &#123;</span><br><span class="line"></span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        SpringApplication.run(DockerApplication.class, args);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @GetMapping(&quot;/say&quot;)</span><br><span class="line">    public String say()&#123;</span><br><span class="line">        log.info(&quot;get say request...&quot;);</span><br><span class="line">        return&quot;Hello,Java&quot;;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(58, 58, 58);">我们使用maven将其打包成docker-demo.jar文件，放入一个单独的文件夹,然后按照下面步骤一步步构建镜像并执行</font></p>
+<ul>
+<li><font style="color:rgb(58, 58, 58);">在当前文件夹建立Dockerfile文件，文件内容如下：</font><font style="color:rgb(1, 1, 1);">FROM openjdk:8-jdk-alpine<br></font><font style="color:rgb(1, 1, 1);">#将容器中的&#x2F;tmp目录作为持久化目录<br></font><font style="color:rgb(1, 1, 1);">VOLUME &#x2F;tmp<br></font><font style="color:rgb(1, 1, 1);">#暴露端口<br></font><font style="color:rgb(1, 1, 1);">EXPOSE 8080<br></font><font style="color:rgb(1, 1, 1);">#复制文件<br></font><font style="color:rgb(1, 1, 1);">COPY docker-demo.jar app.jar<br></font><font style="color:rgb(1, 1, 1);">#配置容器启动后执行的命令<br></font><font style="color:rgb(1, 1, 1);">ENTRYPOINT [“java”,”-Djava.security.egd&#x3D;file:&#x2F;dev&#x2F;.&#x2F;urandom”,”-jar”,”&#x2F;app.jar”]  </font></li>
+<li><font style="color:rgb(58, 58, 58);">使用如下命令构建镜像</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker built -t springboot:v1.0 .</font><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1647423911512-0a4aadf5-b4fc-40da-b1d4-e815598357b5.png"><font style="color:rgb(58, 58, 58);">-t 指定镜像的名称及版本号，注意后面需要以</font><font style="color:rgb(58, 58, 58);"> </font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">.</font><font style="color:rgb(58, 58, 58);"> </font><font style="color:rgb(58, 58, 58);">结尾。</font></li>
+<li><font style="color:rgb(58, 58, 58);">查看镜像文件</font><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1647423911832-02ffb3ba-7649-4a7a-835f-bf2226c3e5bb.png"></li>
+<li><font style="color:rgb(58, 58, 58);">运行构建的镜像<br></font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker run -v &#x2F;app&#x2F;docker&#x2F;logs:&#x2F;logs -p 8080:8080 –rm –name springboot springboot:v1.0</font></li>
+<li><font style="color:rgb(58, 58, 58);">浏览器访问</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);"><a target="_blank" rel="noopener" href="http://192.168.136.129:8080/say">http://192.168.136.129:8080/say</a></font></li>
+<li><font style="color:rgb(58, 58, 58);">在宿主机上实时查看日志<br></font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">tail -100f &#x2F;app&#x2F;docker&#x2F;logs&#x2F;docker-demo-info.log</font><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1647423911564-5ac6f4b4-1d33-4f95-8615-3388647ebd30.png"></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/docker/" rel="tag"><i class="fa fa-tag"></i> docker</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/09/23/docker%20%E9%87%8D%E8%A6%81%E5%91%BD%E4%BB%A4/" rel="prev" title="docker 重要命令">
+      <i class="fa fa-chevron-left"></i> docker 重要命令
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/09/25/Docker%20Compose%20%E7%BD%91%E7%BB%9C%E8%AE%BE%E7%BD%AE/" rel="next" title="Docker Compose">
+      Docker Compose <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8C%87%E4%BB%A4%E8%AF%A6%E8%A7%A3"><span class="nav-number">1.</span> <span class="nav-text">指令详解</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number"></span> <span class="nav-text">Hello, Docker!</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Dockerfile%E5%AE%9E%E6%88%98"><span class="nav-number">1.</span> <span class="nav-text">Dockerfile实战</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="139"
+      src="/images/custom/avatar.jpg">
+  <p class="site-author-name" itemprop="name">139</p>
+  <div class="site-description" itemprop="description">一个普通的JAVA开发的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">117</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">42</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+  <div class="beian"><a href="https://beian.miit.gov.cn/" rel="noopener" target="_blank">浙ICP备2023004484号-1 </a>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">139</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8335634399768246"
+     crossorigin="anonymous"></script>
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

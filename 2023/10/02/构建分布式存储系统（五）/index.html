@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8335634399768246"
+     crossorigin="anonymous"></script>
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="NFS搭建安装nfs-server123456789101112131415161718192021222324# 在每个机器。yum install -y nfs-utils# 在master 执行以下命令 echo &quot;&#x2F;nfs&#x2F;data&#x2F; *(insecure,rw,sync,no_root_squash)&quot; &gt; &#x2F;etc&#x2F;exports# 执行以下命令，启动 nfs">
+<meta property="og:type" content="article">
+<meta property="og:title" content="构建分布式存储系统（五）">
+<meta property="og:url" content="http://example.com/2023/10/02/%E6%9E%84%E5%BB%BA%E5%88%86%E5%B8%83%E5%BC%8F%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F%EF%BC%88%E4%BA%94%EF%BC%89/index.html">
+<meta property="og:site_name" content="进学阁">
+<meta property="og:description" content="NFS搭建安装nfs-server123456789101112131415161718192021222324# 在每个机器。yum install -y nfs-utils# 在master 执行以下命令 echo &quot;&#x2F;nfs&#x2F;data&#x2F; *(insecure,rw,sync,no_root_squash)&quot; &gt; &#x2F;etc&#x2F;exports# 执行以下命令，启动 nfs">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2022/png/25873401/1663309009721-7e906840-fddd-4869-b6eb-e497f465e50c.png">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2022/png/25873401/1663309164098-66faa9e7-8d21-4356-b79a-e178a33474d8.png">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2022/png/25873401/1663309177397-a0ae177d-e790-4d82-bd18-ca85e2f291b7.png">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2022/png/25873401/1663309197542-1300a728-ed59-4397-878a-47c89a972c5c.png">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2022/png/25873401/1663309252792-955072b1-94f6-43cf-91ea-708fbe17f3ed.png">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2022/png/25873401/1663309286193-f18054f3-bd18-4327-8991-dcfd28e22b34.png">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2022/png/25873401/1663309315555-86be7256-e0ea-42a6-819c-7ae1c3e86640.png">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2022/png/25873401/1663309335239-bcfaf7d1-7d95-4d54-b076-f1581637b98c.png">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2022/png/25873401/1663309386512-a2c31479-1d08-4240-8072-4db56d68cd36.png">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2022/png/25873401/1663309391611-a57e1c0a-a432-43ee-817c-dbfb293b80e5.png">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2022/png/25873401/1663309450347-a6a9d2bd-5c14-4120-8230-904a3b7f9a9c.png">
+<meta property="article:published_time" content="2023-10-02T03:34:45.000Z">
+<meta property="article:modified_time" content="2025-03-14T10:09:29.884Z">
+<meta property="article:author" content="139">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.nlark.com/yuque/0/2022/png/25873401/1663309009721-7e906840-fddd-4869-b6eb-e497f465e50c.png">
+
+<link rel="canonical" href="http://example.com/2023/10/02/%E6%9E%84%E5%BB%BA%E5%88%86%E5%B8%83%E5%BC%8F%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F%EF%BC%88%E4%BA%94%EF%BC%89/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>构建分布式存储系统（五） | 进学阁</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">进学阁</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">业精于勤荒于嬉，行成于思毁于随</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">42</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">17</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">117</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/10/02/%E6%9E%84%E5%BB%BA%E5%88%86%E5%B8%83%E5%BC%8F%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F%EF%BC%88%E4%BA%94%EF%BC%89/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          构建分布式存储系统（五）
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-10-02 11:34:45" itemprop="dateCreated datePublished" datetime="2023-10-02T11:34:45+08:00">2023-10-02</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-14 18:09:29" itemprop="dateModified" datetime="2025-03-14T18:09:29+08:00">2025-03-14</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%9F%BA%E4%BA%8EKubesphere%E6%9E%84%E5%BB%BAk8s%E5%B9%B3%E5%8F%B0/" itemprop="url" rel="index"><span itemprop="name">基于Kubesphere构建k8s平台</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="NFS搭建"><a href="#NFS搭建" class="headerlink" title="NFS搭建"></a>NFS搭建</h2><h4 id="安装nfs-server"><a href="#安装nfs-server" class="headerlink" title="安装nfs-server"></a>安装nfs-server</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"># 在每个机器。</span><br><span class="line">yum install -y nfs-utils</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"># 在master 执行以下命令 </span><br><span class="line">echo &quot;/nfs/data/ *(insecure,rw,sync,no_root_squash)&quot; &gt; /etc/exports</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"># 执行以下命令，启动 nfs 服务;创建共享目录</span><br><span class="line">mkdir -p /nfs/data</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"># 在master执行</span><br><span class="line">systemctl enable rpcbind</span><br><span class="line">systemctl enable nfs-server</span><br><span class="line">systemctl start rpcbind</span><br><span class="line">systemctl start nfs-server</span><br><span class="line"></span><br><span class="line"># 使配置生效</span><br><span class="line">exportfs -r</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">#检查配置是否生效</span><br><span class="line">exportfs</span><br></pre></td></tr></table></figure>
+<span id="more"></span>
+<h4 id="配置nfs-client（选做）"><a href="#配置nfs-client（选做）" class="headerlink" title="配置nfs-client（选做）"></a>配置nfs-client（选做）</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">showmount -e 172.31.0.4</span><br><span class="line"></span><br><span class="line">mkdir -p /nfs/data</span><br><span class="line"></span><br><span class="line">mount -t nfs 172.31.0.4:/nfs/data /nfs/data</span><br></pre></td></tr></table></figure>
+
+<h4 id="配置默认存储"><a href="#配置默认存储" class="headerlink" title="配置默认存储"></a>配置默认存储</h4><blockquote>
+<p>配置动态供应的默认存储类</p>
+</blockquote>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br></pre></td><td class="code"><pre><span class="line">## 创建了一个存储类</span><br><span class="line">apiVersion: storage.k8s.io/v1</span><br><span class="line">kind: StorageClass</span><br><span class="line">metadata:</span><br><span class="line">  name: nfs-storage</span><br><span class="line">  annotations:</span><br><span class="line">    storageclass.kubernetes.io/is-default-class: &quot;true&quot;</span><br><span class="line">provisioner: k8s-sigs.io/nfs-subdir-external-provisioner</span><br><span class="line">parameters:</span><br><span class="line">  archiveOnDelete: &quot;true&quot;  ## 删除pv的时候，pv的内容是否要备份</span><br><span class="line"></span><br><span class="line">---</span><br><span class="line">apiVersion: apps/v1</span><br><span class="line">kind: Deployment</span><br><span class="line">metadata:</span><br><span class="line">  name: nfs-client-provisioner</span><br><span class="line">  labels:</span><br><span class="line">    app: nfs-client-provisioner</span><br><span class="line">  # replace with namespace where provisioner is deployed</span><br><span class="line">  namespace: default</span><br><span class="line">spec:</span><br><span class="line">  replicas: 1</span><br><span class="line">  strategy:</span><br><span class="line">    type: Recreate</span><br><span class="line">  selector:</span><br><span class="line">    matchLabels:</span><br><span class="line">      app: nfs-client-provisioner</span><br><span class="line">  template:</span><br><span class="line">    metadata:</span><br><span class="line">      labels:</span><br><span class="line">        app: nfs-client-provisioner</span><br><span class="line">    spec:</span><br><span class="line">      serviceAccountName: nfs-client-provisioner</span><br><span class="line">      containers:</span><br><span class="line">        - name: nfs-client-provisioner</span><br><span class="line">          image: registry.cn-hangzhou.aliyuncs.com/lfy_k8s_images/nfs-subdir-external-provisioner:v4.0.2</span><br><span class="line">          # resources:</span><br><span class="line">          #    limits:</span><br><span class="line">          #      cpu: 10m</span><br><span class="line">          #    requests:</span><br><span class="line">          #      cpu: 10m</span><br><span class="line">          volumeMounts:</span><br><span class="line">            - name: nfs-client-root</span><br><span class="line">              mountPath: /persistentvolumes</span><br><span class="line">          env:</span><br><span class="line">            - name: PROVISIONER_NAME</span><br><span class="line">              value: k8s-sigs.io/nfs-subdir-external-provisioner</span><br><span class="line">            - name: NFS_SERVER</span><br><span class="line">              value: 172.31.0.4 ## 指定自己nfs服务器地址</span><br><span class="line">            - name: NFS_PATH  </span><br><span class="line">              value: /nfs/data  ## nfs服务器共享的目录</span><br><span class="line">      volumes:</span><br><span class="line">        - name: nfs-client-root</span><br><span class="line">          nfs:</span><br><span class="line">            server: 172.31.0.4</span><br><span class="line">            path: /nfs/data</span><br><span class="line">---</span><br><span class="line">apiVersion: v1</span><br><span class="line">kind: ServiceAccount</span><br><span class="line">metadata:</span><br><span class="line">  name: nfs-client-provisioner</span><br><span class="line">  # replace with namespace where provisioner is deployed</span><br><span class="line">  namespace: default</span><br><span class="line">---</span><br><span class="line">kind: ClusterRole</span><br><span class="line">apiVersion: rbac.authorization.k8s.io/v1</span><br><span class="line">metadata:</span><br><span class="line">  name: nfs-client-provisioner-runner</span><br><span class="line">rules:</span><br><span class="line">  - apiGroups: [&quot;&quot;]</span><br><span class="line">    resources: [&quot;nodes&quot;]</span><br><span class="line">    verbs: [&quot;get&quot;, &quot;list&quot;, &quot;watch&quot;]</span><br><span class="line">  - apiGroups: [&quot;&quot;]</span><br><span class="line">    resources: [&quot;persistentvolumes&quot;]</span><br><span class="line">    verbs: [&quot;get&quot;, &quot;list&quot;, &quot;watch&quot;, &quot;create&quot;, &quot;delete&quot;]</span><br><span class="line">  - apiGroups: [&quot;&quot;]</span><br><span class="line">    resources: [&quot;persistentvolumeclaims&quot;]</span><br><span class="line">    verbs: [&quot;get&quot;, &quot;list&quot;, &quot;watch&quot;, &quot;update&quot;]</span><br><span class="line">  - apiGroups: [&quot;storage.k8s.io&quot;]</span><br><span class="line">    resources: [&quot;storageclasses&quot;]</span><br><span class="line">    verbs: [&quot;get&quot;, &quot;list&quot;, &quot;watch&quot;]</span><br><span class="line">  - apiGroups: [&quot;&quot;]</span><br><span class="line">    resources: [&quot;events&quot;]</span><br><span class="line">    verbs: [&quot;create&quot;, &quot;update&quot;, &quot;patch&quot;]</span><br><span class="line">---</span><br><span class="line">kind: ClusterRoleBinding</span><br><span class="line">apiVersion: rbac.authorization.k8s.io/v1</span><br><span class="line">metadata:</span><br><span class="line">  name: run-nfs-client-provisioner</span><br><span class="line">subjects:</span><br><span class="line">  - kind: ServiceAccount</span><br><span class="line">    name: nfs-client-provisioner</span><br><span class="line">    # replace with namespace where provisioner is deployed</span><br><span class="line">    namespace: default</span><br><span class="line">roleRef:</span><br><span class="line">  kind: ClusterRole</span><br><span class="line">  name: nfs-client-provisioner-runner</span><br><span class="line">  apiGroup: rbac.authorization.k8s.io</span><br><span class="line">---</span><br><span class="line">kind: Role</span><br><span class="line">apiVersion: rbac.authorization.k8s.io/v1</span><br><span class="line">metadata:</span><br><span class="line">  name: leader-locking-nfs-client-provisioner</span><br><span class="line">  # replace with namespace where provisioner is deployed</span><br><span class="line">  namespace: default</span><br><span class="line">rules:</span><br><span class="line">  - apiGroups: [&quot;&quot;]</span><br><span class="line">    resources: [&quot;endpoints&quot;]</span><br><span class="line">    verbs: [&quot;get&quot;, &quot;list&quot;, &quot;watch&quot;, &quot;create&quot;, &quot;update&quot;, &quot;patch&quot;]</span><br><span class="line">---</span><br><span class="line">kind: RoleBinding</span><br><span class="line">apiVersion: rbac.authorization.k8s.io/v1</span><br><span class="line">metadata:</span><br><span class="line">  name: leader-locking-nfs-client-provisioner</span><br><span class="line">  # replace with namespace where provisioner is deployed</span><br><span class="line">  namespace: default</span><br><span class="line">subjects:</span><br><span class="line">  - kind: ServiceAccount</span><br><span class="line">    name: nfs-client-provisioner</span><br><span class="line">    # replace with namespace where provisioner is deployed</span><br><span class="line">    namespace: default</span><br><span class="line">roleRef:</span><br><span class="line">  kind: Role</span><br><span class="line">  name: leader-locking-nfs-client-provisioner</span><br><span class="line">  apiGroup: rbac.authorization.k8s.io</span><br></pre></td></tr></table></figure>
+
+<p>确认是否生效</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl get sc</span><br></pre></td></tr></table></figure>
+
+<h2 id="Ceph存储集群"><a href="#Ceph存储集群" class="headerlink" title="Ceph存储集群"></a><font style="color:rgb(47, 48, 52);">Ceph存储集群</font></h2><p><strong><font style="color:rgb(47, 48, 52);">Rook介绍</font></strong></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">Rook </font><a target="_blank" rel="noopener" href="https://rook.io/">https://rook.io</a><font style="color:rgb(47, 48, 52);"> 是一个自管理的分布式存储编排系统，可以为Kubernetes提供便利的存储解决方案。</font><strong><font style="color:rgb(47, 48, 52);">Rook本身并不提供存储，而是在kubernetes和存储系统之间提供适配层，简化存储系统的部署与维护工作。</font></strong></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">目前，Rook支持的存储系统包括：Ceph、CockroachDB、Cassandra、EdgeFS、Minio、NFS。当然，Rook支持的最好的还是Cph 和 NFS。</font></p>
+<p><img src="https://cdn.nlark.com/yuque/0/2022/png/25873401/1663309009721-7e906840-fddd-4869-b6eb-e497f465e50c.png"></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><strong><font style="color:rgb(47, 48, 52);">为什么要使用Rook？</font></strong></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">使用Rook的其中一个主要好处在于它是通过原生的Kubernetes机制和数据存储交互。这就意味着你不再需要通过命令行手动配置Ceph。</font></p>
+<ul>
+<li><font style="color:rgb(47, 48, 52);">你想要在一个集群里部署CephFS吗？只需要创建一个YAML文件就行了！</font></li>
+<li><font style="color:rgb(47, 48, 52);">什么？你还想要部署一个支持S3 API的对象存储？行，另外再建一个YAML文件就行！</font></li>
+</ul>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><strong><font style="color:rgb(47, 48, 52);">Cpeh介绍</font></strong></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">Ceph Ceph Documentation 是一种为优秀的性能、可靠性和可扩展性而设计的统一的、分布式文件系统。ceph 的统一体现在可以提供文件系统、块存储和对象存储，分布式体现在可以动态扩展。</font></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">Ceph支持三种存储：</font></p>
+<ul>
+<li><strong><font style="color:rgb(47, 48, 52);">块存储（RDB）</font></strong><font style="color:rgb(47, 48, 52);">：可以直接作为磁盘挂载</font></li>
+<li><strong><font style="color:rgb(47, 48, 52);">文件系统（CephFS）</font></strong><font style="color:rgb(47, 48, 52);">：提供POSIX兼容的网络文件系统CephFS，专注于高性能、大容量存储</font></li>
+<li><strong><font style="color:rgb(47, 48, 52);">对象存储（RADOSGW）</font></strong><font style="color:rgb(47, 48, 52);">：提供RESTful接口，也提供多种编程语言绑定。兼容S3（是AWS里的对象存储）、Swift（是openstack里的对象存储）</font></li>
+</ul>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><strong><font style="color:rgb(47, 48, 52);">核心组件</font></strong></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">Ceph 主要有三个基本进程:</font></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<ul>
+<li><font style="color:rgb(47, 48, 52);">OSD 用于集群中所有数据与对象的存储，处理集群数据的复制、恢复、回填、再均衡，并向其他osd守护进程发送心跳，然后向 Monitor 提供一些监控信息。</font></li>
+</ul>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<ul>
+<li><font style="color:rgb(47, 48, 52);">Monitor 监控整个集群的状态，维护集群的 cluster MAP 二进制表，保证集群数据的一致性。</font></li>
+</ul>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<ul>
+<li><font style="color:rgb(47, 48, 52);">MDS (可选) 为 Ceph 文件系统提供元数据计算、缓存与同步。MDS 进程并不是必须的进程，只有需要使用 CephFS 时，才需要配置 MDS 节点。</font></li>
+</ul>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><strong><font style="color:rgb(47, 48, 52);">安装Ceph集群</font></strong></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">通过rook安装ceph集群需要满足以下两个前提条件：</font></p>
+<ul>
+<li><font style="color:rgb(47, 48, 52);">已部署好的Kubernetes集群 （</font><font style="color:rgb(47, 48, 52);">✅</font><font style="color:rgb(47, 48, 52);">）</font></li>
+<li><font style="color:rgb(47, 48, 52);">osd节点需要有未格式化⽂件系统的磁盘（</font><font style="color:rgb(47, 48, 52);">✅</font><font style="color:rgb(47, 48, 52);">）</font></li>
+</ul>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><strong><font style="color:rgb(47, 48, 52);">前置准备</font></strong></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">1. 在master1节点下载rook到本地，使用最新版本1.8.8</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git clone --single-branch --branch v1.8.8 https://github.com/rook/rook.git</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(47, 48, 52);">2. 给所有需要安装ceph的worker节点安装lvm2</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">yum install lvm2 -y</span><br><span class="line"></span><br><span class="line">#检查是否安装成功</span><br><span class="line">[root@sit-k8s-worker1 ~]# yum list installed | grep lvm2</span><br><span class="line">lvm2.x86_64            7:2.02.187-6.el7_9.5   @iflytekdc-updates</span><br><span class="line">lvm2-libs.x86_64         7:2.02.187-6.el7_9.5   @iflytekdc-updates</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(47, 48, 52);">3. 给worker节点打上标签，保证ceph只安装在这3台worker节点上</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">kubectl label node k8s-worker1 role=ceph-storage</span><br><span class="line">kubectl label node k8s-worker2 role=ceph-storage</span><br><span class="line">kubectl label node k8s-worker3 role=ceph-storage</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(47, 48, 52);">修改完成后使用命令查看label属性</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">[root@k8s-master1 ~]# kubectl get nodes --show-labels</span><br><span class="line"></span><br><span class="line">NAME      STATUS ROLES        AGE  VERSION LABELS</span><br><span class="line">k8s-worker1   Ready   worker                 3d17h   v1.21.5   beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,kubernetes.io/arch=amd64,kubernetes.io/hostname=k8s-worker1,kubernetes.io/os=linux,node-role.kubernetes.io/worker=,role=ceph-storage</span><br><span class="line">k8s-worker2   Ready   worker                 3d17h   v1.21.5   beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,kubernetes.io/arch=amd64,kubernetes.io/hostname=k8s-worker2,kubernetes.io/os=linux,node-role.kubernetes.io/worker=,role=ceph-storage</span><br><span class="line">k8s-worker3   Ready   worker                 3d17h   v1.21.5   beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,kubernetes.io/arch=amd64,kubernetes.io/hostname=k8s-worker3,kubernetes.io/os=linux,node-role.kubernetes.io/worker=,role=ceph-storage</span><br></pre></td></tr></table></figure>
+
+<ol start="4">
+<li>手动下载安装ceph所需镜像</li>
+</ol>
+<p>rook 中ceph依赖很多都是使用国外的镜像，下载很慢，而且经常出现400，所以建议直接手动下载。<br>注意，以下脚本在所有节点都需要运行（master 和 worker）</p>
+<p>创建可执行文件 ceph.sh，内容如下</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">image_list=(</span><br><span class="line">csi-node-driver-registrar:v2.5.0</span><br><span class="line">csi-attacher:v3.4.0</span><br><span class="line">csi-snapshotter:v5.0.1</span><br><span class="line">csi-resizer:v1.4.0</span><br><span class="line">csi-provisioner:v3.1.0</span><br><span class="line">)</span><br><span class="line">aliyuncs=&quot;registry.aliyuncs.com/it00021hot&quot;</span><br><span class="line">google_gcr=&quot;k8s.gcr.io/sig-storage&quot;</span><br><span class="line">for image in $&#123;image_list[*]&#125;</span><br><span class="line">do</span><br><span class="line">docker image pull $&#123;aliyuncs&#125;/$&#123;image&#125;</span><br><span class="line">docker image tag $&#123;aliyuncs&#125;/$&#123;image&#125; $&#123;google_gcr&#125;/$&#123;image&#125;</span><br><span class="line">docker image rm $&#123;aliyuncs&#125;/$&#123;image&#125;</span><br><span class="line"> echo &quot;$&#123;aliyuncs&#125;/$&#123;image&#125; $&#123;google_gcr&#125;/$&#123;image&#125; downloaded.&quot;</span><br><span class="line">done</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(47, 48, 52);">同时给其授予可执行权限</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chmod +x ceph.sh</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(47, 48, 52);">检查镜像是否下载完成</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker images | grep csi</span><br></pre></td></tr></table></figure>
+
+
+
+<p><img src="https://cdn.nlark.com/yuque/0/2022/png/25873401/1663309164098-66faa9e7-8d21-4356-b79a-e178a33474d8.png"></p>
+<p><font style="color:rgb(47, 48, 52);">5. 修改ceph调度算法，通过节点亲和性让其运行在指定节点上，同时手动指定节点及磁盘</font></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(154, 154, 154);">还记得我们之前挂载磁盘的时候给ceph预留了一个空盘吧？现在需要用到了～</font></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">先通过lsblk查看盘符，可以看到vdb2是预留给ceph的</font></p>
+<p><img src="https://cdn.nlark.com/yuque/0/2022/png/25873401/1663309177397-a0ae177d-e790-4d82-bd18-ca85e2f291b7.png"></p>
+<p><font style="color:rgb(47, 48, 52);">然后修改ceph集群配置</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim /root/rook/deploy/examples/cluster.yaml</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.nlark.com/yuque/0/2022/png/25873401/1663309197542-1300a728-ed59-4397-878a-47c89a972c5c.png"></p>
+<p><strong><font style="color:rgb(47, 48, 52);">注意，name 不能够配置为IP，而应该是标签 </font></strong><a target="_blank" rel="noopener" href="http://kubernetes.io/hostname">kubernetes.io&#x2F;hostname</a><strong><font style="color:rgb(47, 48, 52);"> 的内容</font></strong></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">6. 修改</font><a target="_blank" rel="noopener" href="http://operator.yaml/">operator.yaml</a><font style="color:rgb(47, 48, 52);">，让CSI守护进程可以调度到主节点</font></p>
+<p><font style="color:rgb(154, 154, 154);">默认情况下master节点是不允许调度的，但是ceph有些守护进程是需要调度到master去。</font></p>
+<p><font style="color:rgb(154, 154, 154);">这一步是为了解决后面出现的问题，如果此时不修改也可以在后面出现问题的时候再改。</font></p>
+<p><font style="color:rgb(154, 154, 154);">这些都是经验教训，网上的安装手册不会告诉你有这一步。</font></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">先查看一下master节点的污点设置</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[root@k8s-master1 ~]# kubectl describe no/sit-k8s-master1 | grep Taints</span><br><span class="line"></span><br><span class="line">Taints: node-role.kubernetes.io/master:NoSchedule</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(47, 48, 52);">然后修改rook operator的配置</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim /root/rook/deploy/examples/operator.yaml</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.nlark.com/yuque/0/2022/png/25873401/1663309252792-955072b1-94f6-43cf-91ea-708fbe17f3ed.png"></p>
+<p><strong><font style="color:rgb(47, 48, 52);">安装ceph集群</font></strong></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(154, 154, 154);">ceph 相关镜像较大，创建集群过程中可能会存在镜像拉取失败问题，可以在worker节点提前下载。</font></p>
+<p><font style="color:rgb(154, 154, 154);">所需镜像：</font></p>
+<p><font style="color:rgb(154, 154, 154);">rook&#x2F;ceph:v1.8.8</font></p>
+<p><a target="_blank" rel="noopener" href="http://quay.io/ceph/ceph:">quay.io&#x2F;ceph&#x2F;ceph:</a><font style="color:rgb(154, 154, 154);"> v16.2.7</font></p>
+<p><a target="_blank" rel="noopener" href="http://quay.io/cephcsi/cephcsi:v3.5.1">quay.io&#x2F;cephcsi&#x2F;cephcsi:v3.5.1</a></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">1. 创建ceph所需要的资源</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd /root/rook/deploy/examples</span><br><span class="line">kubectl apply -f crds.yaml -f common.yaml -f operator.yaml</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(47, 48, 52);">执行完成后等待容器启动，只有完全启动后才能执行进行下一步操作。</font></p>
+<p><img src="https://cdn.nlark.com/yuque/0/2022/png/25873401/1663309286193-f18054f3-bd18-4327-8991-dcfd28e22b34.png"></p>
+<p><font style="color:rgb(47, 48, 52);">2. 安装ceph集群</font></p>
+<p><font style="color:rgb(154, 154, 154);">需要先修改一下集群osd的资源限制，否则osd的内存使用率会无限增长(同样是经验教训)</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd /root/rook/deploy/examples</span><br><span class="line">vim cluster.yaml</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(47, 48, 52);">在186行处加入资源限制，建议内存设置4G以上，同时需要注意yaml文件的格式。</font></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><img src="https://cdn.nlark.com/yuque/0/2022/png/25873401/1663309315555-86be7256-e0ea-42a6-819c-7ae1c3e86640.png"></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">修改保存后执行以下命令安装ceph集群</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl apply -f cluster.yaml</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(47, 48, 52);">创建完成后，可以查看pod的状态：</font></p>
+<p><img src="https://cdn.nlark.com/yuque/0/2022/png/25873401/1663309335239-bcfaf7d1-7d95-4d54-b076-f1581637b98c.png"></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">以上是所有组件的 pod 完成后的状态，以rook-ceph-osd-prepare 开头的 pod 用于自动感知集群新挂载硬盘，只不过我们前面手动指定了节点，所以这个不起作用。</font><strong><font style="color:rgb(47, 48, 52);">osd-0、osd-1、osd-2</font></strong><font style="color:rgb(47, 48, 52);">容器必须是存在且正常的，如果上述pod均正常运行成功，则视为集群安装成功。</font></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><strong><font style="color:rgb(47, 48, 52);">安装ceph dashboard</font></strong></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">Ceph Dashboard 是一个内置的基于 Web 的管理和监视应用程序，它是开源 Ceph 发行版的一部分。通过 Dashboard 可以获取 Ceph 集群的各种基本状态信息。</font></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">默认的 ceph 已经安装的 ceph-dashboard，其 SVC 地址是 service clusterIP，并不能被外部访问，需要创建 service 服务</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl apply -f dashboard-external-https.yaml</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(47, 48, 52);">创建NodePort类型就可以被外部访问了</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[root@k8s-master1 ~]# kubectl get svc -n rook-ceph|grep dashboard</span><br><span class="line"></span><br><span class="line">rook-ceph-mgr-dashboard ClusterIP 109.233.40.229 &lt;none&gt; 8443/TCP 8m28s</span><br><span class="line">rook-ceph-mgr-dashboard-external-https NodePort 109.233.34.181 &lt;none&gt; 8443:32234/TCP 29s</span><br></pre></td></tr></table></figure>
+
+
+
+<p><font style="color:rgb(47, 48, 52);">浏览器访问(master1-ip换成自己的集群ip)： <a target="_blank" rel="noopener" href="https://master1-ip:32234/">https://master1-ip:32234/</a></font></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">用户名默认是admin，至于密码可以通过以下代码获取：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl -n rook-ceph get secret rook-ceph-dashboard-password -o jsonpath=&quot;&#123;[&#x27;data&#x27;][&#x27;password&#x27;]&#125;&quot;|base64 --decode &amp;&amp; echo</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.nlark.com/yuque/0/2022/png/25873401/1663309386512-a2c31479-1d08-4240-8072-4db56d68cd36.png"></p>
+<p><img src="https://cdn.nlark.com/yuque/0/2022/png/25873401/1663309391611-a57e1c0a-a432-43ee-817c-dbfb293b80e5.png"></p>
+<p><strong><font style="color:rgb(47, 48, 52);">安装rook工具箱</font></strong></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">Rook 工具箱是一个包含用于 Rook 调试和测试的常用工具的容器，安装很简单</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd /root/rook/deploy/examples</span><br><span class="line">kubectl apply -f toolbox.yaml -n rook-ceph</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(47, 48, 52);">待容器Running后，即可执行相关命令：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"># 查看容器状态</span><br><span class="line">[root@k8s-master1 ~]# kubectl get po -n rook-ceph | grep tools</span><br><span class="line"></span><br><span class="line">rook-ceph-tools-775f4f4468-dcg4x 1/1 Running 0 2m12s</span><br><span class="line"></span><br><span class="line"># 进入ceph容器</span><br><span class="line">[root@k8s-master1 ~]# kubectl -n rook-ceph exec -it $(kubectl -n rook-ceph get pod -l &quot;app=rook-ceph-tools&quot; -o jsonpath=&#x27;&#123;.items[0].metadata.name&#125;&#x27;) -- bash</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.nlark.com/yuque/0/2022/png/25873401/1663309450347-a6a9d2bd-5c14-4120-8230-904a3b7f9a9c.png"></p>
+<p><font style="color:rgb(47, 48, 52);">工具箱相关查询命令</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">ceph status</span><br><span class="line">ceph osd status</span><br><span class="line">ceph df</span><br><span class="line">rados df</span><br></pre></td></tr></table></figure>
+
+<p><strong><font style="color:rgb(47, 48, 52);">部署 RBD StorageClass</font></strong></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">Ceph 可以同时提供对象存储 RADOSGW、块存储 RBD、文件系统存储 Ceph FS。RBD 即 RADOS Block Device 的简称，RBD 块存储是最稳定且最常用的存储类型。RBD 块设备类似磁盘可以被挂载。RBD 块设备具有快照、多副本、克隆和一致性等特性，数据以条带化的方式存储在 Ceph 集群的多个 OSD 中。</font><strong><font style="color:rgb(47, 48, 52);">注意：RBD只支持ReadWriteOnce存储类型</font></strong></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">1. 创建 StorageClass</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd /root/rook/deploy/examples/csi/rbd</span><br><span class="line">kubectl apply -f storageclass.yaml</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(47, 48, 52);">2. 校验pool安装情况</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[root@k8s-master1 ~]# kubectl -n rook-ceph exec -it $(kubectl -n rook-ceph get pod -l &quot;app=rook-ceph-tools&quot; -o jsonpath=&#x27;&#123;.items[0].metadata.name&#125;&#x27;) -- bash</span><br><span class="line"></span><br><span class="line">[root@rook-ceph-tools-775f4f4468-dcg4x /]# ceph osd lspools</span><br><span class="line">1 device_health_metrics</span><br><span class="line">2 replicapool</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(47, 48, 52);">3. 查看StorageClass</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[root@k8s-master1 rbd]# kubectl get sc</span><br><span class="line"></span><br><span class="line">NAME PROVISIONER RECLAIMPOLICY VOLUMEBINDINGMODE ALLOWVOLUMEEXPANSION AGE</span><br><span class="line">rook-ceph-block rook-ceph.rbd.csi.ceph.com Delete Immediate true 43s</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(47, 48, 52);">4. 将Ceph设置为默认存储卷</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[root@k8s-master1 ~]# kubectl patch storageclass rook-ceph-block -p &#x27;&#123;&quot;metadata&quot;: &#123;&quot;annotations&quot;:&#123;&quot;storageclass.kubernetes.io/is-default-class&quot;:&quot;true&quot;&#125;&#125;&#125;&#x27;</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(47, 48, 52);">修改完成后再查看StorageClass状态（</font><strong><font style="color:rgb(47, 48, 52);">有个default标识</font></strong><font style="color:rgb(47, 48, 52);">）</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[root@k8s-master1 ~]# kubectl get sc</span><br><span class="line"></span><br><span class="line">NAME           PROVISIONER        RECLAIMPOLICY VOLUMEBINDINGMODE ALLOWVOLUMEEXPANSION AGE</span><br><span class="line">rook-ceph-block (default)   rook-ceph.rbd.csi.ceph.com   Delete         Immediate           true                   108s</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(47, 48, 52);">通过上面的步骤我们已经给Kubernetes集群安装了Ceph存储，至此我们的高可用集群就已经搭建完毕，甚至可以直接在生产环境使用了。同时也可以看到使用Rook安装Ceph还是很简单的，只需要执行对应的yaml文件即可。</font></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">不过要注意的是我们目前给集群安装的StorageClass是基于RBD的块存储，只支持ReadWriteOnce存储类型，如果你要使用ReadWriteMany存储类型，还需要安装CephFs存储。</font></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/k8s/" rel="tag"><i class="fa fa-tag"></i> k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/10/01/%E5%AE%89%E8%A3%85Kubekey%EF%BC%8C%E6%9E%84%E5%BB%BAKubernetes%E9%9B%86%E7%BE%A4%EF%BC%88%E5%9B%9B%EF%BC%89/" rel="prev" title="安装Kubekey，构建Kubernetes集群（四）">
+      <i class="fa fa-chevron-left"></i> 安装Kubekey，构建Kubernetes集群（四）
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/10/02/%E5%AE%89%E8%A3%85%E5%8F%AF%E8%A7%86%E5%8C%96%E5%B9%B3%E5%8F%B0Kubesphere%EF%BC%88%E4%B8%83%EF%BC%89/" rel="next" title="安装可视化平台Kubesphere（七）">
+      安装可视化平台Kubesphere（七） <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#NFS%E6%90%AD%E5%BB%BA"><span class="nav-number">1.</span> <span class="nav-text">NFS搭建</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%89%E8%A3%85nfs-server"><span class="nav-number">1.0.1.</span> <span class="nav-text">安装nfs-server</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%85%8D%E7%BD%AEnfs-client%EF%BC%88%E9%80%89%E5%81%9A%EF%BC%89"><span class="nav-number">1.0.2.</span> <span class="nav-text">配置nfs-client（选做）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E9%BB%98%E8%AE%A4%E5%AD%98%E5%82%A8"><span class="nav-number">1.0.3.</span> <span class="nav-text">配置默认存储</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Ceph%E5%AD%98%E5%82%A8%E9%9B%86%E7%BE%A4"><span class="nav-number">2.</span> <span class="nav-text">Ceph存储集群</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="139"
+      src="/images/custom/avatar.jpg">
+  <p class="site-author-name" itemprop="name">139</p>
+  <div class="site-description" itemprop="description">一个普通的JAVA开发的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">117</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">42</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+  <div class="beian"><a href="https://beian.miit.gov.cn/" rel="noopener" target="_blank">浙ICP备2023004484号-1 </a>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">139</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8335634399768246"
+     crossorigin="anonymous"></script>
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

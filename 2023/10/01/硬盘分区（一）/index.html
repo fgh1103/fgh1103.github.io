@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8335634399768246"
+     crossorigin="anonymous"></script>
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="硬盘的分区主要目的有两个  便于维护硬件设备 安装分布式存储系统ceph集群的时候需要用到未格式化的分区     NFS格式下可以将 &#x2F;var&#x2F;lib&#x2F;docker和&#x2F;var&#x2F;lib&#x2F;etcd独立出来即可">
+<meta property="og:type" content="article">
+<meta property="og:title" content="硬盘分区（一）">
+<meta property="og:url" content="http://example.com/2023/10/01/%E7%A1%AC%E7%9B%98%E5%88%86%E5%8C%BA%EF%BC%88%E4%B8%80%EF%BC%89/index.html">
+<meta property="og:site_name" content="进学阁">
+<meta property="og:description" content="硬盘的分区主要目的有两个  便于维护硬件设备 安装分布式存储系统ceph集群的时候需要用到未格式化的分区     NFS格式下可以将 &#x2F;var&#x2F;lib&#x2F;docker和&#x2F;var&#x2F;lib&#x2F;etcd独立出来即可">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1663299219613-15d9c675-2d4f-40db-9dad-d6827f6cdf94.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1663299219332-5afb6ffe-f20a-4616-bf67-c067292aa155.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1663299219308-cac34298-6f31-48f9-8757-5a32cdaebbe0.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1663299219447-bd82d493-5e0c-40d5-8e41-47b77963418a.png">
+<meta property="article:published_time" content="2023-10-01T01:33:27.000Z">
+<meta property="article:modified_time" content="2025-03-14T10:06:15.272Z">
+<meta property="article:author" content="139">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1663299219613-15d9c675-2d4f-40db-9dad-d6827f6cdf94.png">
+
+<link rel="canonical" href="http://example.com/2023/10/01/%E7%A1%AC%E7%9B%98%E5%88%86%E5%8C%BA%EF%BC%88%E4%B8%80%EF%BC%89/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>硬盘分区（一） | 进学阁</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">进学阁</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">业精于勤荒于嬉，行成于思毁于随</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">42</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">17</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">117</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/10/01/%E7%A1%AC%E7%9B%98%E5%88%86%E5%8C%BA%EF%BC%88%E4%B8%80%EF%BC%89/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          硬盘分区（一）
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-10-01 09:33:27" itemprop="dateCreated datePublished" datetime="2023-10-01T09:33:27+08:00">2023-10-01</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-14 18:06:15" itemprop="dateModified" datetime="2025-03-14T18:06:15+08:00">2025-03-14</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%9F%BA%E4%BA%8EKubesphere%E6%9E%84%E5%BB%BAk8s%E5%B9%B3%E5%8F%B0/" itemprop="url" rel="index"><span itemprop="name">基于Kubesphere构建k8s平台</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>硬盘的分区主要目的有两个</p>
+<ol>
+<li>便于维护硬件设备</li>
+<li>安装分布式存储系统ceph集群的时候需要用到未格式化的分区</li>
+</ol>
+<font style="color:rgb(47, 48, 52);">  
+</font><font style="color:rgb(47, 48, 52);">NFS格式下可以将 </font><font style="color:rgb(47, 48, 52);background-color:rgb(240, 240, 240);">/var/lib/docker和/var/lib/etcd独立出来即可</font>
+<span id="more"></span>
+### <font style="color:rgb(47, 48, 52);">磁盘挂载分析</font>
+<font style="color:rgb(47, 48, 52);">首先我们来分析一下需要对哪些目录进行挂载</font>
+
+<ul>
+<li><font style="color:rgb(47, 48, 52);">首先，master和worker节点都需要一个容器运行时环境，目前还是建议直接使用docker。使用docker的时候我们都知道，容器数据是存储在</font><font style="color:rgb(47, 48, 52);background-color:rgb(240, 240, 240);">&#x2F;var&#x2F;lib&#x2F;docker</font><font style="color:rgb(47, 48, 52);"> 这个目录的，在使用和操作过程中数据量会逐渐增加，所以建议为 </font><font style="color:rgb(47, 48, 52);background-color:rgb(240, 240, 240);">&#x2F;var&#x2F;lib&#x2F;docker</font><font style="color:rgb(47, 48, 52);"> 单独挂载一个硬盘。</font></li>
+<li><font style="color:rgb(47, 48, 52);">master节点需要安装etcd，etcd数据会存放在</font><font style="color:rgb(47, 48, 52);background-color:rgb(240, 240, 240);">&#x2F;var&#x2F;lib&#x2F;etcd</font><font style="color:rgb(47, 48, 52);"> 这个目录下，生产环境也建议直接给它挂载一个硬盘。</font></li>
+<li><font style="color:rgb(47, 48, 52);">worker节点会安装ceph存储，ceph存储需要有一块未格式化的磁盘。</font></li>
+</ul>
+<p><font style="color:rgb(47, 48, 52);">所以结论如下：</font></p>
+<ol>
+<li><font style="color:rgb(47, 48, 52);">master 节点需要分两个区，分别需要挂载 </font><font style="color:rgb(47, 48, 52);background-color:rgb(240, 240, 240);">&#x2F;var&#x2F;lib&#x2F;docker</font><font style="color:rgb(47, 48, 52);"> 和</font><font style="color:rgb(47, 48, 52);background-color:rgb(240, 240, 240);">&#x2F;var&#x2F;lib&#x2F;etcd</font><font style="color:rgb(47, 48, 52);"> 目录</font></li>
+<li><font style="color:rgb(47, 48, 52);">worker 节点需要分两个区，一个用于挂载</font><font style="color:rgb(47, 48, 52);background-color:rgb(240, 240, 240);">&#x2F;var&#x2F;lib&#x2F;docker</font><font style="color:rgb(47, 48, 52);"> 目录，一块不要格式化并将其预留给ceph。</font></li>
+<li><font style="color:rgb(47, 48, 52);">对于负载均衡器这个没要求，直接使用系统盘即可</font></li>
+</ol>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<h3 id="磁盘分区挂载实战"><a href="#磁盘分区挂载实战" class="headerlink" title="磁盘分区挂载实战"></a><font style="color:rgb(47, 48, 52);">磁盘分区挂载实战</font></h3><h4 id="master节点"><a href="#master节点" class="headerlink" title="master节点"></a><font style="color:rgb(47, 48, 52);">master节点</font></h4><p><font style="color:rgb(47, 48, 52);">master节点我们预备了160G，其中docker使用100G，etcd使用60G（其实etcd只需要10G左右就够了）</font></p>
+<p><font style="color:rgb(47, 48, 52);">1. 查看磁盘挂载情况 </font><font style="color:rgb(47, 48, 52);background-color:rgb(240, 240, 240);">df -h</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[root@k8s-master1 ~]# df -h 文件系统   容量 已用 可用 已用% 挂载点 devtmpfs    16G  0 16G  0% /dev tmpfs     16G  0 16G  0% /dev/shm tmpfs     16G 33M 16G  1% /run tmpfs     16G  0 16G  0% /sys/fs/cgroup /dev/vda2   49G 2.4G 47G  5% / /dev/vda1  1014M 142M 873M 14% /boot tmpfs     3.2G  0 3.2G  0% /run/user/0 </span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(47, 48, 52);"></font></p>
+<p><font style="color:rgb(47, 48, 52);">可以发现并未有磁盘挂载。</font></p>
+<p><font style="color:rgb(47, 48, 52);"></font></p>
+<p><font style="color:rgb(47, 48, 52);">2. 查看磁盘分区情况</font></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1663299219613-15d9c675-2d4f-40db-9dad-d6827f6cdf94.png"></p>
+<p><font style="color:rgb(47, 48, 52);">可以发现有两块空磁盘，</font><font style="color:rgb(47, 48, 52);background-color:rgb(240, 240, 240);">&#x2F;dev&#x2F;vdb</font><font style="color:rgb(47, 48, 52);"> 100G 和 </font><font style="color:rgb(47, 48, 52);background-color:rgb(240, 240, 240);">&#x2F;dev&#x2F;vdc</font><font style="color:rgb(47, 48, 52);"> 60G，接下来需要对其进行分区格式化</font></p>
+<p><font style="color:rgb(47, 48, 52);"></font></p>
+<p><font style="color:rgb(47, 48, 52);">3. 对2块磁盘分别进行分区，以</font><font style="color:rgb(47, 48, 52);background-color:rgb(240, 240, 240);">&#x2F;dev&#x2F;vdb</font><font style="color:rgb(47, 48, 52);"> 为例</font></p>
+<p><font style="color:rgb(47, 48, 52);">使用fdisk命令进行分区</font></p>
+<p>fdisk &#x2F;dev&#x2F;vdb <font style="color:rgb(47, 48, 52);"></font></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1663299219332-5afb6ffe-f20a-4616-bf67-c067292aa155.png"></p>
+<p><strong><font style="color:rgb(47, 48, 52);">说明：</font></strong></p>
+<ul>
+<li><font style="color:rgb(47, 48, 52);">输入n进行分区，d删除分区</font></li>
+<li><font style="color:rgb(47, 48, 52);">选择分区类型</font></li>
+<li><font style="color:rgb(47, 48, 52);">这里有两个选项（推荐选择P）：</font></li>
+<li><font style="color:rgb(47, 48, 52);">p：主分区 linux上主分区最多能有4个，如果要分多个区那就依次选1、2、3、4</font></li>
+<li><font style="color:rgb(47, 48, 52);">e：扩展分区 linux上扩展分区只能有1个，扩展分区创建后不能直接使用，还要在扩展分区上创建逻辑分区。</font></li>
+<li><font style="color:rgb(47, 48, 52);">选择分区个数，可以选择4个分区，这里只需要分成1个区</font></li>
+<li><font style="color:rgb(47, 48, 52);">设置柱面，这里选择默认值就可以，这里所有空间就会被分到一个区</font></li>
+<li><font style="color:rgb(47, 48, 52);">输入w，写入分区表，进行分区</font></li>
+</ul>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><strong><font style="color:rgb(47, 48, 52);">对&#x2F;dev&#x2F;vdb分完区后按照同样的步骤对&#x2F;dev&#x2F;vdc进行分区。</font></strong></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">分区完成后再次查看磁盘分区情况</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">fdisk -l </span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(47, 48, 52);">可以看到磁盘&#x2F;dev&#x2F;vdb下已经有了一个分区&#x2F;dev&#x2F;vdb1，而&#x2F;dev&#x2F;vdc磁盘下也已经有了分区&#x2F;dev&#x2F;vdc1</font></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">4. 使用mkfs.ext4对分区后的磁盘进行格式化</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">[root@k8s-master1 ~]# mkfs.ext4 /dev/vdb1</span><br><span class="line">mke2fs 1.42.9 (28-Dec-2013)</span><br><span class="line">/dev/vdb1 已经挂载;will not make a 文件系统 here!</span><br><span class="line"></span><br><span class="line">​</span><br><span class="line">[root@k8s-master1 ~]# mkfs.ext4 /dev/vdc1</span><br><span class="line">mke2fs 1.42.9 (28-Dec-2013)</span><br><span class="line">/dev/vdc1 已经挂载;will not make a 文件系统 here!</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(47, 48, 52);"></font></p>
+<p><font style="color:rgb(47, 48, 52);">5. 挂载磁盘</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"># 查看格式化后的UUID，用于挂载使用</span><br><span class="line">[root@k8s-master1 ~]# blkid</span><br><span class="line"></span><br><span class="line">/dev/vda2: UUID=&quot;5a00d5df-880e-4f76-b61d-d712d353e8d9&quot; TYPE=&quot;xfs&quot;</span><br><span class="line">/dev/vda1: UUID=&quot;2d10a1a9-0917-4162-a4ed-589a26127875&quot; TYPE=&quot;xfs&quot;</span><br><span class="line">/dev/vdb1: UUID=&quot;b3351cfa-5623-4633-b4a6-9baab1d8e2d4&quot; TYPE=&quot;ext4&quot;</span><br><span class="line">/dev/vdc1: UUID=&quot;3543f03e-0b16-4271-8601-f7f0b2222a92&quot; TYPE=&quot;ext4&quot;</span><br><span class="line">/dev/sr0: UUID=&quot;2022-03-30-15-13-58-00&quot; LABEL=&quot;config-2&quot; TYPE=&quot;iso9660&quot;</span><br></pre></td></tr></table></figure>
+
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">可以看到格式化后的vdb1的uuid为</font><font style="color:rgb(47, 48, 52);background-color:rgb(240, 240, 240);">b3351cfa-5623-4633-b4a6-9baab1d8e2d4</font><font style="color:rgb(47, 48, 52);"> ，vdc1的UUID为</font><font style="color:rgb(47, 48, 52);background-color:rgb(240, 240, 240);">3543f03e-0b16-4271-8601-f7f0b2222a92</font></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">编辑&#x2F;etc&#x2F;fstab文件，在最后一行加上需要挂载的磁盘UUID，并设置磁盘格式为ext4</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">UUID=5a00d5df-880e-4f76-b61d-d712d353e8d9 /           xfs  defaults    0 0</span><br><span class="line">UUID=2d10a1a9-0917-4162-a4ed-589a26127875 /boot         xfs  defaults    0 0</span><br><span class="line">UUID=b3351cfa-5623-4633-b4a6-9baab1d8e2d4 /var/lib/docker    ext4 defaults    0 0</span><br><span class="line">UUID=3543f03e-0b16-4271-8601-f7f0b2222a92 /var/lib/etcd     ext4 defaults    0 0</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(47, 48, 52);"></font></p>
+<p><font style="color:rgb(47, 48, 52);">分区挂载完成后手动挂载确认配置是否正常</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mount -a</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(47, 48, 52);"></font></p>
+<p><font style="color:rgb(47, 48, 52);">6. 验证分区挂载情况，可以看到已经给</font><font style="color:rgb(47, 48, 52);background-color:rgb(240, 240, 240);">&#x2F;var&#x2F;lib&#x2F;docker</font><font style="color:rgb(47, 48, 52);"> 和</font><font style="color:rgb(47, 48, 52);background-color:rgb(240, 240, 240);">&#x2F;var&#x2F;lib&#x2F;etcd</font><font style="color:rgb(47, 48, 52);"> 挂载了分区</font></p>
+<p><font style="color:rgb(47, 48, 52);"></font></p>
+<p>[root@dev-k8s-master3 ~]# </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">[root@dev-k8s-master3 ~]# df -h</span><br><span class="line"></span><br><span class="line">文件系统 容量 已用 可用 已用% 挂载点</span><br><span class="line">devtmpfs 16G 0 16G 0% /dev</span><br><span class="line">tmpfs 16G 0 16G 0% /dev/shm</span><br><span class="line">tmpfs 16G 8.6M 16G 1% /run</span><br><span class="line">tmpfs 16G 0 16G 0% /sys/fs/cgroup</span><br><span class="line">/dev/vda2 49G 2.4G 47G 5% /</span><br><span class="line">/dev/vdc1 59G 53M 56G 1% /var/lib/etcd</span><br><span class="line">/dev/vdb1 99G 61M 94G 1% /var/lib/docker</span><br><span class="line">/dev/vda1 1014M 142M 873M 14% /boot</span><br><span class="line">tmpfs 3.2G 0 3.2G 0% /run/user/0</span><br></pre></td></tr></table></figure>
+
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">7. 挂载完成后建议重启机器</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[root@k8s-slb ~]# reboot </span><br></pre></td></tr></table></figure>
+
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<h4 id="挂载worker节点"><a href="#挂载worker节点" class="headerlink" title="挂载worker节点"></a><font style="color:rgb(47, 48, 52);">挂载worker节点</font></h4><p><font style="color:rgb(47, 48, 52);">worker节点挂载操作同master节点，不过需要注意的是，worker节点总共500G，我们需要将其中的100G独立分区并挂载到</font><font style="color:rgb(47, 48, 52);background-color:rgb(240, 240, 240);">&#x2F;var&#x2F;lib&#x2F;docker</font><font style="color:rgb(47, 48, 52);"> ，剩下的400G用作ceph存储使用，切记ceph的分区不需要格式化。</font></p>
+<p><font style="color:rgb(47, 48, 52);">主体操作就不再演示，只需要关注将其分成2个区即可。</font></p>
+<p><strong><font style="color:rgb(47, 48, 52);">第一次分区：</font></strong></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1663299219308-cac34298-6f31-48f9-8757-5a32cdaebbe0.png"></p>
+<font style="color:rgb(47, 48, 52);">  
+</font>
+
+<p><font style="color:rgb(47, 48, 52);">分区完成后查看分区情况</font></p>
+<p>[root@k8s-worker1 ~]# </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">[root@k8s-worker1 ~]# fdisk -l</span><br><span class="line"></span><br><span class="line">磁盘 /dev/vda：53.7 GB, 53687091200 字节，104857600 个扇区</span><br><span class="line">Units = 扇区 of 1 * 512 = 512 bytes</span><br><span class="line">扇区大小(逻辑/物理)：512 字节 / 512 字节</span><br><span class="line">I/O 大小(最小/最佳)：512 字节 / 512 字节</span><br><span class="line">磁盘标签类型：dos</span><br><span class="line">磁盘标识符：0x000cdd7e</span><br><span class="line"></span><br><span class="line">设备 Boot Start End Blocks Id System</span><br><span class="line">/dev/vda1 * 2048 2099199 1048576 83 Linux</span><br><span class="line">/dev/vda2 2099200 104857566 51379183+ 83 Linux</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">磁盘 /dev/vdb：536.9 GB, 536870912000 字节，1048576000 个扇区</span><br><span class="line">Units = 扇区 of 1 * 512 = 512 bytes</span><br><span class="line">扇区大小(逻辑/物理)：512 字节 / 512 字节</span><br><span class="line">I/O 大小(最小/最佳)：512 字节 / 512 字节</span><br><span class="line">磁盘标签类型：dos</span><br><span class="line">磁盘标识符：0xb098e2fd</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">设备 Boot Start End Blocks Id System</span><br><span class="line">/dev/vdb1 2048 209717247 104857600 83 Linux</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(47, 48, 52);"></font></p>
+<p><font style="color:rgb(47, 48, 52);">可以看到vdb总共536.9G，一个分区</font><font style="color:rgb(47, 48, 52);background-color:rgb(240, 240, 240);">&#x2F;dev&#x2F;vdb1</font><font style="color:rgb(47, 48, 52);"> 占用了100G空间，接着再对vdb进行第二次分区。</font></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1663299219447-bd82d493-5e0c-40d5-8e41-47b77963418a.png"></p>
+<p><font style="color:rgb(47, 48, 52);">剩下的步骤如格式化、挂载、验证可以参考master节点。</font></p>
+<p><strong><font style="color:rgb(47, 48, 52);">切记，只需要挂载第一个100G的分区给&#x2F;var&#x2F;lib&#x2F;docker，剩下的分区预留给ceph，不需要格式化挂载。</font></strong></p>
+<p><strong><font style="color:rgb(47, 48, 52);">小结</font></strong></p>
+<p><font style="color:rgb(47, 48, 52);">正常情况下磁盘分区是运维工程师的事，不过有句话叫 “技多不压身”，多会点总不是坏事。</font></p>
+<p><font style="color:rgb(47, 48, 52);">各位在生产环境使用docker的时候一定不要忘记分区挂载，或者提醒运维给你挂载好目录。还记得很早之前我们使用docker部署应用，由于未给其单独挂载磁盘，</font><font style="color:rgb(47, 48, 52);background-color:rgb(240, 240, 240);">&#x2F;var&#x2F;lib&#x2F;docker</font><font style="color:rgb(47, 48, 52);"> 默认使用系统盘空间，用了一段时间后就经常收到磁盘空间报警（系统盘只分配了50G），现在想起来还是觉得好笑。</font></p>
+<p><font style="color:rgb(47, 48, 52);"></font></p>
+<p><font style="color:rgb(47, 48, 52);"></font></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/k8s/" rel="tag"><i class="fa fa-tag"></i> k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/09/28/%E4%BD%BF%E7%94%A8openjdk_8-jdk-alpine%20%E6%97%A0%E5%AD%97%E4%BD%93%E5%BA%93%E5%A4%84%E7%90%86/" rel="prev" title="使用openjdk_8-jdk-alpine 无字体库处理">
+      <i class="fa fa-chevron-left"></i> 使用openjdk_8-jdk-alpine 无字体库处理
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/10/01/%E5%AE%89%E8%A3%85Docker%EF%BC%88%E4%BA%8C%EF%BC%89/" rel="next" title="安装Docker（二）">
+      安装Docker（二） <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A3%81%E7%9B%98%E5%88%86%E5%8C%BA%E6%8C%82%E8%BD%BD%E5%AE%9E%E6%88%98"><span class="nav-number">1.</span> <span class="nav-text">磁盘分区挂载实战</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#master%E8%8A%82%E7%82%B9"><span class="nav-number">1.1.</span> <span class="nav-text">master节点</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8C%82%E8%BD%BDworker%E8%8A%82%E7%82%B9"><span class="nav-number">1.2.</span> <span class="nav-text">挂载worker节点</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="139"
+      src="/images/custom/avatar.jpg">
+  <p class="site-author-name" itemprop="name">139</p>
+  <div class="site-description" itemprop="description">一个普通的JAVA开发的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">117</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">42</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+  <div class="beian"><a href="https://beian.miit.gov.cn/" rel="noopener" target="_blank">浙ICP备2023004484号-1 </a>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">139</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8335634399768246"
+     crossorigin="anonymous"></script>
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

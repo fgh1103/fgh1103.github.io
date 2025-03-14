@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8335634399768246"
+     crossorigin="anonymous"></script>
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="镜像相关 搜索镜像docker search如docker search nginx Docker就会在Docker Hub中搜索含有“nginx”这个关键词的镜像仓库 下载镜像docker pull">
+<meta property="og:type" content="article">
+<meta property="og:title" content="docker 重要命令">
+<meta property="og:url" content="http://example.com/2023/09/23/docker%20%E9%87%8D%E8%A6%81%E5%91%BD%E4%BB%A4/index.html">
+<meta property="og:site_name" content="进学阁">
+<meta property="og:description" content="镜像相关 搜索镜像docker search如docker search nginx Docker就会在Docker Hub中搜索含有“nginx”这个关键词的镜像仓库 下载镜像docker pull">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1647423839196-5bafe965-5c14-430b-869b-965d0bcce00b.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1647423839136-92601c18-9258-4708-ab17-8e56bd2be5ec.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1647423839136-3e731f39-50b1-4140-83a4-98e1ef98cb17.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1647423839178-4385c85c-c5f1-4a44-83c5-d53b487d8ee3.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1647423839219-f579fcb6-2c77-4007-b225-8af2bfe4d374.png">
+<meta property="article:published_time" content="2023-09-23T10:46:51.000Z">
+<meta property="article:modified_time" content="2025-03-14T10:01:31.443Z">
+<meta property="article:author" content="139">
+<meta property="article:tag" content="docker">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1647423839196-5bafe965-5c14-430b-869b-965d0bcce00b.png">
+
+<link rel="canonical" href="http://example.com/2023/09/23/docker%20%E9%87%8D%E8%A6%81%E5%91%BD%E4%BB%A4/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>docker 重要命令 | 进学阁</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">进学阁</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">业精于勤荒于嬉，行成于思毁于随</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">42</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">17</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">117</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/09/23/docker%20%E9%87%8D%E8%A6%81%E5%91%BD%E4%BB%A4/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          docker 重要命令
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-09-23 18:46:51" itemprop="dateCreated datePublished" datetime="2023-09-23T18:46:51+08:00">2023-09-23</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-14 18:01:31" itemprop="dateModified" datetime="2025-03-14T18:01:31+08:00">2025-03-14</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Docker/" itemprop="url" rel="index"><span itemprop="name">Docker</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="镜像相关"><a href="#镜像相关" class="headerlink" title="镜像相关"></a><font style="color:rgb(81, 81, 81);">镜像相关</font></h3><ul>
+<li><font style="color:rgb(58, 58, 58);">搜索镜像</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker search</font><font style="color:rgb(58, 58, 58);"><br></font><font style="color:rgb(58, 58, 58);">如</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker search nginx</font><font style="color:rgb(58, 58, 58);"> </font><font style="color:rgb(58, 58, 58);">Docker就会在Docker Hub中搜索含有“nginx”这个关键词的镜像仓库</font><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1647423839196-5bafe965-5c14-430b-869b-965d0bcce00b.png"></li>
+<li><font style="color:rgb(58, 58, 58);">下载镜像</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker pull</font><font style="color:rgb(58, 58, 58);">  <span id="more"></span>
+</font><font style="color:rgb(58, 58, 58);">如</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker pull nginx</font><font style="color:rgb(58, 58, 58);"> </font><font style="color:rgb(58, 58, 58);">Docker就会在Docker Hub中下载含有“nginx”最新版本的镜像 当然也可以使用</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker pull reg.jianzh5.com&#x2F;nginx:1.7.9</font><font style="color:rgb(58, 58, 58);"> </font><font style="color:rgb(58, 58, 58);">下载指定仓库地址标签的nginx镜像</font></li>
+<li><font style="color:rgb(58, 58, 58);">列出镜像</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker images</font><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1647423839136-92601c18-9258-4708-ab17-8e56bd2be5ec.png"></li>
+<li><font style="color:rgb(58, 58, 58);">删除镜像</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker rmi</font><font style="color:rgb(58, 58, 58);">如</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker rmi hello-world</font><font style="color:rgb(58, 58, 58);">删除我们刚刚下载的</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">hello-world</font><font style="color:rgb(58, 58, 58);">镜像</font></li>
+<li><font style="color:rgb(58, 58, 58);">构建镜像</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker build</font><font style="color:rgb(58, 58, 58);">通过Dockerfile构建镜像，这个我们等下再拿出来详细说明。</font></li>
+</ul>
+<h3 id="容器相关"><a href="#容器相关" class="headerlink" title="容器相关"></a><font style="color:rgb(81, 81, 81);">容器相关</font></h3><ul>
+<li><font style="color:rgb(58, 58, 58);">新建启动镜像</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker run</font><font style="color:rgb(58, 58, 58);"><br></font><font style="color:rgb(58, 58, 58);">这个命令是我们最常用的命令，主要使用以下几个选项<br></font><font style="color:rgb(58, 58, 58);">① -d选项：表示后台运行<br></font><font style="color:rgb(58, 58, 58);">② -P选项（大写）：随机端口映射<br></font><font style="color:rgb(58, 58, 58);">③ -p选项（小写）：指定端口映射,</font><strong><font style="color:black;">前面是宿主机端口后面是容器端口</font></strong><font style="color:rgb(58, 58, 58);">，如</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker run nginx -p 8080:80</font><font style="color:rgb(58, 58, 58);">，将容器的80端口映射到宿主机的8080端口，然后使用</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">localhost:8080</font><font style="color:rgb(58, 58, 58);">就可以查看容器中nginx的欢迎页了<br></font><font style="color:rgb(58, 58, 58);">④ -v选项：挂载宿主机目录，</font><strong><font style="color:black;">前面是宿主机目录，后面是容器目录</font></strong><font style="color:rgb(58, 58, 58);">,如</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker run -d -p 80:80 -v &#x2F;dockerData&#x2F;nginx&#x2F;conf&#x2F;nginx.conf:&#x2F;etc&#x2F;nginx&#x2F;nginx.conf nginx</font><font style="color:rgb(58, 58, 58);"> </font><font style="color:rgb(58, 58, 58);">挂载宿主机的</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">&#x2F;dockerData&#x2F;nginx&#x2F;conf&#x2F;nginx.conf</font><font style="color:rgb(58, 58, 58);">的文件，这样就可以在宿主机对</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">nginx</font><font style="color:rgb(58, 58, 58);">进行参数配置了,注意目录需要用绝对路径，不要使用相对路径，如果宿主机目录不存在则会自动创建。<br></font><font style="color:rgb(58, 58, 58);">⑤–rm : 停止容器后会直接删除容器，这个参数在测试是很有用，如</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker run -d -p 80:80 –rm nginx</font><font style="color:rgb(58, 58, 58);"><br></font><font style="color:rgb(58, 58, 58);">⑥–name : 给容器起个名字，否则会出现一长串的自定义名称如</font><font style="color:rgb(58, 58, 58);"> </font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker run -name niginx -d -p 80:80 - nginx</font></li>
+<li><font style="color:rgb(58, 58, 58);">列出容器</font><font style="color:rgb(58, 58, 58);"> </font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker ps</font><font style="color:rgb(58, 58, 58);"><br></font><font style="color:rgb(58, 58, 58);">这个命令可以列出当前运行的容器，使用</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">-a</font><font style="color:rgb(58, 58, 58);">参数后列出所有的容器（包括已停止的）</font><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1647423839136-3e731f39-50b1-4140-83a4-98e1ef98cb17.png"></li>
+<li><font style="color:rgb(58, 58, 58);">停止容器</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker stop</font><font style="color:rgb(58, 58, 58);"><br></font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker stop 5d034c6ea010</font><font style="color:rgb(58, 58, 58);"> </font><font style="color:rgb(58, 58, 58);">后面跟的是容器ID，也可以使用容器名称</font></li>
+<li><font style="color:rgb(58, 58, 58);">启动停止的容器</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker start</font><font style="color:rgb(58, 58, 58);"><br></font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker run</font><font style="color:rgb(58, 58, 58);">是新建容器并启动，</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker start</font><font style="color:rgb(58, 58, 58);"> </font><font style="color:rgb(58, 58, 58);">是启动停止的容器,如</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker start 5d034c6ea010</font></li>
+<li><font style="color:rgb(58, 58, 58);">重启容器</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker restart</font><font style="color:rgb(58, 58, 58);"><br></font><font style="color:rgb(58, 58, 58);">此命令执行的过程实际是先执行</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker stop</font><font style="color:rgb(58, 58, 58);">,然后再执行</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker start</font><font style="color:rgb(58, 58, 58);">，如</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker restart 5d034c6ea010</font></li>
+<li><font style="color:rgb(58, 58, 58);">进入容器</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker exec -it 容器id &#x2F;bin&#x2F;bash</font><font style="color:rgb(58, 58, 58);"><br></font><font style="color:rgb(58, 58, 58);">如</font><font style="color:rgb(58, 58, 58);"> </font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker exec -it 5d034c6ea010 &#x2F;bin&#x2F;bash</font><font style="color:rgb(58, 58, 58);">,就相当于进入了容器本身的操作系统</font></li>
+<li><font style="color:rgb(58, 58, 58);">删除容器</font><font style="color:rgb(58, 58, 58);"> </font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker rm</font><font style="color:rgb(58, 58, 58);"><br></font><font style="color:rgb(58, 58, 58);">如</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker rm 5d034c6ea010</font><font style="color:rgb(58, 58, 58);"> </font><font style="color:rgb(58, 58, 58);">后面跟的是容器ID,删除容器之前需要先停止容器运行</font></li>
+<li><font style="color:rgb(58, 58, 58);">数据拷贝</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker cp</font><font style="color:rgb(58, 58, 58);"><br></font><font style="color:rgb(58, 58, 58);">此命令用于容器与宿主机之间进行数据拷贝,如</font><font style="color:rgb(58, 58, 58);"> </font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker cp 5d034c6ea010: &#x2F;etc&#x2F;nginx&#x2F;nginx.conf &#x2F;dockerData&#x2F;nginx&#x2F;conf&#x2F;nginx.conf</font><font style="color:rgb(58, 58, 58);"> </font><font style="color:rgb(58, 58, 58);">将容器的目录文件拷贝到宿主机指定位置,容器ID可以替换成容器名。</font></li>
+</ul>
+<h3 id="命令实战"><a href="#命令实战" class="headerlink" title="命令实战"></a><font style="color:rgb(81, 81, 81);">命令实战</font></h3><p><font style="color:rgb(58, 58, 58);">如果我们需要一个nginx容器，并且需要在宿主机上直接修改nginx的配置文件、默认主页，在宿主机可以实时看到容器nginx的日志。我们可以按照如下的方式一步一步完成。</font></p>
+<ul>
+<li><font style="color:rgb(58, 58, 58);">使用–rm参数启动容器，方便删除<br></font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker run -d -p 8081:80 –name nginx –rm nginx</font></li>
+<li><font style="color:rgb(58, 58, 58);">进入容器，查看容器中配置文件、项目文件、日志文件的目录地址<br></font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker exec -it 9123b67e428e &#x2F;bin&#x2F;bash</font></li>
+<li><font style="color:rgb(58, 58, 58);">导出容器的配置文件<br></font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker cp nginx:&#x2F;etc&#x2F;nginx&#x2F;nginx.conf &#x2F;dockerData&#x2F;nginx&#x2F;conf&#x2F;nginx.conf</font><font style="color:rgb(58, 58, 58);">导出配置文件 nginx.conf</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker cp nginx:&#x2F;etc&#x2F;nginx&#x2F;conf.d &#x2F;dockerData&#x2F;nginx&#x2F;conf&#x2F;conf.d</font><font style="color:rgb(58, 58, 58);">导出配置目录 conf.d</font></li>
+<li><font style="color:rgb(58, 58, 58);">停止容器</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">docker stop 9123b67e428e</font><font style="color:rgb(58, 58, 58);">，由于加了–rm参数，容器会自动删除</font></li>
+<li><font style="color:rgb(58, 58, 58);">再以如下命令启动容器，完成目录挂载</font><font style="color:rgb(1, 1, 1);">docker run -d -p 8081:80 –name nginx \  -v &#x2F;dockerData&#x2F;nginx&#x2F;conf&#x2F;nginx.conf:&#x2F;etc&#x2F;nginx&#x2F;nginx.conf \  -v &#x2F;dockerData&#x2F;nginx&#x2F;conf&#x2F;conf.d:&#x2F;etc&#x2F;nginx&#x2F;conf.d \  -v &#x2F;dockerData&#x2F;nginx&#x2F;www:&#x2F;usr&#x2F;share&#x2F;nginx&#x2F;html \  -v &#x2F;dockerData&#x2F;nginx&#x2F;logs:&#x2F;var&#x2F;log&#x2F;nginx nginx  </font></li>
+<li><font style="color:rgb(58, 58, 58);">访问服务器地址</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);"><a target="_blank" rel="noopener" href="http://192.168.136.129:8081/">http://192.168.136.129:8081/</a></font><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1647423839178-4385c85c-c5f1-4a44-83c5-d53b487d8ee3.png"><font style="color:rgb(58, 58, 58);">访问报错，这时候就进入宿主机的日志目录</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">&#x2F;dockerData&#x2F;nginx&#x2F;logs</font><font style="color:rgb(58, 58, 58);">查看日志<br></font><font style="color:rgb(58, 58, 58);">2019&#x2F;11&#x2F;23 10:08:11 [error] 6#6: *1 directory index of “&#x2F;usr&#x2F;share&#x2F;nginx&#x2F;html&#x2F;“ is forbidden, client: 192.168.136.1, server: localhost, request: “GET &#x2F; HTTP&#x2F;1.1”, host: “192.168.136.129:8081”<br></font><font style="color:rgb(58, 58, 58);">因为</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">&#x2F;usr&#x2F;share&#x2F;nginx&#x2F;html&#x2F;</font><font style="color:rgb(58, 58, 58);">被挂载到了服务器上面的</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">&#x2F;dockerData&#x2F;nginx&#x2F;www</font><font style="color:rgb(58, 58, 58);">目录下，原来的欢迎页面在</font><font style="color:rgb(155, 110, 35);background-color:rgb(255, 245, 227);">dockerData&#x2F;nginx&#x2F;www</font><font style="color:rgb(58, 58, 58);">是没有的，所有就报错了，这里我们随便建一个。</font></li>
+<li><font style="color:rgb(58, 58, 58);">建立默认主页</font><font style="color:rgb(117, 113, 94);">#</font><font style="color:rgb(1, 1, 1);">打开项目文件  </font></li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">cd /dockerData/nginx/www</span><br><span class="line">#使用vim 创建并编辑文件</span><br><span class="line">vi index.html</span><br><span class="line">#此时我们会进入vim界面，按 i 插入，然后输入</span><br><span class="line">&lt;h1 align=&quot;center&quot;&gt;Hello,Welcome to Docker World&lt;/h1&gt;</span><br><span class="line">#输入完后，按 esc，然后输入 :wq</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><font style="color:rgb(1, 1, 1);">  
+</font></li>
+<li><font style="color:rgb(58, 58, 58);">再次访问浏览器地址</font><img src="https://cdn.fbbizyy.com/yuque/0/2022/png/25873401/1647423839219-f579fcb6-2c77-4007-b225-8af2bfe4d374.png"></li>
+</ul>
+<h1 id="用于清理磁盘，删除关闭的容器、无用的数据卷和网络，以及无tag的镜像。"><a href="#用于清理磁盘，删除关闭的容器、无用的数据卷和网络，以及无tag的镜像。" class="headerlink" title="用于清理磁盘，删除关闭的容器、无用的数据卷和网络，以及无tag的镜像。"></a>用于清理磁盘，删除关闭的容器、无用的数据卷和网络，以及无tag的镜像。</h1><p>docker system prune </p>
+<h1 id="可以将没有容器使用-Docker-镜像都删掉。注意，这两个命令会把你暂时关闭的容器，以及暂时没有用到的Docker镜像都删掉了-docker-system-prune-a"><a href="#可以将没有容器使用-Docker-镜像都删掉。注意，这两个命令会把你暂时关闭的容器，以及暂时没有用到的Docker镜像都删掉了-docker-system-prune-a" class="headerlink" title="可以将没有容器使用 Docker 镜像都删掉。注意，这两个命令会把你暂时关闭的容器，以及暂时没有用到的Docker镜像都删掉了 docker system prune -a"></a>可以将没有容器使用 Docker 镜像都删掉。注意，这两个命令会把你暂时关闭的容器，以及暂时没有用到的Docker镜像都删掉了 docker system prune -a</h1>
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/docker/" rel="tag"><i class="fa fa-tag"></i> docker</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/09/22/%E5%AE%89%E8%A3%85Docker/" rel="prev" title="安装Docker">
+      <i class="fa fa-chevron-left"></i> 安装Docker
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/09/24/Dockerfile/" rel="next" title="Dockerfile">
+      Dockerfile <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%95%9C%E5%83%8F%E7%9B%B8%E5%85%B3"><span class="nav-number">1.</span> <span class="nav-text">镜像相关</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%B9%E5%99%A8%E7%9B%B8%E5%85%B3"><span class="nav-number">2.</span> <span class="nav-text">容器相关</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%91%BD%E4%BB%A4%E5%AE%9E%E6%88%98"><span class="nav-number">3.</span> <span class="nav-text">命令实战</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%94%A8%E4%BA%8E%E6%B8%85%E7%90%86%E7%A3%81%E7%9B%98%EF%BC%8C%E5%88%A0%E9%99%A4%E5%85%B3%E9%97%AD%E7%9A%84%E5%AE%B9%E5%99%A8%E3%80%81%E6%97%A0%E7%94%A8%E7%9A%84%E6%95%B0%E6%8D%AE%E5%8D%B7%E5%92%8C%E7%BD%91%E7%BB%9C%EF%BC%8C%E4%BB%A5%E5%8F%8A%E6%97%A0tag%E7%9A%84%E9%95%9C%E5%83%8F%E3%80%82"><span class="nav-number"></span> <span class="nav-text">用于清理磁盘，删除关闭的容器、无用的数据卷和网络，以及无tag的镜像。</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%AF%E4%BB%A5%E5%B0%86%E6%B2%A1%E6%9C%89%E5%AE%B9%E5%99%A8%E4%BD%BF%E7%94%A8-Docker-%E9%95%9C%E5%83%8F%E9%83%BD%E5%88%A0%E6%8E%89%E3%80%82%E6%B3%A8%E6%84%8F%EF%BC%8C%E8%BF%99%E4%B8%A4%E4%B8%AA%E5%91%BD%E4%BB%A4%E4%BC%9A%E6%8A%8A%E4%BD%A0%E6%9A%82%E6%97%B6%E5%85%B3%E9%97%AD%E7%9A%84%E5%AE%B9%E5%99%A8%EF%BC%8C%E4%BB%A5%E5%8F%8A%E6%9A%82%E6%97%B6%E6%B2%A1%E6%9C%89%E7%94%A8%E5%88%B0%E7%9A%84Docker%E9%95%9C%E5%83%8F%E9%83%BD%E5%88%A0%E6%8E%89%E4%BA%86-docker-system-prune-a"><span class="nav-number"></span> <span class="nav-text">可以将没有容器使用 Docker 镜像都删掉。注意，这两个命令会把你暂时关闭的容器，以及暂时没有用到的Docker镜像都删掉了 docker system prune -a</span></a></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="139"
+      src="/images/custom/avatar.jpg">
+  <p class="site-author-name" itemprop="name">139</p>
+  <div class="site-description" itemprop="description">一个普通的JAVA开发的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">117</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">42</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+  <div class="beian"><a href="https://beian.miit.gov.cn/" rel="noopener" target="_blank">浙ICP备2023004484号-1 </a>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">139</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8335634399768246"
+     crossorigin="anonymous"></script>
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
