@@ -192,86 +192,6 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/14/Redis%E4%B8%BB%E4%BB%8E%E6%9E%B6%E6%9E%84/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/custom/avatar.jpg">
-      <meta itemprop="name" content="139">
-      <meta itemprop="description" content="一个普通的JAVA开发的博客">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="进学阁">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2025/03/14/Redis%E4%B8%BB%E4%BB%8E%E6%9E%B6%E6%9E%84/" class="post-title-link" itemprop="url">未命名</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2025-03-14 13:48:48 / 修改时间：13:48:51" itemprop="dateCreated datePublished" datetime="2025-03-14T13:48:48+08:00">2025-03-14</time>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p><font style="background:#F8CED3;color:#70000D">Redis</font></p>
-<p><font style="color:rgb(34, 34, 34);">单机的 Redis，能够承载的 QPS 大概就在上万到几万不等。对于缓存来说，一般都是用来支撑</font><strong><font style="color:rgb(34, 34, 34);">读高并发</font></strong><font style="color:rgb(34, 34, 34);">的。因此架构做成主从(master-slave)架构，一主多从，主负责写，并且将数据复制到其它的 slave 节点，从节点负责读。所有的</font><strong><font style="color:rgb(34, 34, 34);">读请求全部走从节点</font></strong><font style="color:rgb(34, 34, 34);">。这样也可以很轻松实现水平扩容，</font><strong><font style="color:rgb(34, 34, 34);">支撑读高并发</font></strong><font style="color:rgb(34, 34, 34);">。</font></p>
-<p><img src="https://cdn.nlark.com/yuque/0/2023/png/396745/1676981173688-47d05856-4a20-4709-9f23-ee252ae8f2d9.png"></p>
-<p><font style="color:rgb(34, 34, 34);">Redis replication -&gt; 主从架构 -&gt; 读写分离 -&gt; 水平扩容支撑读高并发</font></p>
-<h2 id="Redis-replication-的核心机制"><a href="#Redis-replication-的核心机制" class="headerlink" title="Redis replication 的核心机制"></a><font style="color:rgb(53, 179, 120);">Redis replication 的核心机制</font></h2><ul>
-<li><font style="color:rgb(34, 34, 34);">Redis 采用</font><strong><font style="color:rgb(34, 34, 34);">异步方式</font></strong><font style="color:rgb(34, 34, 34);">复制数据到 slave 节点，不过 Redis2.8 开始，slave node 会周期性地确认自己每次复制的数据量；</font></li>
-<li><font style="color:rgb(34, 34, 34);">一个 master node 是可以配置多个 slave node 的；</font></li>
-<li><font style="color:rgb(34, 34, 34);">slave node 也可以连接其他的 slave node；</font></li>
-<li><font style="color:rgb(34, 34, 34);">slave node 做复制的时候，不会 block master node 的正常工作；</font></li>
-<li><font style="color:rgb(34, 34, 34);">slave node 在做复制的时候，也不会 block 对自己的查询操作，它会用旧的数据集来提供服务；但是复制完成的时候，需要删除旧数据集，加载新数据集，这个时候就会暂停对外服务了；</font></li>
-<li><font style="color:rgb(34, 34, 34);">slave node 主要用来进行横向扩容，做读写分离，扩容的 slave node 可以提高读的吞吐量。</font></li>
-</ul>
-<p><font style="color:rgb(34, 34, 34);">注意，如果采用了主从架构，那么建议必须</font><strong><font style="color:rgb(34, 34, 34);">开启</font></strong><font style="color:rgb(34, 34, 34);"> master node 的持久化，不建议用 slave node 作为 master node 的数据热备，因为那样的话，如果关掉 master 的持久化，可能在 master 宕机重启的时候数据是空的，然后可能一经过复制， slave node 的数据也丢了。</font></p>
-<p><font style="color:rgb(34, 34, 34);">另外，master 的各种备份方案，也需要做。万一本地的所有文件丢失了，从备份中挑选一份 rdb 去恢复 master，这样才能</font><strong><font style="color:rgb(34, 34, 34);">确保启动的时候，是有数据的</font></strong><font style="color:rgb(34, 34, 34);">，即使采用了后续讲解的高可用机制，slave node 可以自动接管 master node，但也可能 sentinel 还没检测到 master failure，master node 就自动重启了，还是可能导致上面所有的 slave node 数据被清空。</font></p>
-<h2 id="Redis-主从复制的核心原理"><a href="#Redis-主从复制的核心原理" class="headerlink" title="Redis 主从复制的核心原理"></a><font style="color:rgb(53, 179, 120);">Redis 主从复制的核心原理</font></h2><p><font style="color:rgb(34, 34, 34);">当启动一个 slave node 的时候，它会发送一个 <code>PSYNC</code> 命令给 master node。</font></p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2025/03/14/Redis%E4%B8%BB%E4%BB%8E%E6%9E%B6%E6%9E%84/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://example.com/2025/01/15/%E9%A1%B9%E7%9B%AE%E5%8F%AF%E7%94%A8%E6%80%A7%E6%8F%90%E5%8D%87%E6%80%9D%E8%80%83/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -842,6 +762,90 @@
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2024/11/06/Redis-Pipeline%E7%AE%A1%E9%81%93/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/11/06/Redis%E4%B8%BB%E4%BB%8E%E6%9E%B6%E6%9E%84/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2024/11/06/Redis%E4%B8%BB%E4%BB%8E%E6%9E%B6%E6%9E%84/" class="post-title-link" itemprop="url">Redis主从架构</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-11-06 00:00:00" itemprop="dateCreated datePublished" datetime="2024-11-06T00:00:00+08:00">2024-11-06</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-14 14:09:04" itemprop="dateModified" datetime="2025-03-14T14:09:04+08:00">2025-03-14</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/redis/" itemprop="url" rel="index"><span itemprop="name">redis</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p><font style="background:#F8CED3;color:#70000D">Redis</font></p>
+<p><font style="color:rgb(34, 34, 34);">单机的 Redis，能够承载的 QPS 大概就在上万到几万不等。对于缓存来说，一般都是用来支撑</font><strong><font style="color:rgb(34, 34, 34);">读高并发</font></strong><font style="color:rgb(34, 34, 34);">的。因此架构做成主从(master-slave)架构，一主多从，主负责写，并且将数据复制到其它的 slave 节点，从节点负责读。所有的</font><strong><font style="color:rgb(34, 34, 34);">读请求全部走从节点</font></strong><font style="color:rgb(34, 34, 34);">。这样也可以很轻松实现水平扩容，</font><strong><font style="color:rgb(34, 34, 34);">支撑读高并发</font></strong><font style="color:rgb(34, 34, 34);">。</font></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2023/png/396745/1676981173688-47d05856-4a20-4709-9f23-ee252ae8f2d9.png"></p>
+<p><font style="color:rgb(34, 34, 34);">Redis replication -&gt; 主从架构 -&gt; 读写分离 -&gt; 水平扩容支撑读高并发</font></p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2024/11/06/Redis%E4%B8%BB%E4%BB%8E%E6%9E%B6%E6%9E%84/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
