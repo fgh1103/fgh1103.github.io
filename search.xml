@@ -4629,8 +4629,7 @@
     <title>项目可用性提升思考</title>
     <url>/2025/01/15/%E9%A1%B9%E7%9B%AE%E5%8F%AF%E7%94%A8%E6%80%A7%E6%8F%90%E5%8D%87%E6%80%9D%E8%80%83/</url>
     <content><![CDATA[<p>项目是一个在运营中的项目，在后续新功能开发的时候线上总是出现各种问题，让客户对项目的信任度降低很多，也对公司造成了经济损失。于是就有了一个任务，提高项目的可用性。经过一段时间的实践，总结出来了一个公式</p>
-<p>:::info<br><strong>提升系统的稳定性&#x3D;减少故障的数量+提升发现速度+提升恢复速度</strong></p>
-<p>:::</p>
+<p><strong>提升系统的稳定性&#x3D;减少故障的数量+提升发现速度+提升恢复速度</strong></p>
 <h3 id="减少故障的数量"><a href="#减少故障的数量" class="headerlink" title="减少故障的数量"></a>减少故障的数量</h3><p>线上的故障主要分为依赖类故障、变更类故障、容量类故障、固件类故障</p>
 <h4 id="依赖类故障"><a href="#依赖类故障" class="headerlink" title="依赖类故障"></a>依赖类故障</h4><p><font style="color:rgba(0, 0, 0, 0.9);">在现在分布式架构盛行的背景下，一个微服务的直接和间接依赖是非常多的。下游的某个服务、缓存、DB如果挂了，自己就会被“牵连”，无法提供正常服务。</font></p>
 <span id="more"></span>
@@ -7514,6 +7513,984 @@
       </categories>
       <tags>
         <tag>mysql</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Docker安装Redis并启动</title>
+    <url>/2024/11/06/Docker%E5%AE%89%E8%A3%85Redis%E5%B9%B6%E5%90%AF%E5%8A%A8/</url>
+    <content><![CDATA[<p><font style="background:#F8CED3;color:#70000D">Docker</font> <font style="background:#DBF1B7;color:#2A4200">Redis</font></p>
+<h2 id="1、拉取Redis镜像"><a href="#1、拉取Redis镜像" class="headerlink" title="1、拉取Redis镜像"></a>1、拉取Redis镜像</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">docker pull redis</span><br></pre></td></tr></table></figure>
+
+<h2 id="2、启动Redis实例"><a href="#2、启动Redis实例" class="headerlink" title="2、启动Redis实例"></a>2、启动Redis实例</h2><p><font style="color:#F5222D;">不推荐</font>直接启动，请使用设置密码启动的命令</p>
+<span id="more"></span>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">docker run -d -p 6379:6379 --name redis redis</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2020/png/396745/1609297031729-040af577-c558-46f5-82ca-c8341d8b212b.png"></p>
+<p>设置访问密码的启动（**<font style="color:#52C41A;">推荐</font>**）</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">docker run --name redis -d -p 6379:6379 -d redis --requirepass <span class="string">&quot;You Password&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="3、一键式部署启动脚本"><a href="#3、一键式部署启动脚本" class="headerlink" title="3、一键式部署启动脚本"></a>3、一键式部署启动脚本</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">docker run -d -p 6379:6379 --name redis redis --requirepass <span class="string">&quot;You Password&quot;</span></span><br></pre></td></tr></table></figure>
+
+]]></content>
+      <categories>
+        <category>redis</category>
+      </categories>
+      <tags>
+        <tag>redis</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Redis Cluster 配置</title>
+    <url>/2024/11/06/Redis%20Cluster%20%E9%85%8D%E7%BD%AE/</url>
+    <content><![CDATA[<p><font style="background:#F8CED3;color:#70000D">Redis</font><font style="background:#DBF1B7;color:#2A4200">Redis Cluster</font></p>
+<p><font style="color:rgba(0, 0, 0, 0.85);">Redis Cluster 集群相关配置，使用集群方式的必须重视和知晓。别嘴上原理说的头头是道，而集群有哪些配置？如何配置让集群快到飞起，实现真正的高可用却一头雾水，通过下面这些配置详解也让你对集群原理更加深刻。</font></p>
+<h3 id="cluster-enabled"><a href="#cluster-enabled" class="headerlink" title="cluster-enabled"></a><font style="color:rgb(244, 138, 0);">cluster-enabled</font></h3><p><font style="color:rgba(0, 0, 0, 0.85);">普通的 Redis 实例是不能成为集群的一员，想要将该节点加入 Redis Cluster，需要设置 </font><font style="color:rgb(244, 138, 0);">cluster-enabled yes</font><font style="color:rgba(0, 0, 0, 0.85);">。</font></p>
+<h3 id="cluster-config-file"><a href="#cluster-config-file" class="headerlink" title="cluster-config-file"></a><font style="color:rgb(244, 138, 0);">cluster-config-file</font></h3><p><font style="color:rgb(244, 138, 0);">cluster-config-file nodes-6379.conf</font><font style="color:rgba(0, 0, 0, 0.85);"> 指定集群中的每个节点文件。</font></p>
+<p><font style="color:rgba(0, 0, 0, 0.85);">集群中的每个节点都有一个配置文件，这个文件并不是让程序员编辑的，是自己创建和更新的，每个节点都要使用不同的配置文件，一定要确保同一个集群中的不同节点使用的是不同的文件。</font></p>
+<span id="more"></span>
+<h3 id="cluster-node-timeout"><a href="#cluster-node-timeout" class="headerlink" title="cluster-node-timeout"></a><font style="color:rgb(244, 138, 0);">cluster-node-timeout</font></h3><p><font style="color:rgba(0, 0, 0, 0.85);">设置集群节点不可用的最大超时时间，节点失效检测。集群中当一个节点向另一个节点发送PING命令，但是目标节点未在给定的时限内返回PING命令的回复时，那么发送命令的节点会将目标节点标记为PFAIL(possible failuer，可能已失效)；</font></p>
+<p><font style="color:rgba(0, 0, 0, 0.85);">如果master 节点超过这个时间还是无响应，则用它的从节点将启动故障迁移，升级成主节点。</font></p>
+<p><strong><font style="color:rgba(0, 0, 0, 0.85);">注意，任何一个节点在这个时间之内如果还是没有连上大部分的主节点，则此节点将停止接收任何请求。</font></strong></p>
+<p><font style="color:rgba(0, 0, 0, 0.85);">默认配置是 </font><font style="color:rgb(244, 138, 0);">cluster-node-timeout 15000</font><font style="color:rgba(0, 0, 0, 0.85);">，单位是毫秒数。</font></p>
+<h3 id="cluster-port"><a href="#cluster-port" class="headerlink" title="cluster-port"></a><font style="color:rgb(244, 138, 0);">cluster-port</font></h3><p><font style="color:rgba(0, 0, 0, 0.85);">该端口是集群总线监听 TCP 连接的端口，默认配置为 </font><font style="color:rgb(244, 138, 0);">cluster-port 0</font><font style="color:rgba(0, 0, 0, 0.85);">，我就会把端口绑定为客户端命令端口 + 10000（客户端端口默认 6379，所以绑定为 16379 作为集群总线端口）。每个 Redis Cluster 节点都需要开放两个端口：</font></p>
+<ul>
+<li><font style="color:rgba(0, 0, 0, 0.55);">一个用于服务于客户端的 TCP 端口，比如 6379.</font></li>
+<li><font style="color:rgba(0, 0, 0, 0.55);">另一个称为集群总线端口，节点使用集群总线进行故障监测、配置更新、故障转移等。客户端不要与集群总线端口通信，另外请确保在防火墙打开这两个端口，否则 Redis 集群接地那将无法通信。</font></li>
+</ul>
+<h3 id="cluster-replica-validity-factor"><a href="#cluster-replica-validity-factor" class="headerlink" title="cluster-replica-validity-factor"></a><font style="color:rgb(244, 138, 0);">cluster-replica-validity-factor</font></h3><p><font style="color:rgba(0, 0, 0, 0.85);">该配置用于决定当 Redis Cluster 集群中，一个 master 宕机后，如何选择一个 slave 节点完成故障转移自动恢复（failover）。如果设置为 0 ，则不管 slave 与 master 之间断开多久，都认为自己有资格成为 master。</font></p>
+<p><font style="color:rgba(0, 0, 0, 0.85);">下面提供了两种方式来评估 slave 的数据是否太旧。</font></p>
+<ul>
+<li><font style="color:rgba(0, 0, 0, 0.55);">如果有多个 slave 可以 failover，他们之间会通过交换信息选出拥有拥有最大复制 offset 的 slave 节点。</font></li>
+<li><font style="color:rgba(0, 0, 0, 0.55);">每个 slave 节点计算上次与 master 节点交互的时间，这个交互包含最后一次 </font><font style="color:rgb(244, 138, 0);">ping</font><font style="color:rgba(0, 0, 0, 0.55);"> 操作、master 节点传输过来的写指令、上次可 master 断开的时间等。如果上次交互的时间过去很久，那么这个节点就不会发起 failover。</font></li>
+</ul>
+<p><font style="color:rgba(0, 0, 0, 0.85);">针对第二点，交互时间可以通过配置定义，如果 slave 与 master 上次交互的时间大于 </font><font style="color:rgb(244, 138, 0);">(node-timeout * cluster-replica-validity-factor) + repl-ping-replica-period</font><font style="color:rgba(0, 0, 0, 0.85);">，该 slave 就不会发生 failover。</font></p>
+<p><font style="color:rgba(0, 0, 0, 0.85);">例如，&#96;&#96;node-timeout &#x3D; 30</font><font style="color:rgb(244, 138, 0);"> 秒，</font><font style="color:rgba(0, 0, 0, 0.85);">cluster-replica-validity-factor&#x3D;10</font><font style="color:rgb(244, 138, 0);">，</font><font style="color:rgba(0, 0, 0, 0.85);">repl-ping-slave-period&#x3D;10&#96;秒， 表示slave节点与master节点上次交互时间已经过去了310秒，那么slave节点就不会做failover。</font></p>
+<p><font style="color:rgba(0, 0, 0, 0.85);">调大 </font><font style="color:rgb(244, 138, 0);">cluster-replica-validity-factor</font><font style="color:rgba(0, 0, 0, 0.85);"> 则允许存储过旧数据的 slave 节点提升为 master，调小的话可能会导致没有 slave 节点可以升为 master 节点。</font></p>
+<p><strong><font style="color:rgba(0, 0, 0, 0.85);">考虑高可用，建议大家设置为 </font><strong><strong><font style="color:rgb(244, 138, 0);">cluster-replica-validity-factor 0</font></strong></strong><font style="color:rgba(0, 0, 0, 0.85);">。</font></strong></p>
+<h3 id="cluster-migration-barrier"><a href="#cluster-migration-barrier" class="headerlink" title="cluster-migration-barrier"></a><font style="color:rgb(244, 138, 0);">cluster-migration-barrier</font></h3><p><font style="color:rgba(0, 0, 0, 0.85);">没有 slave 节点的 master 节点称为孤儿 master节点，这个配置就是用于防止出现裸奔的 master。</font></p>
+<p><font style="color:rgba(0, 0, 0, 0.85);">当某个 master 的 slave 节点宕机后，集群会从其他 master 中选出一个富余的 slave 节点迁移过来，确保每个 master 节点至少有一个 slave 节点，防止当孤立 master 节点宕机时，没有slave节点可以升为 master 导致集群不可用。</font></p>
+<p><font style="color:rgba(0, 0, 0, 0.85);">默认配置为 </font><font style="color:rgb(244, 138, 0);">cluster-migration-barrier 1</font><font style="color:rgba(0, 0, 0, 0.85);">，是一个迁移临界值。</font></p>
+<p><font style="color:rgba(0, 0, 0, 0.85);">含义是：迁移后 master 节点至少还有 1 个 slave 节点才能做迁移操作。比如 master A 节点有2个以上 slave 节点 ，当集群出现孤儿 master B 节点时，A 节点富余的 slave 节点可以迁移到 master B 节点上。</font></p>
+<p><font style="color:rgba(0, 0, 0, 0.85);">生产环境建议维持默认值，最大可能保证高可用，设置为非常大的值或者配置  </font><font style="color:rgb(244, 138, 0);">cluster-allow-replica-migration no</font><font style="color:rgba(0, 0, 0, 0.85);"> 禁用自动迁移功能。</font></p>
+<p><font style="color:rgb(244, 138, 0);">cluster-allow-replica-migration</font><font style="color:rgba(0, 0, 0, 0.85);"> 默认配置为 yes，表示允许自动迁移。</font></p>
+<h3 id="cluster-require-full-coverage"><a href="#cluster-require-full-coverage" class="headerlink" title="cluster-require-full-coverage"></a><font style="color:rgb(244, 138, 0);">cluster-require-full-coverage</font></h3><p><font style="color:rgba(0, 0, 0, 0.85);">默认配置是 </font><font style="color:rgb(244, 138, 0);">yes</font><font style="color:rgba(0, 0, 0, 0.85);">，表示为当 redis cluster 发现至少还有一个 哈希槽没有被分配时禁止查询操作。</font></p>
+<p><font style="color:rgba(0, 0, 0, 0.85);">这就会导致集群部分宕机，整个集群就不可用了，当所有哈希槽都有分配，集群会自动变为可用状态。</font></p>
+<p><font style="color:rgba(0, 0, 0, 0.85);">如果你希望 cluster 的子集依然可用，配置成 </font><font style="color:rgb(244, 138, 0);">cluster-require-full-coverage yes</font><font style="color:rgba(0, 0, 0, 0.85);">。</font></p>
+<h3 id="cluster-replica-no-failover"><a href="#cluster-replica-no-failover" class="headerlink" title="cluster-replica-no-failover"></a><font style="color:rgb(244, 138, 0);">cluster-replica-no-failover</font></h3><p><font style="color:rgba(0, 0, 0, 0.85);">默认配置为 </font><font style="color:rgb(244, 138, 0);">no</font><font style="color:rgba(0, 0, 0, 0.85);">，当配置成 </font><font style="color:rgb(244, 138, 0);">yes</font><font style="color:rgba(0, 0, 0, 0.85);">，在master 宕机时，slave 不会做故障转移升为 master。</font></p>
+<p><strong><font style="color:rgba(0, 0, 0, 0.85);">这个配置在多数据中心的情况下会很有用，你可能希望某个数据中心永远不要升级为 master 节点，否则 master 节点就漂移到其他数据中心了。</font></strong></p>
+<h3 id="cluster-allow-reads-when-down"><a href="#cluster-allow-reads-when-down" class="headerlink" title="cluster-allow-reads-when-down"></a><font style="color:rgb(244, 138, 0);">cluster-allow-reads-when-down</font></h3><p><font style="color:rgba(0, 0, 0, 0.85);">默认是 </font><font style="color:rgb(244, 138, 0);">no</font><font style="color:rgba(0, 0, 0, 0.85);">，表示当集群因主节点数量达不到最小值或者哈希槽没有完全分配而被标记为失效时，节点将停止所有客户端请求。</font></p>
+<p><font style="color:rgba(0, 0, 0, 0.85);">设置成 </font><font style="color:rgb(244, 138, 0);">yes</font><font style="color:rgba(0, 0, 0, 0.85);">，则允许集群失效的情况下依然可从节点中读取数据，保证了高可用。</font></p>
+<h3 id="cluster-allow-pubsubshard-when-down"><a href="#cluster-allow-pubsubshard-when-down" class="headerlink" title="cluster-allow-pubsubshard-when-down"></a><font style="color:rgb(244, 138, 0);">cluster-allow-pubsubshard-when-down</font></h3><p><font style="color:rgba(0, 0, 0, 0.85);">配置成 </font><font style="color:rgb(244, 138, 0);">yes</font><font style="color:rgba(0, 0, 0, 0.85);">，表示当集群因主节点数量达不到最小值或者哈希槽没有完全分配而被标记为失效时，pub&#x2F;sub 依然可以正常运行。</font></p>
+<h3 id="cluster-link-sendbuf-limit"><a href="#cluster-link-sendbuf-limit" class="headerlink" title="cluster-link-sendbuf-limit"></a><font style="color:rgb(244, 138, 0);">cluster-link-sendbuf-limit</font></h3><p><font style="color:rgba(0, 0, 0, 0.85);">设置每个集群总线连接的发送字节缓冲区的内存使用限制，超过限制缓冲区将被清空（主要为了防止发送缓冲区发送给慢速连接时无限延长时间的问题）。</font></p>
+<p><font style="color:rgba(0, 0, 0, 0.85);">默认禁用，建议最小设置1gb，这样默认情况下集群连接缓冲区可以容纳至少一pubsub消息（client-query-buffer-limit 默认是1gb）；</font></p>
+]]></content>
+      <categories>
+        <category>redis</category>
+      </categories>
+      <tags>
+        <tag>redis</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Redis Linux安装</title>
+    <url>/2024/11/06/Redis%20Linux%E5%AE%89%E8%A3%85/</url>
+    <content><![CDATA[<h2 id="1-下载官方镜像"><a href="#1-下载官方镜像" class="headerlink" title="1.下载官方镜像"></a>1.下载官方镜像</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">docker pull redis:7.0.5</span><br></pre></td></tr></table></figure>
+
+<h2 id="2-准备安装位置"><a href="#2-准备安装位置" class="headerlink" title="2.准备安装位置"></a>2.准备安装位置</h2><p>执行命令</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">mkdir -p /opt/server/redis/conf</span><br><span class="line">chmod -R 777 /opt/server/redis</span><br><span class="line">cd /opt/server/redis/conf</span><br><span class="line">wget http://download.redis.io/redis-stable/redis.conf #下载redis的配置文件 (跳此步,直接下一步,我已经写好配置了)</span><br><span class="line">vim redis.conf #更改配置文件, 让宿主机可以访问redis-server #保存并退出</span><br></pre></td></tr></table></figure>
+<span id="more"></span>
+<h2 id="3-编辑配置文件"><a href="#3-编辑配置文件" class="headerlink" title="3.编辑配置文件"></a>3.编辑配置文件</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">#开启保护</span><br><span class="line">protected-mode yes</span><br><span class="line">#开启远程连接 </span><br><span class="line">#bind 127.0.0.1 </span><br><span class="line">#自定义密码</span><br><span class="line">requirepass 12345678 </span><br><span class="line">port 6379</span><br><span class="line">timeout 0</span><br><span class="line"># 900s内至少一次写操作则执行bgsave进行RDB持久化</span><br><span class="line">save 900 1 </span><br><span class="line">save 300 10</span><br><span class="line">save 60 10000</span><br><span class="line">rdbcompression yes</span><br><span class="line">dbfilename dump.rdb</span><br><span class="line">dir /data</span><br><span class="line">appendonly yes</span><br><span class="line">appendfsync everysec</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(77, 77, 77);">参数说明:</font></p>
+<p><font style="color:rgb(77, 77, 77);">1.修改保护模式protected-mode yes 默认为yes 可以跳过这一步</font></p>
+<p><font style="color:rgb(77, 77, 77);">Redis protected-mode属性解读</font></p>
+<p><font style="color:rgb(77, 77, 77);">设置外部网络连接redis服务，设置说明如下：</font></p>
+<p><font style="color:rgb(77, 77, 77);">a.关闭protected-mode模式，此时外部网络可以直接访问</font></p>
+<p><font style="color:rgb(77, 77, 77);">b.开启protected-mode保护模式，需配置bind ip 和设置访问密码 redis3.2版本后新增protected-mode配置，默认是yes，即开启。</font></p>
+<p><font style="color:rgb(77, 77, 77);">2.把bind 127.0.0.1 注释掉 #bind 127.0.0.1, 这样所有的ip都可以访问了</font></p>
+<p><font style="color:rgb(77, 77, 77);">3.设置密码（根据自己的需要）</font></p>
+<p><font style="color:rgb(77, 77, 77);">设置永久密码的方法</font></p>
+<p><font style="color:rgb(77, 77, 77);">找到requirepass foobared 把foobared改为自己的登陆密码 这里我设置为123456</font></p>
+<p><font style="color:rgb(77, 77, 77);">requirepass 123456</font></p>
+<p><font style="color:rgb(77, 77, 77);">设置临时密码的方法</font></p>
+<p><font style="color:rgb(77, 77, 77);">在连接上redis后,config set设置临时密码,redis重启后,设置的密码就失效了</font></p>
+<p><font style="color:rgb(77, 77, 77);">127.0.0.1:6379&gt; config set requirepass “123456” # 设置密码为123456<br></font><font style="color:rgb(77, 77, 77);">OK<br></font><font style="color:rgb(77, 77, 77);">127.0.0.1:6379&gt; config get requirepass # 获取密码的值</font></p>
+<p><font style="color:rgb(77, 77, 77);">“requirepass”<br></font><font style="color:rgb(77, 77, 77);">“123456”</font></p>
+<p><font style="color:rgb(77, 77, 77);">4.appendonly yes #开启AOF模式</font></p>
+<h2 id="4-书写docker-compose文件"><a href="#4-书写docker-compose文件" class="headerlink" title="4.书写docker-compose文件"></a>4.书写docker-compose文件</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">version: &#x27;3.8&#x27;</span><br><span class="line">services:</span><br><span class="line">  myredis:</span><br><span class="line">    container_name: myredis</span><br><span class="line">    image: redis:7.0.5</span><br><span class="line">    restart: always</span><br><span class="line">    ports:</span><br><span class="line">      - 6379:6379</span><br><span class="line">    privileged: true</span><br><span class="line">    command: redis-server /etc/redis/redis.conf --appendonly yes</span><br><span class="line">    volumes:</span><br><span class="line">      - ./redis/data:/data</span><br><span class="line">      - ./redis/conf/redis.conf:/etc/redis/redis.conf</span><br><span class="line">    networks:</span><br><span class="line">      - myweb</span><br><span class="line">networks:</span><br><span class="line">  myweb:</span><br><span class="line">    driver: bridge</span><br></pre></td></tr></table></figure>
+
+<h2 id="启动容器"><a href="#启动容器" class="headerlink" title="启动容器"></a><font style="color:rgb(77, 77, 77);">启动容器</font></h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"># docker-compose up -d # 后台启动</span><br><span class="line"># docker ps -a #查看启动的容器</span><br></pre></td></tr></table></figure>
+
+]]></content>
+      <categories>
+        <category>redis</category>
+      </categories>
+      <tags>
+        <tag>redis</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Redis 运维工具</title>
+    <url>/2024/11/06/Redis%20%E8%BF%90%E7%BB%B4%E5%B7%A5%E5%85%B7/</url>
+    <content><![CDATA[<h1 id="10-1-运维脚本"><a href="#10-1-运维脚本" class="headerlink" title="10.1 运维脚本"></a>10.1 运维脚本</h1><p>[root@db01 ~]# cat redis_shell.sh</p>
+<span id="more"></span>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line">#!<span class="regexp">/bin/</span>bash</span><br><span class="line"><span class="title function_">USAG</span>(<span class="params"></span>)&#123;</span><br><span class="line"> echo <span class="string">&quot;sh $0 &#123;start|stop|restart|login|ps|tail&#125; PORT&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span> [ <span class="string">&quot;$#&quot;</span> = <span class="number">1</span> ]</span><br><span class="line">then</span><br><span class="line"> <span class="variable constant_">REDIS_PORT</span>=<span class="string">&#x27;6379&#x27;</span></span><br><span class="line">elif</span><br><span class="line"> [ <span class="string">&quot;$#&quot;</span> = <span class="number">2</span> -a -z <span class="string">&quot;$(echo &quot;</span>$2<span class="string">&quot;|sed &#x27;s#[0-9]##g&#x27;)&quot;</span> ]</span><br><span class="line">then</span><br><span class="line"> <span class="variable constant_">REDIS_PORT</span>=<span class="string">&quot;$2&quot;</span></span><br><span class="line"><span class="keyword">else</span></span><br><span class="line"> <span class="variable constant_">USAG</span></span><br><span class="line"> exit <span class="number">0</span></span><br><span class="line">fi</span><br><span class="line"></span><br><span class="line"><span class="variable constant_">REDIS_IP</span>=$(hostname -I|awk <span class="string">&#x27;&#123;print $1&#125;&#x27;</span>)</span><br><span class="line"><span class="variable constant_">PATH_DIR</span>=<span class="regexp">/opt/</span>redis_cluster/redis_$&#123;<span class="variable constant_">REDIS_PORT</span>&#125;/</span><br><span class="line"><span class="variable constant_">PATH_CONF</span>=<span class="regexp">/opt/</span>redis_cluster/redis_$&#123;<span class="variable constant_">REDIS_PORT</span>&#125;/conf/redis_$&#123;<span class="variable constant_">REDIS_PORT</span>&#125;.<span class="property">conf</span></span><br><span class="line"><span class="variable constant_">PATH_LOG</span>=<span class="regexp">/opt/</span>redis_cluster/redis_$&#123;<span class="variable constant_">REDIS_PORT</span>&#125;/logs/redis_$&#123;<span class="variable constant_">REDIS_PORT</span>&#125;.<span class="property">log</span></span><br><span class="line"></span><br><span class="line"><span class="title function_">CMD_START</span>(<span class="params"></span>)&#123;</span><br><span class="line">      redis-server $&#123;<span class="variable constant_">PATH_CONF</span>&#125;</span><br><span class="line">     &#125;</span><br><span class="line">     <span class="title function_">CMD_SHUTDOWN</span>(<span class="params"></span>)&#123;</span><br><span class="line">      redis-cli -c -h $&#123;<span class="variable constant_">REDIS_IP</span>&#125; -p $&#123;<span class="variable constant_">REDIS_PORT</span>&#125; shutdown</span><br><span class="line">     &#125;</span><br><span class="line">     <span class="title function_">CMD_LOGIN</span>(<span class="params"></span>)&#123;</span><br><span class="line">      redis-cli -c -h $&#123;<span class="variable constant_">REDIS_IP</span>&#125; -p $&#123;<span class="variable constant_">REDIS_PORT</span>&#125;</span><br><span class="line">     &#125;</span><br><span class="line">     <span class="title function_">CMD_PS</span>(<span class="params"></span>)&#123;</span><br><span class="line">      ps -ef|grep redis</span><br><span class="line">     &#125;</span><br><span class="line">     <span class="title function_">CMD_TAIL</span>(<span class="params"></span>)&#123;</span><br><span class="line">      tail -f $&#123;<span class="variable constant_">PATH_LOG</span>&#125;</span><br><span class="line">     &#125;</span><br><span class="line">         </span><br><span class="line"><span class="keyword">case</span> $1 <span class="keyword">in</span></span><br><span class="line">     start)</span><br><span class="line">     <span class="variable constant_">CMD_START</span></span><br><span class="line">     <span class="variable constant_">CMD_PS</span></span><br><span class="line">     ;;</span><br><span class="line">     stop)</span><br><span class="line">     <span class="variable constant_">CMD_SHUTDOWN</span></span><br><span class="line">     <span class="variable constant_">CMD_PS</span></span><br><span class="line">     ;;</span><br><span class="line">     restart)</span><br><span class="line">     <span class="variable constant_">CMD_START</span></span><br><span class="line">     <span class="variable constant_">CMD_SHUTDOWN</span></span><br><span class="line">     <span class="variable constant_">CMD_PS</span></span><br><span class="line">     ;;</span><br><span class="line">     login)</span><br><span class="line">     <span class="variable constant_">CMD_LOGIN</span></span><br><span class="line">     ;;</span><br><span class="line">     ps)</span><br><span class="line">     <span class="variable constant_">CMD_PS</span></span><br><span class="line">     ;;</span><br><span class="line">     tail)</span><br><span class="line">     <span class="variable constant_">CMD_TAIL</span></span><br><span class="line">     ;;</span><br><span class="line">     *)</span><br><span class="line">     <span class="variable constant_">USAG</span></span><br><span class="line">    esac</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="10-2-数据导入导出工具"><a href="#10-2-数据导入导出工具" class="headerlink" title="10.2 数据导入导出工具"></a>10.2 数据导入导出工具</h1><p>需求背景 </p>
+<p>刚切换到 redis 集群的时候肯定会面临数据导入的问题,所以这里推荐使用 redis-migrate-tool 工具来导 入单节点数据到集群里</p>
+<p><a href="http://www.oschina.net/p/redis-migrate-tool">官方地址：</a></p>
+<p>安装工具:</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line">cd /opt/redis_cluster/</span><br><span class="line">git clone <span class="attr">https</span>:<span class="comment">//github.com/vipshop/redis-migrate-tool.git</span></span><br><span class="line">cd redis-migrate-tool/</span><br><span class="line">autoreconf -fvi</span><br><span class="line">./configure</span><br><span class="line">make &amp;&amp; make install</span><br></pre></td></tr></table></figure>
+
+<p>创建配置文件</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line">[root@db01 ~]# cat redis_6379_to_6380.<span class="property">conf</span></span><br><span class="line">[source]</span><br><span class="line"><span class="attr">type</span>: single</span><br><span class="line"><span class="attr">servers</span>:</span><br><span class="line">- <span class="number">10.0</span><span class="number">.0</span><span class="number">.51</span>:<span class="number">6379</span></span><br><span class="line">[target]</span><br><span class="line"><span class="attr">type</span>: redis cluster</span><br><span class="line"><span class="attr">servers</span>:</span><br><span class="line">- <span class="number">10.0</span><span class="number">.0</span><span class="number">.51</span>:<span class="number">6380</span></span><br><span class="line">[common]</span><br><span class="line"><span class="attr">listen</span>: <span class="number">0.0</span><span class="number">.0</span><span class="number">.0</span>:<span class="number">8888</span></span><br><span class="line"><span class="attr">source_safe</span>: <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<p>生成测试数据</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line">[root@db01 ~]# cat input_key.<span class="property">sh</span></span><br><span class="line">#!<span class="regexp">/bin/</span>bash</span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> $(seq <span class="number">1</span> <span class="number">1000</span>)</span><br><span class="line"><span class="keyword">do</span></span><br><span class="line"> redis-cli -c -h db01 -p <span class="number">6379</span> set k_$&#123;i&#125; v_$&#123;i&#125; &amp;&amp; echo <span class="string">&quot;set k_$&#123;i&#125; is ok&quot;</span></span><br><span class="line">done</span><br></pre></td></tr></table></figure>
+
+<p>执行导入命令</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line">[root@db01 ~]# redis-migrate-tool -c redis_6379_to_6380.<span class="property">conf</span> </span><br></pre></td></tr></table></figure>
+
+<p>数据校验</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line">[root@db01 ~]# redis-migrate-tool -c redis_6379_to_6380.<span class="property">conf</span> -C redis_check</span><br></pre></td></tr></table></figure>
+
+<h1 id="10-3-分析键值大小"><a href="#10-3-分析键值大小" class="headerlink" title="10.3 分析键值大小"></a>10.3 分析键值大小</h1><figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line">需求背景</span><br><span class="line">redis 的内存使用太大键值太多,不知道哪些键值占用的容量比较大,而且在线分析会影响性能.</span><br><span class="line"></span><br><span class="line">安装工具</span><br><span class="line">yum install python-pip gcc python-devel</span><br><span class="line">cd /opt/</span><br><span class="line">git clone <span class="attr">https</span>:<span class="comment">//github.com/sripathikrishnan/redis-rdb-tools</span></span><br><span class="line">cd redis-rdb-tools</span><br><span class="line">python setup.<span class="property">py</span> install</span><br><span class="line"></span><br><span class="line">使用方法</span><br><span class="line">cd /data/redis_cluster/redis_6380/</span><br><span class="line">rdb -c memory redis_6380.<span class="property">rdb</span> -f redis_6380.<span class="property">rdb</span>.<span class="property">csv</span></span><br><span class="line"></span><br><span class="line">分析 rdb 并导出</span><br><span class="line">awk -F <span class="string">&#x27;,&#x27;</span> <span class="string">&#x27;&#123;print $4,$2,$3,$1&#125;&#x27;</span> redis_6380.<span class="property">rdb</span>.<span class="property">csv</span> |sort &gt; <span class="number">6380.</span>txt</span><br></pre></td></tr></table></figure>
+
+<h1 id="10-4-监控过期键"><a href="#10-4-监控过期键" class="headerlink" title="10.4 监控过期键"></a>10.4 监控过期键</h1><figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line">需求背景</span><br><span class="line">因为开发重复提交，导致电商网站优惠卷过期时间失效</span><br><span class="line">问题分析</span><br><span class="line">如果一个键已经设置了过期时间，这时候在 set 这个键，过期时间就会取消</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line">解决思路</span><br><span class="line">如何在不影响机器性能的前提下批量获取需要监控键过期时间</span><br><span class="line"><span class="number">1.</span><span class="title class_">Keys</span> * 查出来匹配的键名。然后循环读取 ttl 时间</span><br><span class="line"><span class="number">2.</span>scan * 范围查询键名。然后循环读取 ttl 时间</span><br><span class="line"><span class="title class_">Keys</span> 重操作，会影响服务器性能，除非是不提供服务的从节点</span><br><span class="line"><span class="title class_">Scan</span> 负担小，但是需要去多次才能取完，需要写脚本</span><br></pre></td></tr></table></figure>
+
+<p>脚本内容：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line">cat 01get_key.<span class="property">sh</span></span><br><span class="line">#!<span class="regexp">/bin/</span>bash</span><br><span class="line">key_num=<span class="number">0</span></span><br><span class="line">&gt; key_name.<span class="property">log</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> line <span class="keyword">in</span> $(cat key_list.<span class="property">txt</span>)</span><br><span class="line"><span class="keyword">do</span></span><br><span class="line">   <span class="keyword">while</span> <span class="literal">true</span></span><br><span class="line">   <span class="keyword">do</span></span><br><span class="line">      scan_num=$(redis-cli -h <span class="number">192.168</span><span class="number">.47</span><span class="number">.75</span> -p <span class="number">6380</span> <span class="variable constant_">SCAN</span> $&#123;key_num&#125; match $&#123;line&#125;\* count</span><br><span class="line">     <span class="number">1000</span>|awk <span class="string">&#x27;NR==1&#123;print $0&#125;&#x27;</span>)</span><br><span class="line">      key_name=$(redis-cli -h <span class="number">192.168</span><span class="number">.47</span><span class="number">.75</span> -p <span class="number">6380</span> <span class="variable constant_">SCAN</span> $&#123;key_num&#125; match $&#123;line&#125;\* count</span><br><span class="line">     <span class="number">1000</span>|awk <span class="string">&#x27;NR&gt;1&#123;print $0&#125;&#x27;</span>)</span><br><span class="line">      echo $&#123;key_name&#125;|xargs -n <span class="number">1</span> &gt;&gt; key_name.<span class="property">log</span></span><br><span class="line">      ((key_num=scan_num))</span><br><span class="line">      <span class="keyword">if</span> [ $&#123;key_num&#125; == <span class="number">0</span> ]</span><br><span class="line">      then</span><br><span class="line">      <span class="keyword">break</span></span><br><span class="line">      fi</span><br><span class="line">   done</span><br><span class="line">done</span><br></pre></td></tr></table></figure>
+
+
+
+]]></content>
+      <categories>
+        <category>redis</category>
+      </categories>
+      <tags>
+        <tag>redis</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Redis 使用场景</title>
+    <url>/2024/11/06/Redis%20%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF/</url>
+    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a><strong><font style="color:rgb(72, 179, 120);">前言</font></strong></h2><p><font style="color:rgb(63, 63, 63);">Redis作为一种优秀的基于key&#x2F;value的缓存，有非常不错的性能和稳定性，无论是在工作中，还是面试中，都经常会出现。</font></p>
+<p><font style="color:rgb(63, 63, 63);">总结一下在实际工作中使用Redis的10种场景，希望对你会有所帮助。</font></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/396745/1705650079483-5a10f8da-dfe0-40b3-bea7-8d61661f6012.png"></p>
+<span id="more"></span>
+<h2 id="1、统计访问次数"><a href="#1、统计访问次数" class="headerlink" title="1、统计访问次数"></a><strong><font style="color:rgb(72, 179, 120);">1、统计访问次数</font></strong></h2><p><font style="color:rgb(63, 63, 63);">对于很多官方网站的首页，经常会有一些统计首页访问次数的需求。</font></p>
+<p><font style="color:rgb(63, 63, 63);">访问次数只有一个字段，如果保存到数据库中，再最后做汇总显然有些麻烦。</font></p>
+<p><font style="color:rgb(63, 63, 63);">该业务场景可以使用Redis，定义一个key，比如：OFFICIAL_INDEX_VISIT_COUNT。</font></p>
+<p><font style="color:rgb(63, 63, 63);">在Redis中有incr命令，可以实现给value值加1操作：</font></p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">incr OFFICIAL_INDEX_VISIT_COUNT</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(63, 63, 63);">当然如果想一次加的值大于1，可以用incrby命令，例如：</font></p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">incrby OFFICIAL_INDEX_VISIT_COUNT 5</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(63, 63, 63);">这样可以一次性加5。</font></p>
+<h2 id="2、获取分类树"><a href="#2、获取分类树" class="headerlink" title="2、获取分类树"></a><strong><font style="color:rgb(72, 179, 120);">2、获取分类树</font></strong></h2><p><font style="color:rgb(63, 63, 63);">在很多网站都有分类树的功能，如果没有生成静态的html页面，想通过调用接口的方式获取分类树的数据。</font></p>
+<p><font style="color:rgb(63, 63, 63);">一般为了性能考虑，会将分类树的json数据缓存到Redis当中，为了后面在网站当中能够快速获取数据。</font></p>
+<p><font style="color:rgb(63, 63, 63);">不然在接口中需要使用递归查询数据库，然后拼接成分类树的数据结构。</font></p>
+<p><font style="color:rgb(63, 63, 63);">这个过程非常麻烦，而且需要多次查询数据库，性能很差。</font></p>
+<p><font style="color:rgb(63, 63, 63);">因此，可以考虑用一个定时任务，异步将分类树的数据，直接缓存到Redis当中，定义一个key，比如：MALL_CATEGORY_TREE。</font></p>
+<p><font style="color:rgb(63, 63, 63);">然后接口中直接使用MALL_CATEGORY_TREE这个key从缓存中获取数据即可。</font></p>
+<p><font style="color:rgb(63, 63, 63);">可以直接用key&#x2F;value字符串保存数据。</font></p>
+<h2 id="3、做分布式锁"><a href="#3、做分布式锁" class="headerlink" title="3、做分布式锁"></a><strong><font style="color:rgb(72, 179, 120);">3、做分布式锁</font></strong></h2><p><font style="color:rgb(63, 63, 63);">分布式锁可能是使用Redis最常见的场景之一，相对于其他的分布式锁，比如：数据库分布式锁或者Zookeeper分布式锁，基于Redis的分布式锁，有更好的性能，被广泛使用于实际工作中。</font></p>
+<p><font style="color:rgb(63, 63, 63);">使用下面这段代码可以加锁：</font></p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">try</span>&#123;</span><br><span class="line">    <span class="type">String</span> <span class="variable">result</span> <span class="operator">=</span> jedis.set(lockKey, requestId, <span class="string">&quot;NX&quot;</span>, <span class="string">&quot;PX&quot;</span>, expireTime);</span><br><span class="line">    <span class="keyword">if</span> (<span class="string">&quot;OK&quot;</span>.equals(result)) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">    unlock(lockKey);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(63, 63, 63);">但上面这段代码在有些场景下，会有一些问题，释放锁可能会释放了别人的锁。</font></p>
+<p><font style="color:rgb(63, 63, 63);">说实话Redis分布式锁虽说很常用，但坑也挺多的，如果用不好的话，很容易踩坑。</font></p>
+<h2 id="4、做排行榜"><a href="#4、做排行榜" class="headerlink" title="4、做排行榜"></a><strong><font style="color:rgb(72, 179, 120);">4、做排行榜</font></strong></h2><p><font style="color:rgb(63, 63, 63);">很多网站有排行榜的功能，比如：商城中有商品销量的排行榜，游戏网站有玩家获得积分的排行榜。</font></p>
+<p><font style="color:rgb(63, 63, 63);">通常情况下，可以使用</font><font style="color:rgb(40, 202, 113);">Sorted Set</font><font style="color:rgb(63, 63, 63);">保存排行榜的数据。</font></p>
+<p><font style="color:rgb(63, 63, 63);">使用</font><font style="color:rgb(40, 202, 113);">ZADD</font><font style="color:rgb(63, 63, 63);">可以添加排行榜的数据，使用</font><font style="color:rgb(40, 202, 113);">ZRANGE</font><font style="color:rgb(63, 63, 63);">可以获取排行榜的数据。</font></p>
+<p><font style="color:rgb(63, 63, 63);">例如：</font></p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ZADD rank:score 100 <span class="string">&quot;周星驰&quot;</span></span><br><span class="line">ZADD rank:score 90 <span class="string">&quot;周杰伦&quot;</span></span><br><span class="line">ZADD rank:score 80 <span class="string">&quot;周润发&quot;</span></span><br><span class="line">ZRANGE rank:score 0 -1 WITHSCORES</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(63, 63, 63);">返回数据：</font></p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">1) <span class="string">&quot;周星驰&quot;</span></span><br><span class="line">2) <span class="string">&quot;100&quot;</span></span><br><span class="line">3) <span class="string">&quot;周杰伦&quot;</span></span><br><span class="line">4) <span class="string">&quot;90&quot;</span></span><br><span class="line">5) <span class="string">&quot;周润发&quot;</span></span><br><span class="line">6) <span class="string">&quot;80&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="5、记录用户登录状态"><a href="#5、记录用户登录状态" class="headerlink" title="5、记录用户登录状态"></a><strong><font style="color:rgb(72, 179, 120);">5、记录用户登录状态</font></strong></h2><p><font style="color:rgb(63, 63, 63);">通常下，用户登录成功之后，用户登录之后的状态信息，会保存到Redis中。</font></p>
+<p><font style="color:rgb(63, 63, 63);">这样后面该用户访问其他接口的时候，会直接从Redis中查询用户登录状态，如果可以查到数据，说明用户已登录，则允许做后续的操作。</font></p>
+<p><font style="color:rgb(63, 63, 63);">如果从Redis中没有查到用户登录状态，说明该用户没有登录，或者登录状态失效了，则直接跳转到用户登录页面。</font></p>
+<p><font style="color:rgb(63, 63, 63);">使用Redis保存用户登录状态，有个好处是它可以设置一个过期时间，比如：该时间可以设置成30分钟。</font></p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">jedis.set(userId, userInfo, <span class="number">1800</span>);</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(63, 63, 63);">在Redis内部有专门的job，会将过期的数据删除，也有获取数据时实时删除的逻辑。</font></p>
+<h2 id="6、限流"><a href="#6、限流" class="headerlink" title="6、限流"></a><strong><font style="color:rgb(72, 179, 120);">6、限流</font></strong></h2><p><font style="color:rgb(63, 63, 63);">使用Redis还有一个非常常用的的业务场景是</font><font style="color:rgb(40, 202, 113);">做限流</font><font style="color:rgb(63, 63, 63);">。</font></p>
+<p><font style="color:rgb(63, 63, 63);">当然还有其他的限流方式，比如：使用nginx，但使用Redis控制可以更精细。</font></p>
+<p><font style="color:rgb(63, 63, 63);">比如：限制同一个ip，1分钟之内只能访问10次接口，10分钟之内只能访问50次接口，1天之内只能访问100次接口。</font></p>
+<p><font style="color:rgb(63, 63, 63);">如果超过次数，则接口直接返回：请求太频繁了，请稍后重试。</font></p>
+<p><font style="color:rgb(63, 63, 63);">跟上面保存用户登录状态类似，需要在Redis中保存用户的请求记录。</font></p>
+<p><font style="color:rgb(63, 63, 63);">比如：key是用户ip，value是访问的次数从1开始，后面每访问一次则加1。</font></p>
+<p><font style="color:rgb(63, 63, 63);">如果value超过一定的次数，则直接拦截这种异常的ip。</font></p>
+<p><font style="color:rgb(63, 63, 63);">当然也需要设置一个过期时间，异常ip如果超过这个过期时间，比如：1天，则恢复正常了，该ip可以再发起请求了。</font></p>
+<p><font style="color:rgb(63, 63, 63);">或者限制同一个用户id。</font></p>
+<h2 id="7、位统计"><a href="#7、位统计" class="headerlink" title="7、位统计"></a><strong><font style="color:rgb(72, 179, 120);">7、位统计</font></strong></h2><p><font style="color:rgb(63, 63, 63);">比如现在有个需求：有个网站需要统计一周内连续登陆的用户，以及一个月内登陆过的用户。</font></p>
+<p><font style="color:rgb(63, 63, 63);">这个需求使用传统的数据库，实现起来比较麻烦，但使用Redis的</font><font style="color:rgb(40, 202, 113);">bitmap</font><font style="color:rgb(63, 63, 63);">可以实时的进行类似的统计。</font></p>
+<p><font style="color:rgb(63, 63, 63);">bitmap 是二进制的byte数组，也可以简单理解成是一个普通字符串。它将二进制数据存储在byte数组中以达到存储数据的目的。</font></p>
+<p><font style="color:rgb(63, 63, 63);">保存数据命令使用setbit，语法：</font></p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">setbit key offset value</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(63, 63, 63);">具体示例：</font></p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">setbit user:view:2024-01-17 123456 1</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(63, 63, 63);">往bitmap数组中设置了用户id&#x3D;123456的登录状态为1，标记2024-01-17已登录。</font></p>
+<p><font style="color:rgb(63, 63, 63);">然后通过命令getbit获取数据，语法：</font></p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">getbit key offset</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(63, 63, 63);">具体示例：</font></p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">getbit user:view:2024-01-17 123456</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(63, 63, 63);">如果获取的值是1，说明这一天登录了。</font></p>
+<p><font style="color:rgb(63, 63, 63);">如果想统计一周内连续登录的用户，只需要遍历用户id，根据日期中数组中去查询状态即可。</font></p>
+<h2 id="8、缓存加速"><a href="#8、缓存加速" class="headerlink" title="8、缓存加速"></a><strong><font style="color:rgb(72, 179, 120);">8、缓存加速</font></strong></h2><p><font style="color:rgb(63, 63, 63);">在工作中使用Redis作为缓存加速，这种用法也是非常常见的。</font></p>
+<p><font style="color:rgb(63, 63, 63);">如果查询订单数据，先从Redis缓存中查询，如果缓存中存在，则直接将数据返回给用户。</font></p>
+<p><font style="color:rgb(63, 63, 63);">如果缓存中不存在，则再从数据库中查询数据，如果数据存在，则将数据保存到缓存中，然后再返回给用户。</font></p>
+<p><font style="color:rgb(63, 63, 63);">如果缓存和数据库都不存在，则直接给用户返回数据不存在。</font></p>
+<p><font style="color:rgb(63, 63, 63);">流程图如下：</font><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/396745/1705650079525-ad1cc08c-d266-44d2-ae4b-7fc8d9e256ec.png"><font style="color:rgb(63, 63, 63);">但使用缓存加速的业务场景，需要注意一下，可能会出现：缓存击穿、穿透和雪崩等问题。</font></p>
+<h2 id="9、做消息队列"><a href="#9、做消息队列" class="headerlink" title="9、做消息队列"></a><strong><font style="color:rgb(72, 179, 120);">9、做消息队列</font></strong></h2><p><font style="color:rgb(63, 63, 63);">说起队列经常想到是：kafka、rabbitMQ、RocketMQ等这些分布式消息队列。</font></p>
+<p><font style="color:rgb(63, 63, 63);">其实Redis也有消息队列的功能，之前有个支付系统，就是用的Redis队列功能。</font></p>
+<p><font style="color:rgb(63, 63, 63);">PubSub(发布订阅)是Redis2.0版本引入的消息传递模型。</font></p>
+<p><font style="color:rgb(63, 63, 63);">顾名思义，消费者可以订阅一个或多个channel，生产者向对应channel发送消息后，所有订阅者都能收到相关消息。对应channel发送消息后，所有订阅者都能收到相关消息。</font></p>
+<p><font style="color:rgb(63, 63, 63);">在java代码中可以实现MessageListener接口，来消费队列中的消息。</font></p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Slf4j</span></span><br><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">RedisMessageListenerListener</span> <span class="keyword">implements</span> <span class="title class_">MessageListener</span> &#123;</span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> RedisTemplate&lt;String, Object&gt; redisTemplate;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onMessage</span><span class="params">(Message message, <span class="type">byte</span>[] pattern)</span> &#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">channel</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">String</span>(pattern);</span><br><span class="line">        RedisSerializer&lt;?&gt; valueSerializer = redisTemplate.getValueSerializer();</span><br><span class="line">        <span class="type">Object</span> <span class="variable">deserialize</span> <span class="operator">=</span> valueSerializer.deserialize(message.getBody());</span><br><span class="line">        <span class="keyword">if</span> (deserialize == <span class="literal">null</span>) <span class="keyword">return</span>;</span><br><span class="line">        <span class="type">String</span> <span class="variable">md5DigestAsHex</span> <span class="operator">=</span> DigestUtils.md5DigestAsHex(deserialize.toString().getBytes(StandardCharsets.UTF_8));</span><br><span class="line">        <span class="type">Boolean</span> <span class="variable">result</span> <span class="operator">=</span> redisTemplate.opsForValue().setIfAbsent(md5DigestAsHex, <span class="string">&quot;1&quot;</span>, <span class="number">20</span>, TimeUnit.SECONDS);</span><br><span class="line">        <span class="keyword">if</span> (Boolean.TRUE.equals(result)) &#123;</span><br><span class="line">            log.info(<span class="string">&quot;接收的结果：&#123;&#125;&quot;</span>, deserialize.toString());</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            log.info(<span class="string">&quot;其他服务处理中&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="10、生成全局ID"><a href="#10、生成全局ID" class="headerlink" title="10、生成全局ID"></a><strong><font style="color:rgb(72, 179, 120);">10、生成全局ID</font></strong></h2><p><font style="color:rgb(63, 63, 63);">在有些需要生成全局ID的业务场景，其实也可以使用Redis。</font></p>
+<p><font style="color:rgb(63, 63, 63);">可以使用incrby命令，利用原子性操作，可以执行下面这个命令：</font></p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">incrby userid 10000</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgb(63, 63, 63);">在分库分表的场景，对于有些批量操作，可以从Redis中，一次性拿一批id出来，然后给业务系统使用。</font></p>
+]]></content>
+      <categories>
+        <category>redis</category>
+      </categories>
+      <tags>
+        <tag>redis</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Redis-Pipeline管道</title>
+    <url>/2024/11/06/Redis-Pipeline%E7%AE%A1%E9%81%93/</url>
+    <content><![CDATA[<p><font style="background:#F8CED3;color:#70000D">Redis</font> <font style="background:#DBF1B7;color:#2A4200">Pipeline</font> <font style="background:#C0DDFC;color:#00346B">管道</font></p>
+<h1 id="环境说明"><a href="#环境说明" class="headerlink" title="环境说明"></a>环境说明</h1><blockquote>
+<p>Linux（CentOS7.3）-Redis6.0.5源码编译版</p>
+</blockquote>
+<hr>
+<h1 id="1、Redis客户端与服务端通信分析"><a href="#1、Redis客户端与服务端通信分析" class="headerlink" title="1、Redis客户端与服务端通信分析"></a>1、Redis客户端与服务端通信分析</h1><p>Redis 性能瓶颈主要是网络，主要原因就在于 Redis 执行命令的时间通常在微秒级别。正常情况下，执行一条 Redis 命令流程要经过如下几个步骤：</p>
+<ol>
+<li><font style="color:#4A4A4A;">客户端发送 Redis 命令，阻塞等待 Redis 应答</font></li>
+<li><font style="color:#4A4A4A;">Redis 接收到命令，执行命令</font></li>
+<li><font style="color:#4A4A4A;">应答，客户端收到响应信息</font></li>
+</ol>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2020/png/396745/1593255821904-3b60671e-8865-423a-893e-f9abdf6cc908.png"></p>
+<span id="more"></span>
+<p><font style="color:#4A4A4A;">其中 1 、3 称之为一次 RTT（Round Trip Time）。在这种情况下，如果同时执行大量命令，那当前命令需要等待上一条命令应答完成后才会执行，这个过程不仅仅只有多次 RTT，还有频繁的调用系统 IO，发送网络请求，如下图：</font></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2020/png/396745/1593256561687-03a7f134-07e2-42e5-a3ad-13bb9b4d76b0.png"></p>
+<p><font style="color:#4A4A4A;">把大量的时间消耗在来回路上，真正办事的时间就只有一点点，这种做法是非常不明智且低效的，为了解决这种低效的做法，pipeline 出现了，它允许客户端一次性发送多条命令，减少 RTT 和 IO 的调用次数（IO 调用涉及到用户态到内核态之间的切换）。如下图：</font></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2020/png/396745/1593257317620-fe39c154-5821-466b-99a0-4beda2dffc47.png"></p>
+<h1 id="2、实现原理"><a href="#2、实现原理" class="headerlink" title="2、实现原理"></a>2、实现原理</h1><p>要支持 pipeline，除了需要 Redis 服务端支持，也需要各个客户端的支持，例如 jedis 就对 pipeline 提供了很好的支持。对于服务端来说，所需要的就是能够处理客户端通过一个 TCP 连接发送的多个命令，对多个命令进行排队，执行。而客户端，则需要将多个命令缓存起来，待缓冲区满了就发送，同时还需要处理 Redis 的应答。</p>
+<p>pipeline 能提供性能的核心就在于：<strong>它能将一组 Redis 命令进行组装，通过一次 RTT 传输给 Redis，同时再将这组命令的执行结果按照顺序返回给客户端</strong>。将原来一组命令多次 RTT 以及 IO 交互变成了一组 RTT 和 IO 交互，大大减少了网络传输时间和 IO 调用的时间。</p>
+<p>下图是一次请求交互的流程</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2020/png/396745/1593258035647-e037916a-3530-4e6d-85de-0dc781737ed3.png"></p>
+<p><font style="color:#4A4A4A;">需要注意的是，在使用 pipeline 的过程中需要控制其中命令的大小，如果一次组装的命令过多，则会增加造成一定的网络阻塞，也会增加客户端的等待时间。</font></p>
+<h1 id="3、性能压测"><a href="#3、性能压测" class="headerlink" title="3、性能压测"></a>3、性能压测</h1><p>Redis 提供了一个压测工具 <code>redis-benchmark</code>，该工具在Redis安装包的src目录下，通过redis-benchmark可以进行 pipeline 测试。如下：</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2020/png/396745/1595559269428-4f01da0a-b2c3-45d1-8996-e879265fa104.png"></p>
+<p>-P 参数：它表示单个管道内并行的请求数量</p>
+<h1 id="4、与批量的比较"><a href="#4、与批量的比较" class="headerlink" title="4、与批量的比较"></a>4、与批量的比较</h1><p>pipeline 的批次提交命令与 Redis 的批量命令有很多相似之处，可以利用 pipeline 模拟出批次的效果，但是他们还是存在一些不同之处：</p>
+<ol>
+<li><font style="color:#4A4A4A;">pipeline 可以一次性发送多个不同的命令，例如 set、get、而批量这是一次一个命令，只不过这一次对应的是多个 key 而已。</font></li>
+<li><font style="color:#4A4A4A;">pipeline 只是将多个命令一起发出去而已，不保证这些命令的执行是原子性，而批量则是原子性的，他需要保证整个操作的正确性，避免中途出错而导致最后产生的数据不一致。</font></li>
+</ol>
+]]></content>
+      <categories>
+        <category>redis</category>
+      </categories>
+      <tags>
+        <tag>redis</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title></title>
+    <url>/2025/03/14/Redis%E4%B8%BB%E4%BB%8E%E6%9E%B6%E6%9E%84/</url>
+    <content><![CDATA[<p><font style="background:#F8CED3;color:#70000D">Redis</font></p>
+<p><font style="color:rgb(34, 34, 34);">单机的 Redis，能够承载的 QPS 大概就在上万到几万不等。对于缓存来说，一般都是用来支撑</font><strong><font style="color:rgb(34, 34, 34);">读高并发</font></strong><font style="color:rgb(34, 34, 34);">的。因此架构做成主从(master-slave)架构，一主多从，主负责写，并且将数据复制到其它的 slave 节点，从节点负责读。所有的</font><strong><font style="color:rgb(34, 34, 34);">读请求全部走从节点</font></strong><font style="color:rgb(34, 34, 34);">。这样也可以很轻松实现水平扩容，</font><strong><font style="color:rgb(34, 34, 34);">支撑读高并发</font></strong><font style="color:rgb(34, 34, 34);">。</font></p>
+<p><img src="https://cdn.nlark.com/yuque/0/2023/png/396745/1676981173688-47d05856-4a20-4709-9f23-ee252ae8f2d9.png"></p>
+<p><font style="color:rgb(34, 34, 34);">Redis replication -&gt; 主从架构 -&gt; 读写分离 -&gt; 水平扩容支撑读高并发</font></p>
+<h2 id="Redis-replication-的核心机制"><a href="#Redis-replication-的核心机制" class="headerlink" title="Redis replication 的核心机制"></a><font style="color:rgb(53, 179, 120);">Redis replication 的核心机制</font></h2><ul>
+<li><font style="color:rgb(34, 34, 34);">Redis 采用</font><strong><font style="color:rgb(34, 34, 34);">异步方式</font></strong><font style="color:rgb(34, 34, 34);">复制数据到 slave 节点，不过 Redis2.8 开始，slave node 会周期性地确认自己每次复制的数据量；</font></li>
+<li><font style="color:rgb(34, 34, 34);">一个 master node 是可以配置多个 slave node 的；</font></li>
+<li><font style="color:rgb(34, 34, 34);">slave node 也可以连接其他的 slave node；</font></li>
+<li><font style="color:rgb(34, 34, 34);">slave node 做复制的时候，不会 block master node 的正常工作；</font></li>
+<li><font style="color:rgb(34, 34, 34);">slave node 在做复制的时候，也不会 block 对自己的查询操作，它会用旧的数据集来提供服务；但是复制完成的时候，需要删除旧数据集，加载新数据集，这个时候就会暂停对外服务了；</font></li>
+<li><font style="color:rgb(34, 34, 34);">slave node 主要用来进行横向扩容，做读写分离，扩容的 slave node 可以提高读的吞吐量。</font></li>
+</ul>
+<p><font style="color:rgb(34, 34, 34);">注意，如果采用了主从架构，那么建议必须</font><strong><font style="color:rgb(34, 34, 34);">开启</font></strong><font style="color:rgb(34, 34, 34);"> master node 的持久化，不建议用 slave node 作为 master node 的数据热备，因为那样的话，如果关掉 master 的持久化，可能在 master 宕机重启的时候数据是空的，然后可能一经过复制， slave node 的数据也丢了。</font></p>
+<p><font style="color:rgb(34, 34, 34);">另外，master 的各种备份方案，也需要做。万一本地的所有文件丢失了，从备份中挑选一份 rdb 去恢复 master，这样才能</font><strong><font style="color:rgb(34, 34, 34);">确保启动的时候，是有数据的</font></strong><font style="color:rgb(34, 34, 34);">，即使采用了后续讲解的高可用机制，slave node 可以自动接管 master node，但也可能 sentinel 还没检测到 master failure，master node 就自动重启了，还是可能导致上面所有的 slave node 数据被清空。</font></p>
+<h2 id="Redis-主从复制的核心原理"><a href="#Redis-主从复制的核心原理" class="headerlink" title="Redis 主从复制的核心原理"></a><font style="color:rgb(53, 179, 120);">Redis 主从复制的核心原理</font></h2><p><font style="color:rgb(34, 34, 34);">当启动一个 slave node 的时候，它会发送一个 <code>PSYNC</code> 命令给 master node。</font></p>
+<p><font style="color:rgb(34, 34, 34);">如果这是 slave node 初次连接到 master node，那么会触发一次 <code>full resynchronization</code> 全量复制。此时 master 会启动一个后台线程，开始生成一份 <code>RDB</code> 快照文件，同时还会将从客户端 client 新收到的所有写命令缓存在内存中。<code>RDB</code> 文件生成完毕后， master 会将这个 <code>RDB</code> 发送给 slave，slave 会先</font><strong><font style="color:rgb(34, 34, 34);">写入本地磁盘，然后再从本地磁盘加载到内存</font></strong><font style="color:rgb(34, 34, 34);">中，接着 master 会将内存中缓存的写命令发送到 slave，slave 也会同步这些数据。slave node 如果跟 master node 有网络故障，断开了连接，会自动重连，连接之后 master node 仅会复制给 slave 部分缺少的数据。</font></p>
+<p><img src="https://cdn.nlark.com/yuque/0/2023/png/396745/1676981173703-84789937-9009-4c26-a9b8-382b4b98aff4.png"></p>
+<h3 id="主从复制的断点续传"><a href="#主从复制的断点续传" class="headerlink" title="主从复制的断点续传"></a><font style="color:rgb(34, 34, 34);">主从复制的断点续传</font></h3><p><font style="color:rgb(34, 34, 34);">从 Redis2.8 开始，就支持主从复制的断点续传，如果主从复制过程中，网络连接断掉了，那么可以接着上次复制的地方，继续复制下去，而不是从头开始复制一份。</font></p>
+<p><font style="color:rgb(34, 34, 34);">master node 会在内存中维护一个 backlog，master 和 slave 都会保存一个 replica offset 还有一个 master run id，offset 就是保存在 backlog 中的。如果 master 和 slave 网络连接断掉了，slave 会让 master 从上次 replica offset 开始继续复制，如果没有找到对应的 offset，那么就会执行一次 <code>resynchronization</code> 。</font></p>
+<p><font style="color:rgb(34, 34, 34);">&gt; 如果根据 host+ip 定位 master node，是不靠谱的，如果 master node 重启或者数据出现了变化，那么 slave node 应该根据不同的 run id 区分。</font></p>
+<h3 id="无磁盘化复制"><a href="#无磁盘化复制" class="headerlink" title="无磁盘化复制"></a><font style="color:rgb(34, 34, 34);">无磁盘化复制</font></h3><p><font style="color:rgb(34, 34, 34);">master 在内存中直接创建 <code>RDB</code> ，然后发送给 slave，不会在自己本地落地磁盘了。只需要在配置文件中开启 <code>repl-diskless-sync yes</code> 即可。</font></p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">repl-diskless-sync <span class="built_in">yes</span></span><br><span class="line"><span class="comment"># 等待 5s 后再开始复制，因为要等更多 slave 重新连接过来</span></span><br><span class="line">repl-diskless-sync-delay 5</span><br></pre></td></tr></table></figure>
+
+<h3 id="过期-key-处理"><a href="#过期-key-处理" class="headerlink" title="过期 key 处理"></a><font style="color:rgb(34, 34, 34);">过期 key 处理</font></h3><p><font style="color:rgb(34, 34, 34);">slave 不会过期 key，只会等待 master 过期 key。如果 master 过期了一个 key，或者通过 LRU 淘汰了一个 key，那么会模拟一条 del 命令发送给 slave。</font></p>
+<h3 id="复制的完整流程"><a href="#复制的完整流程" class="headerlink" title="复制的完整流程"></a><font style="color:rgb(34, 34, 34);">复制的完整流程</font></h3><p><font style="color:rgb(34, 34, 34);">slave node 启动时，会在自己本地保存 master node 的信息，包括 master node 的 <code>host</code> 和 <code>ip</code> ，但是复制流程没开始。</font></p>
+<p><font style="color:rgb(34, 34, 34);">slave node 内部有个定时任务，每秒检查是否有新的 master node 要连接和复制，如果发现，就跟 master node 建立 socket 网络连接。然后 slave node 发送 <code>ping</code> 命令给 master node。如果 master 设置了 requirepass，那么 slave node 必须发送 masterauth 的口令过去进行认证。master node </font><strong><font style="color:rgb(34, 34, 34);">第一次执行全量复制</font></strong><font style="color:rgb(34, 34, 34);">，将所有数据发给 slave node。而在后续，master node 持续将写命令，异步复制给 slave node。</font></p>
+<p><img src="https://cdn.nlark.com/yuque/0/2023/png/396745/1676981173697-c41d207c-5580-4edb-871f-ce9cb34a437f.png"></p>
+<h3 id="全量复制"><a href="#全量复制" class="headerlink" title="全量复制"></a><font style="color:rgb(34, 34, 34);">全量复制</font></h3><ul>
+<li><font style="color:rgb(34, 34, 34);">master 执行 bgsave ，在本地生成一份 rdb 快照文件。</font></li>
+<li><font style="color:rgb(34, 34, 34);">master node 将 rdb 快照文件发送给 slave node，如果 rdb 复制时间超过 60 秒（repl-timeout），那么 slave node 就会认为复制失败，可以适当调大这个参数(对于千兆网卡的机器，一般每秒传输 100MB，6G 文件，很可能超过 60s)</font></li>
+<li><font style="color:rgb(34, 34, 34);">master node 在生成 rdb 时，会将所有新的写命令缓存在内存中，在 slave node 保存了 rdb 之后，再将新的写命令复制给 slave node。</font></li>
+<li><font style="color:rgb(34, 34, 34);">如果在复制期间，内存缓冲区持续消耗超过 64MB，或者一次性超过 256MB，那么停止复制，复制失败。</font></li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">client-output-buffer-limit slave 256MB 64MB 60</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><font style="color:rgb(34, 34, 34);">slave node 接收到 rdb 之后，清空自己的旧数据，然后重新加载 rdb 到自己的内存中，同时</font><strong><font style="color:rgb(34, 34, 34);">基于旧的数据版本</font></strong><font style="color:rgb(34, 34, 34);">对外提供服务。</font></li>
+<li><font style="color:rgb(34, 34, 34);">如果 slave node 开启了 AOF，那么会立即执行 BGREWRITEAOF，重写 AOF。</font></li>
+</ul>
+<h3 id="增量复制"><a href="#增量复制" class="headerlink" title="增量复制"></a><font style="color:rgb(34, 34, 34);">增量复制</font></h3><ul>
+<li><font style="color:rgb(34, 34, 34);">如果全量复制过程中，master-slave 网络连接断掉，那么 slave 重新连接 master 时，会触发增量复制。</font></li>
+<li><font style="color:rgb(34, 34, 34);">master 直接从自己的 backlog 中获取部分丢失的数据，发送给 slave node，默认 backlog 就是 1MB。</font></li>
+<li><font style="color:rgb(34, 34, 34);">master 就是根据 slave 发送的 psync 中的 offset 来从 backlog 中获取数据的。</font></li>
+</ul>
+<h3 id="heartbeat"><a href="#heartbeat" class="headerlink" title="heartbeat"></a><font style="color:rgb(34, 34, 34);">heartbeat</font></h3><p><font style="color:rgb(34, 34, 34);">主从节点互相都会发送 heartbeat 信息。</font></p>
+<p><font style="color:rgb(34, 34, 34);">master 默认每隔 10 秒发送一次 heartbeat，slave node 每隔 1 秒发送一个 heartbeat。</font></p>
+<h3 id="异步复制"><a href="#异步复制" class="headerlink" title="异步复制"></a><font style="color:rgb(34, 34, 34);">异步复制</font></h3><p><font style="color:rgb(34, 34, 34);">master 每次接收到写命令之后，先在内部写入数据，然后异步发送给 slave node。</font></p>
+<h2 id="Redis-如何才能做到高可用"><a href="#Redis-如何才能做到高可用" class="headerlink" title="Redis 如何才能做到高可用"></a><font style="color:rgb(53, 179, 120);">Redis 如何才能做到高可用</font></h2><p><font style="color:rgb(34, 34, 34);">如果系统在 365 天内，有 99.99% 的时间，都是可以哗哗对外提供服务的，那么就说系统是高可用的。</font></p>
+<p><font style="color:rgb(34, 34, 34);">一个 slave 挂掉了，是不会影响可用性的，还有其它的 slave 在提供相同数据下的相同的对外的查询服务。</font></p>
+<p><font style="color:rgb(34, 34, 34);">但是，如果 master node 死掉了，会怎么样？没法写数据了，写缓存的时候，全部失效了。slave node 还有什么用呢，没有 master 给它们复制数据了，系统相当于不可用了。</font></p>
+<p><font style="color:rgb(34, 34, 34);">Redis 的高可用架构，叫做 <code>failover</code> </font><strong><font style="color:rgb(34, 34, 34);">故障转移</font></strong><font style="color:rgb(34, 34, 34);">，也可以叫做主备切换。</font></p>
+<p><font style="color:rgb(34, 34, 34);">master node 在故障时，自动检测，并且将某个 slave node 自动切换为 master node 的过程，叫做主备切换。这个过程，实现了 Redis 的主从架构下的高可用。</font></p>
+]]></content>
+  </entry>
+  <entry>
+    <title>Redis</title>
+    <url>/2024/11/06/Redis/</url>
+    <content><![CDATA[<h4 id="Redis是什么"><a href="#Redis是什么" class="headerlink" title="Redis是什么"></a>Redis是什么</h4><p><em><font style="color:rgb(247, 49, 49);">Redis</font></em><font style="color:rgb(51, 51, 51);">（Remote Dictionary Server )，即远程字典服务，是一个开源的使用ANSI C语言编写、支持网络、可基于内存亦可持久化的日志型、Key-Value数据库，并提供多种语言的API。官网地址为：</font><font style="color:rgb(51, 51, 51);">redis.io</font></p>
+<p><font style="color:rgb(51, 51, 51);"></font></p>
+<span id="more"></span>
+<h4 id="Redis能做什么"><a href="#Redis能做什么" class="headerlink" title="Redis能做什么"></a>Redis能做什么</h4><p><font style="color:rgb(51, 51, 51);">redis是一个key-value</font><a href="https://baike.baidu.com/item/%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F">存储系统</a><font style="color:rgb(51, 51, 51);">。和Memcached类似，它支持存储的value类型相对更多，包括string(字符串)、list(</font><a href="https://baike.baidu.com/item/%E9%93%BE%E8%A1%A8">链表</a><font style="color:rgb(51, 51, 51);">)、set(集合)、zset(sorted set –有序集合)和hash（哈希类型）。这些</font><a href="https://baike.baidu.com/item/%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B">数据类型</a><font style="color:rgb(51, 51, 51);">都支持push&#x2F;pop、add&#x2F;remove及取交集并集和差集及更丰富的操作，而且这些操作都是原子性的。在此基础上，redis支持各种不同方式的排序。与memcached一样，为了保证效率，数据都是缓存在内存中。区别的是redis会周期性的把更新的数据写入磁盘或者把修改操作写入追加的记录文件，并且在此基础上实现了master-slave(主从)同步。</font></p>
+<p><font style="color:rgb(51, 51, 51);">Redis 是一个高性能的key-value数据库。 redis的出现，很大程度补偿了</font>memcached<font style="color:rgb(51, 51, 51);">这类key&#x2F;value存储的不足，在部 分场合可以对关系数据库起到很好的补充作用。它提供了Java，C&#x2F;C++，C#，PHP，JavaScript，Perl，Object-C，Python，Ruby，Erlang等客户端，使用很方便。</font><font style="color:rgb(51, 102, 204);"> [1]</font><font style="color:rgb(19, 110, 194);"> </font></p>
+<p><font style="color:rgb(51, 51, 51);">Redis支持主从同步。数据可以从主服务器向任意数量的从服务器上同步，从服务器可以是关联其他从服务器的主服务器。这使得Redis可执行单层树复制。存盘可以有意无意的对数据进行写操作。由于完全实现了</font><a href="https://baike.baidu.com/item/%E5%8F%91%E5%B8%83%2F%E8%AE%A2%E9%98%85">发布&#x2F;订阅</a><font style="color:rgb(51, 51, 51);">机制，使得从数据库在任何地方同步树时，可订阅一个频道并接收主服务器完整的消息发布记录。同步对读取操作的可扩展性和数据冗余很有帮助。</font></p>
+<h4 id="Redis都支持哪些语言"><a href="#Redis都支持哪些语言" class="headerlink" title="Redis都支持哪些语言"></a>Redis都支持哪些语言</h4><p><img src="https://cdn.nlark.com/yuque/0/2022/png/25873401/1644650393217-b2ac6b9b-cf08-485e-b1d9-ebd4e8692474.png"></p>
+<h4 id="Redis的特性"><a href="#Redis的特性" class="headerlink" title="Redis的特性"></a>Redis的特性</h4><ul>
+<li>开源</li>
+<li>持久化<ul>
+<li>RDB操作</li>
+<li>AOF操作</li>
+</ul>
+</li>
+<li>集群</li>
+<li>事务</li>
+</ul>
+]]></content>
+      <categories>
+        <category>redis</category>
+      </categories>
+      <tags>
+        <tag>redis</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Redis内存优化</title>
+    <url>/2024/11/06/Redis%E5%86%85%E5%AD%98%E4%BC%98%E5%8C%96/</url>
+    <content><![CDATA[<h2 id="内存配置和查看"><a href="#内存配置和查看" class="headerlink" title="内存配置和查看"></a>内存配置和查看</h2><p><strong>Redis最大内存配置建议</strong></p>
+<ul>
+<li>Redis默认占用的内存：在64位操作系统下不限制内存大小，在32位操作系统下最多使用3GB。</li>
+<li>在生产环境下，一般推荐设置为最大物理内存的四分之三。</li>
+<li>配置单位是字节Bytes，如果设置为<code>maxmemory 0</code>即代表内存无限制。<span id="more"></span>
+<strong>如何修改Redis的最大内存？</strong></li>
+</ul>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">//方式一：修改redis.conf配置文件。需重启Redis</span></span><br><span class="line">#maxmemory &lt;bytes&gt;</span><br><span class="line">maxmemory <span class="number">1</span></span><br><span class="line">#MAXMEMORY POLICY: how Redis will select what to remove when maxmemory</span><br><span class="line"></span><br><span class="line"><span class="comment">//方式二：通过命令修改。无需重启Redis</span></span><br><span class="line">config set maxmemory <span class="number">1</span></span><br><span class="line">config get maxmemory</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.nlark.com/yuque/0/2022/png/696107/1646381474990-e234251f-74ea-4d93-805b-b0d0c3773052.png"></p>
+<p><strong>查看内存占用情况</strong></p>
+<p>使用<code>info memory</code>命令</p>
+<p><img src="https://cdn.nlark.com/yuque/0/2022/png/696107/1646381894028-a1552038-e01d-4246-97aa-3b443e37777f.png"></p>
+<h2 id="过期键的删除策略"><a href="#过期键的删除策略" class="headerlink" title="过期键的删除策略"></a>过期键的删除策略</h2><p><font style="color:rgb(51, 51, 51);">Redis处理过期Key有两种删除策略：被动方式、主动方式。</font><a href="https://www.redis.io/commands/expire">参考：Redis的过期删除策略</a></p>
+<p><strong><font style="color:rgb(51, 51, 51);">被动方式：惰性删除</font></strong></p>
+<p>描述：数据到达过期时间后不做处理，等下次访问该数据时，如果未过期则返回数据，如果发现已过期则删除，返回不存在。</p>
+<p>优点：对于CPU来讲是友好的，不需要随时去遍历哪些Key已经过期了。</p>
+<p>缺点：它对内存是最不友好的。如果一个键已经过期，而这个键又仍然保留在redis中，那么只要这个过期键不被删除，它所占用的内存就不会释放。在使用惰性删除策略时，如果数据库中有非常多的过期键，而这些过期键又恰好没有被访问到的话，那么它们也许永远也不会被删除（除非用户手动执行FLUSHDB），我们甚至可以将这种情况看作是一种内存泄漏，即无用的垃圾数据占用了大量的内存，而服务器却不会自己去释放它们，这对于运行状态非常依赖于内存的Redis服务器来说，肯定不是一个好消息。</p>
+<p><strong><font style="color:rgb(51, 51, 51);">主动方式：立即删除</font></strong></p>
+<p>描述：立即删除能保证内存中数据的最大新鲜度，因为它保证过期键值会在过期后马上被删除，其所占用的内存也会随之释放。</p>
+<p>缺点：立即删除对cpu是最不友好的。因为删除操作会占用cpu的时间，如果刚好碰上了cpu很忙的时候，比如正在做交集或排序等计算的时候，就会给cpu造成额外的压力。</p>
+<p><strong><font style="color:rgb(51, 51, 51);">主动方式：定期删除</font></strong></p>
+<p>描述：定期删除策略是每隔一段时间执行一次删除过期键操作，并通过限制删除操作执行的时长和频率来减少删除操作对CPU时间的影响。redis默认每隔100ms检查，是否有过期的key，有过期key则删除。注意：redis不是每隔100ms将所有的key检查一次而是随机抽取进行检查。</p>
+<p>策略细化：周期性轮询redis库中的时效性数据，采用随机抽取的策略，利用过期数据占比的方式控制删除频度： </p>
+<p>特点1：CPU性能占用设置有峰值，检测频度可自定义设置 </p>
+<p>特点2：内存压力不是很大，长期占用内存的冷数据会被持续清理 </p>
+<p>总结：周期性抽查存储空间 （随机抽查，重点抽查）</p>
+<p>难点：如何确定删除操作执行的时长和频率？</p>
+<p>如果删除操作执行得太频繁，或者执行的时间太长，定期删除策略就会退化成立即删除策略，以至于将CPU时间过多地消耗在删除过期键上面。如果删除操作执行得太少，或者执行的时间太短，定期删除策略又会和惰性删除束略一样，出现浪费内存的情况。因此，如果采用定期删除策略的话，服务器必须根据情况，合理地设置删除操作的执行时长和执行频率。</p>
+<h2 id="缓存淘汰策略"><a href="#缓存淘汰策略" class="headerlink" title="缓存淘汰策略"></a>缓存淘汰策略</h2><p><a href="https://www.redis.io/topics/lru-cache">缓存的淘汰策略：https://www.redis.io/topics/lru-cache</a></p>
+<p><strong>问题背景</strong></p>
+<p>Redis的键在过期后会有综合策略将其淘汰出内存，但是问题出现了：如果用户所有的key都没有配置过期时间，或者有配置过期时间，Redis在使用删除策略时，部分键总是没有能淘汰出内存，这时候就会出现大量Key堆积到内存甚至OOM的情况。而缓存的淘汰就是解决的该个问题。</p>
+<p><strong>缓存淘汰策略有哪些(6.0.8版本下)</strong></p>
+<ul>
+<li><font style="color:#E8323C;">noeviction（默认但严禁使用）</font>：不会del掉任务key。默认情况下的配置，生产环境下严禁使用。</li>
+<li><font style="color:#E8323C;">allkeys-lru（推荐）</font>：通过首先尝试删除最近较少使用的（LRU）键来驱逐键，以便为添加的新数据腾出空间。</li>
+<li>volatile-lru：通过首先尝试删除最近较少使用的（LRU）密钥来驱逐密钥，但仅在具有过期集的密钥中，以便为添加的新数据腾出空间。</li>
+<li>allkeys-random：随机驱逐键，以便为添加的新数据腾出空间。</li>
+<li>volatile-random：随机逐出键，以便为添加的新数据腾出空间，但仅逐出带有expire set的键。</li>
+<li>volatile-ttl：驱逐设置了 expire的键，并尝试首先驱逐具有较短生存时间（TTL）的密钥，以便为添加的新数据腾出空间。</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"># MAXMEMORY POLICY: how Redis will select what to remove when maxmemory is reached. You can select among five behaviors:</span><br><span class="line"></span><br><span class="line"># <span class="keyword">volatile</span>-lru -&gt; Evict using approximated LRU among the keys with an expire set.</span><br><span class="line"># allkeys-lru -&gt; Evict any key using approximated LRU.</span><br><span class="line"># <span class="keyword">volatile</span>-lfu -&gt; Evict using approximated LFU among the keys with an expire set.</span><br><span class="line"># allkeys-lfu -&gt; Evict any key using approximated LFU.</span><br><span class="line"># <span class="keyword">volatile</span>-random -&gt; Remove a random key among the ones with an expire set.</span><br><span class="line"># allkeys-random -&gt; Remove a random key, any key.</span><br><span class="line"># <span class="keyword">volatile</span>-ttl -&gt; Remove the key with the nearest expire <span class="title function_">time</span> <span class="params">(minor TTL)</span></span><br><span class="line"># noeviction -&gt; Don<span class="string">&#x27;t evict anything, just return an error on write operations.</span></span><br><span class="line"><span class="string">#</span></span><br><span class="line"><span class="string"># LRU means Least Recently Used。LFU means Least Frequently Used。Both LRU, LFU and volatile-ttl are implemented using approximated randomized algorithms.</span></span><br><span class="line"><span class="string"># The default is: maxmemory-policy noeviction</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string"># 将缓存策略更改为所有键使用LRU淘汰。LRU算法为：最近最少使用的淘汰。</span></span><br><span class="line"><span class="string">maxmemory-policy allkeys-lru</span></span><br></pre></td></tr></table></figure>
+
+
+
+]]></content>
+      <categories>
+        <category>redis</category>
+      </categories>
+      <tags>
+        <tag>redis</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Redis哨兵实战</title>
+    <url>/2024/11/06/Redis%E5%93%A8%E5%85%B5%E5%AE%9E%E6%88%98/</url>
+    <content><![CDATA[<h1 id="7-1-哨兵介绍"><a href="#7-1-哨兵介绍" class="headerlink" title="7.1 哨兵介绍"></a>7.1 哨兵介绍</h1><p> Redis 的<font style="color:#F5222D;">主从模式下</font>，主节点一旦发生故障不能提供服务，<font style="color:#F5222D;">需要人工干预</font>，将从节点晋升为主节点， 同时还<font style="color:#F5222D;">需要修改客户端配置。</font>对于很多应用场景这种方式无法接受。 </p>
+<p>Sentinel（哨兵）架构解决了 redis 主从人工干预的问题。 Redis Sentinel 是 redis 的高可用实现方案，实际生产环境中，对提高整个系统可用性非常有帮助的。</p>
+<span id="more"></span>
+
+<h1 id="7-2-哨兵主要功能"><a href="#7-2-哨兵主要功能" class="headerlink" title="7.2 哨兵主要功能"></a>7.2 哨兵主要功能</h1><p>Redis Sentinel 是一个分布式系统， Redis Sentinel 为 Redis 提供高可用性。<font style="color:#F5222D;">可以在没有人为干预的 情况下阻止某种类型的故障。</font> Redis 的 Sentinel 系统用于管理多个 Redis 服务器（instance）该系统执行以下三个任务：</p>
+<p>1.监控（Monitoring）：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="title class_">Sentinel</span> 会不断地定期检查你的主服务器和从服务器是否运作正常。</span><br></pre></td></tr></table></figure>
+
+<p>2.提醒（Notification）：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line">当被监控的某个 <span class="title class_">Redis</span> 服务器出现问题时， <span class="title class_">Sentinel</span> 可以通过 <span class="variable constant_">API</span> 向管理员或者其他应用程序发送通知。</span><br></pre></td></tr></table></figure>
+
+<p>3.<font style="color:#F5222D;">自动故障迁移（Automatic failover）</font>：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line">当一个主服务器不能正常工作时， <span class="title class_">Sentinel</span> 会开始一次自动故障迁移操作， 它会将失效主服务器的其中一个从服务器升级为新的主服务器， 并让失效主服务器的其他从服务器改为复制新的主服务器； 当客户端试图连接失效的主服务器时， 集群也会向客户端返回新主服务器的地址， 使得集群可以使用新主服务器代替失效服务器</span><br></pre></td></tr></table></figure>
+
+<p>架构图：</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2021/png/1581532/1610877929723-a1dfc439-0ef4-4327-971d-cec37e372e9a.png"></p>
+<h1 id="7-3-目录规划"><a href="#7-3-目录规划" class="headerlink" title="7.3 目录规划"></a>7.3 目录规划</h1><table>
+<thead>
+<tr>
+<th>**角色 **</th>
+<th><strong>IP</strong></th>
+<th><strong>端口</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Master</td>
+<td>10.0.0.51</td>
+<td>6379</td>
+</tr>
+<tr>
+<td>Sentinel-01</td>
+<td></td>
+<td>26379</td>
+</tr>
+<tr>
+<td>slave01</td>
+<td>10.0.0.52</td>
+<td>6379</td>
+</tr>
+<tr>
+<td>Sentinel-02</td>
+<td></td>
+<td>26379</td>
+</tr>
+<tr>
+<td>slave02</td>
+<td>10.0.0.53</td>
+<td>26379</td>
+</tr>
+<tr>
+<td>Sentinel-03</td>
+<td></td>
+<td>26379</td>
+</tr>
+</tbody></table>
+<h1 id="7-4-安装配置命令"><a href="#7-4-安装配置命令" class="headerlink" title="7.4 安装配置命令"></a>7.4 安装配置命令</h1><p>哨兵是基于主从复制，所以需要先部署好主从复制</p>
+<p>手工操作步骤如下：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="number">1.</span>先配置和创建好 <span class="number">1</span> 台服务器的节点和哨兵</span><br><span class="line"><span class="number">2.</span>使用 rsync 传输到另外 <span class="number">2</span> 台机器</span><br><span class="line"><span class="number">3.</span>修改另外两台机器的 <span class="variable constant_">IP</span> 地址</span><br><span class="line">	<span class="attr">ps</span>: 建议使用 ansible 剧本批量部署</span><br></pre></td></tr></table></figure>
+
+<h3 id="7-4-1-db01-命令"><a href="#7-4-1-db01-命令" class="headerlink" title="7.4.1 db01 命令"></a>7.4.1 db01 命令</h3><figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line">mkdir -p /data/redis_cluster/redis_26379</span><br><span class="line">mkdir -p /opt/redis_cluster/redis_26379/&#123;conf,pid,logs&#125;</span><br><span class="line"></span><br><span class="line">cat &gt; <span class="regexp">/opt/</span>redis_cluster/redis_26379/conf/redis_26379.<span class="property">conf</span>&lt;&lt;<span class="variable constant_">EOF</span></span><br><span class="line">bind <span class="number">10.0</span><span class="number">.0</span><span class="number">.51</span></span><br><span class="line">port <span class="number">26379</span></span><br><span class="line">daemonize yes</span><br><span class="line">logfile /opt/redis_cluster/redis_26379/logs/redis_26379.<span class="property">log</span></span><br><span class="line">dir /data/redis_cluster/redis_26379</span><br><span class="line">sentinel monitor mymaster <span class="number">10.0</span><span class="number">.0</span><span class="number">.51</span> <span class="number">6379</span> <span class="number">2</span></span><br><span class="line">sentinel down-after-milliseconds mymaster <span class="number">3000</span></span><br><span class="line">sentinel parallel-syncs mymaster <span class="number">1</span></span><br><span class="line">sentinel failover-timeout mymaster <span class="number">1800</span></span><br><span class="line"><span class="variable constant_">EOF</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="7-4-2-db02-命令"><a href="#7-4-2-db02-命令" class="headerlink" title="7.4.2 db02 命令"></a>7.4.2 db02 命令</h3><figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line">mkdir -p /data/redis_cluster/redis_26379</span><br><span class="line">mkdir -p /opt/redis_cluster/redis_26379/&#123;conf,pid,logs&#125;</span><br><span class="line"></span><br><span class="line">cat &gt; <span class="regexp">/opt/</span>redis_cluster/redis_26379/conf/redis_26379.<span class="property">conf</span>&lt;&lt;<span class="variable constant_">EOF</span></span><br><span class="line">bind <span class="number">10.0</span><span class="number">.0</span><span class="number">.52</span></span><br><span class="line">port <span class="number">26379</span></span><br><span class="line">daemonize yes</span><br><span class="line">logfile /opt/redis_cluster/redis_26379/logs/redis_26379.<span class="property">log</span></span><br><span class="line">dir /data/redis_cluster/redis_26379</span><br><span class="line">sentinel monitor mymaster <span class="number">10.0</span><span class="number">.0</span><span class="number">.51</span> <span class="number">6379</span> <span class="number">2</span></span><br><span class="line">sentinel down-after-milliseconds mymaster <span class="number">3000</span></span><br><span class="line">sentinel parallel-syncs mymaster <span class="number">1</span></span><br><span class="line">sentinel failover-timeout mymaster <span class="number">1800</span></span><br><span class="line"><span class="variable constant_">EOF</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="7-4-3-db03-命令"><a href="#7-4-3-db03-命令" class="headerlink" title="7.4.3 db03 命令"></a>7.4.3 db03 命令</h3><figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line">mkdir -p /data/redis_cluster/redis_26379</span><br><span class="line">mkdir -p /opt/redis_cluster/redis_26379/&#123;conf,pid,logs&#125;</span><br><span class="line">cat &gt; <span class="regexp">/opt/</span>redis_cluster/redis_26379/conf/redis_26379.<span class="property">conf</span>&lt;&lt;<span class="variable constant_">EOF</span></span><br><span class="line">bind <span class="number">10.0</span><span class="number">.0</span><span class="number">.53</span></span><br><span class="line">port <span class="number">26379</span></span><br><span class="line">daemonize yes</span><br><span class="line">logfile /opt/redis_cluster/redis_26379/logs/redis_26379.<span class="property">log</span></span><br><span class="line">dir /data/redis_cluster/redis_26379</span><br><span class="line">sentinel monitor mymaster <span class="number">10.0</span><span class="number">.0</span><span class="number">.51</span> <span class="number">6379</span> <span class="number">2</span></span><br><span class="line">sentinel down-after-milliseconds mymaster <span class="number">3000</span></span><br><span class="line">sentinel parallel-syncs mymaster <span class="number">1</span></span><br><span class="line">sentinel failover-timeout mymaster <span class="number">1800</span></span><br><span class="line"><span class="variable constant_">EOF</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="7-4-4-配置文件解释"><a href="#7-4-4-配置文件解释" class="headerlink" title="7.4.4 配置文件解释"></a>7.4.4 配置文件解释</h3><figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line">sentinel monitor mymaster <span class="number">10.0</span><span class="number">.0</span><span class="number">.51</span> <span class="number">6379</span> <span class="number">2</span></span><br><span class="line">#mymaster 主节点别名 主节点 ip 和端口，判断主节点失败，两个 sentinel 节点同意</span><br><span class="line">sentinel down-after-milliseconds mymaster <span class="number">3000</span></span><br><span class="line">#选项指定了 <span class="title class_">Sentinel</span> 认为服务器已经断线所需的毫秒数。</span><br><span class="line">sentinel parallel-syncs mymaster <span class="number">1</span></span><br><span class="line">#向新的主节点发起复制操作的从节点个数，<span class="number">1</span> 轮询发起复制</span><br><span class="line">sentinel failover-timeout mymaster <span class="number">18000</span></span><br><span class="line">#故障转移超时时间</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2021/png/1581532/1610878275263-d98266eb-1c71-447f-a62b-b4355e9c0e2a.png"></p>
+<h3 id="7-4-5-db02-x2F-db03-命令"><a href="#7-4-5-db02-x2F-db03-命令" class="headerlink" title="7.4.5 db02&#x2F;db03 命令"></a>7.4.5 db02&#x2F;db03 命令</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">-db01</span><br><span class="line">rsync -avz /opt/* db02:/opt/</span><br><span class="line">rsync -avz /opt/* db03:/opt/</span><br><span class="line"></span><br><span class="line">-db02</span><br><span class="line"><span class="built_in">mkdir</span> -p /data/redis_cluster/redis_26379</span><br><span class="line"><span class="built_in">cd</span> /opt/redis_cluster/redis</span><br><span class="line">make install</span><br><span class="line">sed -i <span class="string">&#x27;s#bind 10.0.0.51#bind 10.0.0.52#g&#x27;</span> /opt/redis_cluster/redis_6379/conf/redis_6379.conf</span><br><span class="line">sed -i <span class="string">&#x27;s#bind 10.0.0.51#bind 10.0.0.52#g&#x27;</span> /opt/redis_cluster/redis_26379/conf/redis_26379.conf</span><br><span class="line"></span><br><span class="line">-db03</span><br><span class="line"><span class="built_in">mkdir</span> -p /data/redis_cluster/redis_26379</span><br><span class="line"><span class="built_in">cd</span> /opt/redis_cluster/redis</span><br><span class="line">make install</span><br><span class="line"></span><br><span class="line">sed -i <span class="string">&#x27;s#bind 10.0.0.51#bind 10.0.0.53#g&#x27;</span> /opt/redis_cluster/redis_6379/conf/redis_6379.conf</span><br><span class="line">sed -i <span class="string">&#x27;s#bind 10.0.0.51#bind 10.0.0.53#g&#x27;</span> /opt/redis_cluster/redis_26379/conf/redis_26379.conf</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="7-4-6-配置主从关系"><a href="#7-4-6-配置主从关系" class="headerlink" title="7.4.6 配置主从关系"></a>7.4.6 配置主从关系</h3><p>db02 和 db03</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">redis-server /opt/redis_cluster/redis_6379/conf/redis_6379.conf</span><br><span class="line">redis-cli slaveof 10.0.0.51 6379</span><br><span class="line">ps -ef|grep redis</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="7-4-7-启动哨兵"><a href="#7-4-7-启动哨兵" class="headerlink" title="7.4.7 启动哨兵"></a>7.4.7 启动哨兵</h3><p>3 台都操作</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">redis-sentinel /opt/redis_cluster/redis_26379/conf/redis_26379.conf</span><br></pre></td></tr></table></figure>
+
+<h1 id="7-5-配置文件的变化"><a href="#7-5-配置文件的变化" class="headerlink" title="7.5 配置文件的变化"></a>7.5 配置文件的变化</h1><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">当所有节点启动后,配置文件的内容发生了变化,体现在三个方面:</span><br><span class="line">1)Sentinel 节点自动发现了从节点,其余 Sentinel 节点</span><br><span class="line">2)去掉了默认配置,例如 parallel-syncs failover-timeout 参数</span><br><span class="line">3)添加了配置纪元相关参数</span><br></pre></td></tr></table></figure>
+
+<p>查看配置文件命令</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">[root@db01 ~]<span class="comment"># tail -6 /opt/redis_cluster/redis_26379/conf/redis_26379.conf</span></span><br><span class="line"><span class="comment"># Generated by CONFIG REWRITE</span></span><br><span class="line">sentinel known-slave mymaster 10.0.0.52 6379</span><br><span class="line">sentinel known-slave mymaster 10.0.0.53 6379</span><br><span class="line">sentinel known-sentinel mymaster 10.0.0.53 26379 7794fbbb9dfb62f4d2d7f06ddef06bacb62e4c97</span><br><span class="line">sentinel known-sentinel mymaster 10.0.0.52 26379 17bfab23bc53a531571790b9b31558dddeaeca40</span><br><span class="line">sentinel current-epoch 0</span><br></pre></td></tr></table></figure>
+
+<h1 id="7-6-哨兵常用操作-API"><a href="#7-6-哨兵常用操作-API" class="headerlink" title="7.6 哨兵常用操作 API"></a>7.6 哨兵常用操作 API</h1><p>登陆命令</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">[root@db01 ~]<span class="comment"># redis-cli -h db01 -p 26379</span></span><br></pre></td></tr></table></figure>
+
+<p>Sentinel 节点是一个特殊的 Redis 节点,他们有自己专属的 API</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">Info Sentinel</span><br><span class="line">Sentinel masters</span><br><span class="line">Sentinel master &lt;master name&gt;</span><br><span class="line">Sentinel slaves &lt;master name&gt;</span><br><span class="line">Sentinel sentinels &lt;master name&gt;</span><br><span class="line">Sentinel get-master-addr-by-name &lt;master name&gt;</span><br><span class="line">Sentinel failover &lt;master name&gt;</span><br><span class="line">Sentinel flushconfig</span><br></pre></td></tr></table></figure>
+
+<h1 id="7-7-模拟故障转移"><a href="#7-7-模拟故障转移" class="headerlink" title="7.7 模拟故障转移"></a>7.7 模拟故障转移</h1><p><img src="https://cdn.fbbizyy.com/yuque/0/2021/png/1581532/1610878608305-2435777b-43db-456e-91bb-e1a8ea97033c.png"></p>
+<ul>
+<li>停掉其中 1 个节点，然后观察其他节点的日志变化 故障转移后配置文件变化</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">Redis Sentinel 存在多个从节点时,如果想将指定的从节点晋升为主节点,可以将其他从节点的 slavepriority 配置为 0,但是需要注意 failover 后,将 slave-priority 调回原值.</span><br><span class="line"></span><br><span class="line">1.查询命令:CONFIG GET slave-priority</span><br><span class="line">2.设置命令:CONFIG SET slave-priority 0</span><br><span class="line">3.主动切换:sentinel failover mymaster</span><br></pre></td></tr></table></figure>
+
+<p>操作过程： db02&#x2F;db03 操作</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">redis-cli -h db02 -p 6379 CONFIG SET slave-priority 0</span><br><span class="line">redis-cli -h db03 -p 6379 CONFIG SET slave-priority 0</span><br></pre></td></tr></table></figure>
+
+<p>db01 操作</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">redis-cli -h db01 -p 26379 Sentinel failover mymaster</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+]]></content>
+      <categories>
+        <category>redis</category>
+      </categories>
+      <tags>
+        <tag>redis</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Redis的持久化机制：RDB和AOF</title>
+    <url>/2024/11/06/Redis%E7%9A%84%E6%8C%81%E4%B9%85%E5%8C%96%E6%9C%BA%E5%88%B6%EF%BC%9ARDB%E5%92%8CAOF/</url>
+    <content><![CDATA[<p><font style="background:#F8CED3;color:#70000D">Redis</font> <font style="background:#C0DDFC;color:#00346B">持久化</font> <font style="background:#DBF1B7;color:#2A4200">RDB</font> <font style="background:#C0CAFC;color:#101E60">AOF</font></p>
+<h2 id="Redis持久化"><a href="#Redis持久化" class="headerlink" title="Redis持久化"></a>Redis持久化</h2><p>Redis作为一个键值对内存数据库(NoSQL)，数据都存储在内存当中，在处理客户端请求时，所有操作都在内存当中进行，如下所示：</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2020/png/396745/1595947486480-a9da248e-7b33-49f1-a2e1-34f6860258ee.png"></p>
+<p><strong>这样做有什么问题呢？</strong></p>
+<p>存储在内存当中的数据，只要服务器关机(各种原因引起的)，内存中的数据就会消失了，不仅服务器关机会造成数据消失，Redis服务器守护进程退出，内存中的数据也一样会消失。</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2020/png/396745/1595947587065-79abeaa4-c341-40dd-80b1-327e6274e9cc.png"></p>
+<p>对于只把Redis当缓存来用的项目来说，数据消失或许问题不大，重新从数据源把数据加载进来就可以了，但如果直接把用户提交的业务数据存储在Redis当中，把Redis作为数据库来使用，在其放存储重要业务数据，那么Redis的内存数据丢失所造成的影响也许是毁灭性。</p>
+<p>为了避免内存中数据丢失，Redis提供了对持久化的支持，可以选择不同的方式将数据从内存中保存到硬盘当中，使数据可以持久化保存。</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2020/png/396745/1595947635480-edd0424f-a715-4fbe-b098-6e0b2207a81b.png"></p>
+<p>Redis提供了RDB和AOF两种不同的数据持久化方式。</p>
+<hr>
+<span id="more"></span>
+<h2 id="RDB"><a href="#RDB" class="headerlink" title="RDB"></a>RDB</h2><p>RDB是一种快照存储持久化方式，具体就是将Redis某一时刻的内存数据保存到硬盘的文件当中，默认保存的文件名为dump.rdb，而在Redis服务器启动时，会重新加载dump.rdb文件的数据到内存当中恢复数据。</p>
+<h3 id="开启RDB持久化方式"><a href="#开启RDB持久化方式" class="headerlink" title="开启RDB持久化方式"></a>开启RDB持久化方式</h3><p>开启RDB持久化方式很简单，客户端可以通过向Redis服务器发送save或bgsave命令让服务器生成rdb文件，或者通过服务器配置文件指定触发RDB条件。</p>
+<h4 id="1-save命令"><a href="#1-save命令" class="headerlink" title="1. save命令"></a>1. save命令</h4><p>save命令是一个同步操作。</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 同步数据到磁盘上</span></span><br><span class="line">&gt; save</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2020/png/396745/1595947995230-b9be3099-e153-4589-85eb-5f0dad21b53a.png"></p>
+<p>当客户端向服务器发送save命令请求进行持久化时，服务器会阻塞save命令之后的其他客户端的请求，直到数据同步完成。</p>
+<p>如果数据量太大，同步数据会执行很久，而这期间Redis服务器也无法接收其他请求，所以，最好不要在生产环境使用save命令。</p>
+<h4 id="2-bgsave"><a href="#2-bgsave" class="headerlink" title="2. bgsave"></a>2. bgsave</h4><p>与save命令不同，bgsave命令是一个异步操作。</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 异步保存数据集到磁盘上</span></span><br><span class="line">&gt; bgsave</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2020/png/396745/1595947852470-eaba962f-4ff1-47c2-b2cb-56336de93b9d.png"></p>
+<p>当客户端发服务发出bgsave命令时，Redis服务器主进程会forks一个子进程来数据同步问题，在将数据保存到rdb文件之后，子进程会退出。</p>
+<p>所以，与save命令相比，Redis服务器在处理bgsave采用子线程进行IO写入，而主进程仍然可以接收其他请求，但forks子进程是同步的，所以forks子进程时，一样不能接收其他请求，这意味着，如果forks一个子进程花费的时间太久(一般是很快的)，bgsave命令仍然有阻塞其他客户的请求的情况发生。</p>
+<h4 id="3-服务器配置自动触发"><a href="#3-服务器配置自动触发" class="headerlink" title="3. 服务器配置自动触发"></a>3. 服务器配置自动触发</h4><p>除了通过客户端发送命令外，还有一种方式，就是在Redis配置文件中的save指定到达触发RDB持久化的条件，比如【多少秒内至少达到多少写操作】就开启RDB数据同步。</p>
+<p>例如可以在配置文件redis.conf指定如下的选项：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 900s内至少达到一条写命令</span><br><span class="line">save 900 1</span><br><span class="line"># 300s内至少达至10条写命令</span><br><span class="line">save 300 10</span><br><span class="line"># 60s内至少达到10000条写命令</span><br><span class="line">save 60 10000</span><br></pre></td></tr></table></figure>
+
+<p>之后在启动服务器时加载配置文件。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 启动服务器加载配置文件</span><br><span class="line">redis-server redis.conf</span><br></pre></td></tr></table></figure>
+
+<p>这种通过服务器配置文件触发RDB的方式，与bgsave命令类似，达到触发条件时，会forks一个子进程进行数据同步，不过最好不要通过这方式来触发RDB持久化，因为设置触发的时间太短，则容易频繁写入rdb文件，影响服务器性能，时间设置太长则会造成数据丢失。</p>
+<h3 id="rdb文件"><a href="#rdb文件" class="headerlink" title="rdb文件"></a>rdb文件</h3><p>前面介绍了三种让服务器生成rdb文件的方式，无论是由主进程生成还是子进程来生成，其过程如下：</p>
+<ul>
+<li>生成临时rdb文件，并写入数据。</li>
+<li>完成数据写入，用临时文代替代正式rdb文件。</li>
+<li>删除原来的db文件。</li>
+</ul>
+<p>RDB默认生成的文件名为dump.rdb，当然，可以通过配置文件进行更加详细配置，比如在单机下启动多个redis服务器进程时，可以通过端口号配置不同的rdb名称，如下所示：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 是否压缩rdb文件</span><br><span class="line">rdbcompression yes</span><br><span class="line"># rdb文件的名称</span><br><span class="line">dbfilename redis-6379.rdb</span><br><span class="line"># rdb文件保存目录</span><br><span class="line">dir ~/redis/</span><br></pre></td></tr></table></figure>
+
+<p><strong>RDB的几个优点</strong></p>
+<ul>
+<li>与AOF方式相比，通过rdb文件恢复数据比较快。</li>
+<li>rdb文件非常紧凑，适合于数据备份。</li>
+<li>通过RDB进行数据备，由于使用子进程生成，所以对Redis服务器性能影响较小。</li>
+</ul>
+<p><strong>RDB的几个缺点</strong></p>
+<ul>
+<li>如果服务器宕机的话，采用RDB的方式会造成某个时段内数据的丢失，比如设置10分钟同步一次或5分钟达到1000次写入就同步一次，那么如果还没达到触发条件服务器就死机了，那么这个时间段的数据会丢失。</li>
+<li>使用save命令会造成服务器阻塞，直接数据同步完成才能接收后续请求。</li>
+<li>使用bgsave命令在forks子进程时，如果数据量太大，forks的过程也会发生阻塞，另外，forks子进程会耗费内存。</li>
+</ul>
+<hr>
+<h2 id="AOF"><a href="#AOF" class="headerlink" title="AOF"></a>AOF</h2><p>Redis的另外一个持久化方式：AOF(Append-only file)。</p>
+<p>与RDB存储某个时刻的快照不同，AOF持久化方式会记录客户端对服务器的每一次写操作命令，并将这些写操作以Redis协议追加保存到以后缀为aof文件末尾，在Redis服务器重启时，会加载并运行aof文件的命令，以达到恢复数据的目的。</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2020/png/396745/1595948362986-82adb4d6-9656-43a4-be66-0a22284241af.png"></p>
+<p><strong>开启AOF持久化方式</strong></p>
+<p>Redis默认不开启AOF持久化方式，可以在配置文件中开启并进行更加详细的配置，如下面的redis.conf文件：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 开启aof机制</span><br><span class="line">appendonly yes</span><br><span class="line"># aof文件名</span><br><span class="line">appendfilename &quot;appendonly.aof&quot;</span><br><span class="line"># 写入策略,always表示每个写操作都保存到aof文件中,也可以是everysec或no</span><br><span class="line">appendfsync always</span><br><span class="line"># 默认不重写aof文件</span><br><span class="line">no-appendfsync-on-rewrite no</span><br><span class="line"># 保存目录</span><br><span class="line">dir ~/redis/</span><br></pre></td></tr></table></figure>
+
+<h3 id="三种写入策略"><a href="#三种写入策略" class="headerlink" title="三种写入策略"></a>三种写入策略</h3><p>在上面的配置文件中，可以通过appendfsync选项指定写入策略,有三个选项</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">appendfsync always</span><br><span class="line"># appendfsync everysec</span><br><span class="line"># appendfsync no</span><br></pre></td></tr></table></figure>
+
+<h4 id="1-always"><a href="#1-always" class="headerlink" title="1. always"></a>1. always</h4><p>客户端的每一个写操作都保存到aof文件当，这种策略很安全，但是每个写请注都有IO操作，所以也很慢。</p>
+<h4 id="2-everysec"><a href="#2-everysec" class="headerlink" title="2. everysec"></a>2. everysec</h4><p>appendfsync的默认写入策略，每秒写入一次aof文件，因此，最多可能会丢失1s的数据。</p>
+<h4 id="3-no"><a href="#3-no" class="headerlink" title="3. no"></a>3. no</h4><p>Redis服务器不负责写入aof，而是交由操作系统来处理什么时候写入aof文件。更快，但也是最不安全的选择，不推荐使用。</p>
+<h3 id="AOF文件重写"><a href="#AOF文件重写" class="headerlink" title="AOF文件重写"></a>AOF文件重写</h3><p>AOF将客户端的每一个写操作都追加到aof文件末尾，比如对一个key多次执行incr命令，这时候，aof保存每一次命令到aof文件中，aof文件会变得非常大。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">incr num 1</span><br><span class="line">incr num 2</span><br><span class="line">incr num 3</span><br><span class="line">incr num 4</span><br><span class="line">incr num 5</span><br><span class="line">incr num 6</span><br><span class="line">...</span><br><span class="line">incr num 100000</span><br></pre></td></tr></table></figure>
+
+<p>aof文件太大，加载aof文件恢复数据时，就会非常慢，为了解决这个问题，Redis支持aof文件重写，通过重写aof，可以生成一个恢复当前数据的最少命令集，比如上面的例子中那么多条命令，可以重写为：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set num 100000</span><br></pre></td></tr></table></figure>
+
+<p>aof文件是一个二进制文件，并不是像上面的例子一样，直接保存每个命令，而使用Redis自己的格式，上面只是方便演示。<font style="color:#000000;"></font></p>
+<h3 id="两种重写方式"><a href="#两种重写方式" class="headerlink" title="两种重写方式"></a>两种重写方式</h3><p>通过在redis.conf配置文件中的选项 <code>no-appendfsync-on-rewrite</code> 可以设置是否开启重写，这种方式会在每次fsync时都重写，影响服务器性以，因此默认值为no，不推荐使用。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 默认不重写aof文件</span><br><span class="line">no-appendfsync-on-rewrite no</span><br></pre></td></tr></table></figure>
+
+<p>客户端向服务器发送bgrewriteaof命令，也可以让服务器进行AOF重写。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 让服务器异步重写追加aof文件命令</span><br><span class="line">&gt; bgrewriteaof</span><br></pre></td></tr></table></figure>
+
+<p>AOF重写方式也是异步操作，即如果要写入aof文件，则Redis主进程会forks一个子进程来处理，如下所示：</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2020/png/396745/1595948490006-2c4231ef-ac2c-41a5-ad4c-db3f3425e157.png"></p>
+<p>重写aof文件的好处</p>
+<ul>
+<li>压缩aof文件，减少磁盘占用量。</li>
+<li>将aof的命令压缩为最小命令集，加快了数据恢复的速度。</li>
+</ul>
+<p><font style="color:#000000;">Redis 配置文件中有两个对应的参数是来决定重写机制的触发时机的。</font><font style="color:#000000;"></font></p>
+<p><strong><font style="color:#000000;">auto-aof-rewrite-percentage：</font></strong><font style="color:#000000;">AOF 文件</font><font style="color:#000000;">距离上次文件增长超过多少百分比</font></p>
+<p><strong><font style="color:#000000;">auto-aof-rewrite-min-size：</font></strong><font style="color:#000000;">AOF 文件体积最小多大以上触发</font><font style="color:#000000;"></font></p>
+<p><font style="color:#000000;">满足所设置的条件时，会自动触发 AOF 重写，此时 Redis 会扫描整个实例的数据，重新生成一个 AOF 文件来达到瘦身的效果。</font></p>
+<h3 id="AOF文件损坏的恢复"><a href="#AOF文件损坏的恢复" class="headerlink" title="AOF文件损坏的恢复"></a>AOF文件损坏的恢复</h3><p>在写入aof日志文件时，如果Redis服务器宕机，则aof日志文件文件会出格式错误，在重启Redis服务器时，Redis服务器会拒绝载入这个aof文件，可以通过以下步骤修复aof并恢复数据。</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2020/png/396745/1604539358891-aca7e579-9fe2-484e-aaee-586850e74fb7.png"></p>
+<p>和 RBD 不同的是，Redis 中是通过创建一个不带网络连接的伪客户端来进行实现的。为什么要创建伪客户端呢？AOF 文件中的数据格式，都是由命令组成的。通过客户端直接执行每条命令就可以将数据进行恢复。</p>
+<p>1、备份现在aof文件，以防万一。</p>
+<p>2、使用redis-check-aof命令修复aof文件，该命令格式如下：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 修复aof日志文件</span></span><br><span class="line">$ redis-check-aof -fix file.aof</span><br></pre></td></tr></table></figure>
+
+<p>3、重启Redis服务器，加载已经修复的aof文件，恢复数据。</p>
+<p>:::tips<br>注意的是，如果服务器开启了 AOF 持久化功能，会优先使用 AOF 文件来进行恢复。只有在 AOF 关闭状态下，服务器才会使用 RDB 文件来进行还原。</p>
+<p>:::</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2020/png/396745/1604539359112-6b1a2cf0-6d11-4895-969d-42c400a8df75.png"></p>
+<h3 id="AOF的优点"><a href="#AOF的优点" class="headerlink" title="AOF的优点"></a>AOF的优点</h3><ul>
+<li>AOF只是追加日志文件，因此对服务器性能影响较小，速度比RDB要快，消耗的内存较少。</li>
+</ul>
+<h3 id="AOF的缺点"><a href="#AOF的缺点" class="headerlink" title="AOF的缺点"></a>AOF的缺点</h3><ul>
+<li>AOF方式生成的日志文件太大，即使通过AOF重写，文件体积仍然很大。</li>
+<li>恢复数据的速度比RDB慢。</li>
+</ul>
+<hr>
+<h2 id="RDB和AOF对比选择"><a href="#RDB和AOF对比选择" class="headerlink" title="RDB和AOF对比选择"></a>RDB和AOF对比选择</h2><h3 id="1、RDB-优点与缺点"><a href="#1、RDB-优点与缺点" class="headerlink" title="1、RDB 优点与缺点"></a>1、RDB 优点与缺点</h3><h4 id="（1）优点"><a href="#（1）优点" class="headerlink" title="（1）优点"></a>（1）优点</h4><p><u>文件体积小</u>：RDB 的文件内容是二进制格式，因此体积比实例内存小。<u>恢复速度快</u>：当 Redis 实例恢复时，加载 RDB 文件速度很快，能在很短时间内迅速恢复数据。</p>
+<h4 id="（2）缺点"><a href="#（2）缺点" class="headerlink" title="（2）缺点"></a>（2）缺点</h4><p><u>数据缺失</u>：RDB 保存的是某一时刻的数据，当 Redis 实例某一时刻异常时，会导致数据丢失。<u>消耗资源</u>：RDB 文件的生成会消耗大量的 CPU 和内存资源，有一定代价。</p>
+<h3 id="2、AOF-优点与缺点"><a href="#2、AOF-优点与缺点" class="headerlink" title="2、AOF 优点与缺点"></a>2、AOF 优点与缺点</h3><h4 id="（1）优点-1"><a href="#（1）优点-1" class="headerlink" title="（1）优点"></a>（1）优点</h4><p><u>数据更完整</u>：AOF 中是及时写入的方式，数据保存更完整。恢复时降低数据的损失率<u>易读性强</u>：AOF 中保存的数据格式是客户端的写入命令，可读性性强。</p>
+<h4 id="（2）缺点-1"><a href="#（2）缺点-1" class="headerlink" title="（2）缺点"></a>（2）缺点</h4><p><u>文件体积大</u>：AOF 中存储客户端所有的写命令，未经压缩，随着命令的写入，文件会越来越大。<u>增加磁盘IO</u>：AOF 文件刷盘如果采用每秒刷一次的方式会导致磁盘IO升高，影响性能。</p>
+<p>通过上面的介绍，了解了RDB与AOF各自的优点与缺点，到底要如何选择呢？</p>
+<p>通过下面的表，可以从几个方面对比一下RDB与AOF，在应用时，要根本自己的实际需求，选择RDB或者AOF，其实，如果想要数据足够安全，可以两种方式都开启，但两种持久化方式同时进行IO操作，会严重影响服务器性能，因此有时候不得不做出选择。</p>
+<table>
+<thead>
+<tr>
+<th><strong>方式</strong></th>
+<th><strong>RDB</strong></th>
+<th><strong>AOF</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>启动优化级</td>
+<td>低</td>
+<td>高</td>
+</tr>
+<tr>
+<td>体积</td>
+<td>小</td>
+<td>大</td>
+</tr>
+<tr>
+<td>恢复速度</td>
+<td>快</td>
+<td>由策略决定</td>
+</tr>
+<tr>
+<td>数据安全性</td>
+<td>会丢数据</td>
+<td>由策略决定</td>
+</tr>
+<tr>
+<td>轻重</td>
+<td>重</td>
+<td>轻</td>
+</tr>
+</tbody></table>
+<p>当RDB与AOF两种方式都开启时，Redis会优先使用AOF日志来恢复数据，因为AOF保存的文件比RDB文件更完整。</p>
+<h2 id="混合持久化"><a href="#混合持久化" class="headerlink" title="混合持久化"></a>混合持久化</h2><p>既然 RDB 与 AOF 持久化都存在各自的缺点，那么有没有一种更好的持久化方式？</p>
+<p>那就是混合持久化。其实就是 RDB 与 AOF 的混合模式，这是 Redis4 之后新增的。</p>
+<p>1、持久化方式</p>
+<p>混合持久化是通过 aof-use-rdb-preamble 参数来开启的。它的操作方式是这样的，在写入的时候先把数据以 RDB 的形式写入文件的开头，再将后续的写命令以 AOF 的格式追加到文件中。这样既能保证数据恢复时的速度，同时又能减少数据丢失的风险。</p>
+<p>2、文件恢复</p>
+<p>那么混合持久化中是如何来进行数据恢复的呢？在 Redis 重启时，先加载 RDB 的内容，然后再重放增量 AOF 格式命令。这样就避免了 AOF 持久化时的全量加载，从而使加载速率得到大幅提升。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><h3 id="RDB持久化"><a href="#RDB持久化" class="headerlink" title="RDB持久化"></a>RDB持久化</h3><ul>
+<li>将某一时刻的数据以二进制形式写入到磁盘里，服务重启时检测到对应文件自动加载进行数据恢复。</li>
+<li>有手动触发和自动触发两种机制。</li>
+</ul>
+<h3 id="AOF持久化"><a href="#AOF持久化" class="headerlink" title="AOF持久化"></a>AOF持久化</h3><ul>
+<li>以文件追加的方式写入客户端执行的写命令。</li>
+<li>数据恢复时，通过创建伪客户端的方式执行命令，直到恢复完成。</li>
+</ul>
+<h3 id="混合持久化-1"><a href="#混合持久化-1" class="headerlink" title="混合持久化"></a>混合持久化</h3><ul>
+<li>在写入的时候先把数据以 RDB 的形式写入文件的开头，再将后续的写命令以 AOF 的格式追加到文件中。</li>
+</ul>
+]]></content>
+      <categories>
+        <category>redis</category>
+      </categories>
+      <tags>
+        <tag>redis</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Redis的VM机制</title>
+    <url>/2024/11/06/Redis%E7%9A%84VM%E6%9C%BA%E5%88%B6/</url>
+    <content><![CDATA[<p><font style="background:#F8CED3;color:#70000D">Redis</font></p>
+<h3 id="Redis-之-VM-机制"><a href="#Redis-之-VM-机制" class="headerlink" title="Redis 之 VM 机制"></a>Redis 之 VM 机制</h3><p><font style="color:black;">Redis 的 VM (虚拟内存)机制就是暂时把不经常访问的数据(冷数据)从内存交换到磁盘中，从而腾出宝贵的内存空间用于其它需要访问的数据(热数据)。通过 VM 功能可以实现冷热数据分离，使热数据仍在内存中、冷数据保存到磁盘。这样就可以避免因为内存不足而造成访问速度下降的问题。Redis 提高数据库容量的办法有两种：一种是可以将数据分割到多个 Redis Server上；另一种是使用虚拟内存把那些不经常访问的数据交换到磁盘上。</font><strong><font style="color:rgb(53, 179, 120);">「需要特别注意的是 Redis 并没有使用 OS 提供的 Swap，而是自己实现。」</font></strong></p>
+<p><font style="color:black;">Redis 为了保证查找的速度，只会将 value 交换出去，而在内存中保留所有的 Key。所以它非常适合 Key 很小，Value 很大的存储结构。如果 Key 很大，value 很小，那么vm可能还是无法满足需求。</font></p>
+<span id="more"></span>
+<h3 id="VM-相关配置"><a href="#VM-相关配置" class="headerlink" title="VM 相关配置"></a>VM 相关配置</h3><p><font style="color:black;">通过在 redis 的 redis.conf 文件里，设置 VM 的相关参数来实现数据在内存和磁盘之间 换入和 换出操作。相关配置如下：</font></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">#开启vm功能</span><br><span class="line">vm-enabled yes</span><br><span class="line">#交换出来的value保存的文件路径</span><br><span class="line">vm-swap-file /tmp/redis.swap</span><br><span class="line">#设置当内存消耗达到上限时开始将value交换出来</span><br><span class="line">vm-max-memory 1000000</span><br><span class="line">#设置单个页面的大小，单位是字节</span><br><span class="line">vm-page-size 32</span><br><span class="line">#设置最多能交换保存多少个页到磁盘</span><br><span class="line">vm-pages 13417728</span><br><span class="line">#设置完成交换动作的工作线程数，设置为0表示不使用工作线程而使用主线程,这会以阻塞的方式来运行。建议设置成CPU核个数</span><br><span class="line">vm-max-threads 4</span><br></pre></td></tr></table></figure>
+
+<p><font style="color:black;">redis 规定同一个数据页面只能保存一个对象，但一个对象可以保存在多个数据页面中。在 redis 使用的内存没超过 vm-max-memory 时，是不会交换任何 value 到磁盘上的。当超过最大内存限制后，redis 会选择较老的对象(如果两个对象一样老会优先交换比较大的对象)将它从内存中移除，这样会更加节约内存。</font></p>
+<p>对于 Redis 来说，一个数据页面只会保存一个对象，也就是一个 Value 值，所以应该将 vm-page-size 设置成大多数 value 可以保存进去。如果设置太小，一个 value 对象就会占用几个数据页面，如果设置太大，就会造成页面空闲空间浪费。</p>
+<h3 id="VM-的工作机制"><a href="#VM-的工作机制" class="headerlink" title="VM 的工作机制"></a>VM 的工作机制</h3><p><font style="color:black;">redis 的 VM 的工作机制分为两种：一种是 vm-max-threads&#x3D;0，一种是 vm-max-threads &gt; 0。</font></p>
+<p><strong><font style="color:rgb(53, 179, 120);">「第一种：vm-max-threads &#x3D; 0」</font></strong></p>
+<ul>
+<li><font style="color:rgb(53, 179, 120);">数据换出：</font><font style="color:black;">主线程定期检查使用的内存大小，如果发现内存超出最大上限，会直接以阻塞的方式，将选中的对象 换出 到磁盘上(保存到文件中)，并释放对象占用的内存，此过程会一直重复直到下面条件满足任意一条才结束：</font><ol>
+<li><font style="color:rgb(1, 1, 1);">内存使用降到最大限制以下。</font></li>
+<li><font style="color:rgb(1, 1, 1);">设置的交换文件数量达到上限。</font></li>
+<li><font style="color:rgb(1, 1, 1);">几乎全部的对象都被交换到磁盘了。</font></li>
+</ol>
+</li>
+<li><font style="color:rgb(53, 179, 120);">数据换入：</font><font style="color:black;">当有 client 请求 key 对应的 value 已被换出到磁盘中时，主线程会以阻塞的方式从换出文件中加载对应的 value 对象，加载时此时会阻塞所有 client，然后再处理 client 的请求。</font><strong><font style="color:rgb(53, 179, 120);">「这种方式会阻塞所有的 client。」</font></strong></li>
+</ul>
+<p><strong><font style="color:rgb(53, 179, 120);">「第二种：vm-max-threads &gt; 0」</font></strong></p>
+<ul>
+<li><font style="color:rgb(53, 179, 120);">数据换出：</font><font style="color:rgb(1, 1, 1);">当主线程检测到使用内存超过最大上限，会将选中的要交换的数据放到一个队列中交由工作线程后台处理，主线程会继续处理 client 请求。</font></li>
+<li><font style="color:rgb(53, 179, 120);">数据换入：</font><font style="color:rgb(1, 1, 1);">当有 client 请求 key 的对应的 value 已被换出到磁盘中时，主线程先阻塞当前 client，然后将加载对象的信息放到一个队列中，让工作线程去加载，此时进主线程继续处理其他 client 请求。加载完毕后工作线程通知主线程，主线程再执行被阻塞的 client 的命令。</font><strong><font style="color:rgb(53, 179, 120);">「这种方式只阻塞单个 client。」</font></strong></li>
+</ul>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p><font style="color:black;">Redis 直接自己构建了 VM 机制 ，不会像一般的系统会调用系统函数处理，会浪费一定的时间去 移动 和 请求，而 Redis 不存在。这也是 Redis 能够那么快的一个原因之一了。</font></p>
+]]></content>
+      <categories>
+        <category>redis</category>
+      </categories>
+      <tags>
+        <tag>redis</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Redis配置文件详解</title>
+    <url>/2024/11/06/Redis%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E8%AF%A6%E8%A7%A3/</url>
+    <content><![CDATA[<h2 id="Redis服务配置"><a href="#Redis服务配置" class="headerlink" title="Redis服务配置"></a>Redis服务配置</h2><span id="more"></span>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 是否以守护进程启动 默认：no</span><br><span class="line">daemonize no</span><br><span class="line"># 用于设置Redis绑定的网络接口（网卡）。如果不配置bind，默认情况下Redis监听所有可用的网卡，redis只接受来自绑定网络接口的请求。</span><br><span class="line"># Redis的配置文件中一般默认有bind 127.0.0.1，只允许本地连接，如果想要被远程访问注释掉bind配置或者bind外网ip即可。</span><br><span class="line">bind 127.0.0.1</span><br><span class="line"># 是否开启保护模式 默认：yes，是否有效会被bind和requirepass配置影响</span><br><span class="line">## 当protected-mode为yes</span><br><span class="line">### 注释bind和requirepass，redis的保护模式生效，只能通过本地连接</span><br><span class="line">### 只注释bind，配置requirepass，redis的保护模式失效，可以通过密码远程连接</span><br><span class="line">### 只注释requirepass，redis的保护模式失效，可以通过bind的ip无密码连接</span><br><span class="line">## 当protected-mode为no</span><br><span class="line">### 无论上面的哪种场景，客户端都可以根据 bind 及 requirepass 实际参数来连接到 redis</span><br><span class="line">protected-mode yes</span><br><span class="line"># redis服务端口 默认：6379</span><br><span class="line">port 6379</span><br><span class="line"># 客户端连接空闲时间单位秒，如果在指定时间内没有操作则会断开连接 默认：0（不超时）</span><br><span class="line">timeout 0</span><br><span class="line"># tcp心跳检测时间单位秒，对访问客户端的一种心跳检测，每个n秒检测一次 默认：0（不检测），建议设置成60</span><br><span class="line">tcp-keepalive 0</span><br><span class="line"># 客户端最大连接数，设置redis同时可以与多少个客户端进行连接 默认：10000</span><br><span class="line">maxclients 10000</span><br><span class="line"># 日志级别配置 默认：notice</span><br><span class="line">## debug：能设置的最高的日志级别，打印所有信息，包括debug信息。</span><br><span class="line">## verbose：打印除了debug日志之外的所有日志。</span><br><span class="line">## notice：打印除了debug和verbose级别的所有日志。</span><br><span class="line">## warning：仅打印非常重要的信息。</span><br><span class="line">loglevel notice</span><br><span class="line"># 日志文件输出路径配置</span><br><span class="line">## 该路径默认为空。可以根据自己需要把日志文件输出到指定位置。</span><br><span class="line">logfile &quot;&quot;</span><br><span class="line"># 数据库数量配置 默认：16</span><br><span class="line">databases 16</span><br></pre></td></tr></table></figure>
+
+<h2 id="持久化配置"><a href="#持久化配置" class="headerlink" title="持久化配置"></a>持久化配置</h2><h3 id="RDB全量持久化配置（默认开启）"><a href="#RDB全量持久化配置（默认开启）" class="headerlink" title="RDB全量持久化配置（默认开启）"></a>RDB全量持久化配置（默认开启）</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 持久化数据存储在本地的文件名称 默认：dump.rdb</span><br><span class="line">dbfilename dump.rdb</span><br><span class="line"># 持久化数据存储在本地的路径，默认：./（当前工作目录）</span><br><span class="line">dir /data</span><br><span class="line"></span><br><span class="line"># 用于设置RDB持久化的时间间隔和条件</span><br><span class="line">## 表示每900秒内有至少1个写操作就保存一次RDB文件</span><br><span class="line">save 900 1</span><br><span class="line">## 表示每300秒内有至少10个写操作就保存一次RDB文件</span><br><span class="line">save 300 10</span><br><span class="line">## 表示每10秒内有至少1000个写操作就保存一次RDB文件</span><br><span class="line">save 60 10000</span><br><span class="line"></span><br><span class="line"># 当RDB持久化时出现错误无法继续时，是否阻塞客户端变更操作，错误可能因为磁盘已满/磁盘故障/OS级别异常等 默认：yes</span><br><span class="line">stop-writes-on-bgsave-error yes  </span><br><span class="line"># 是否启用RDB文件压缩，默认: yes，压缩往往意味着额外的cpu消耗，同时也意味这较小的文件尺寸以及较短的网络传输时间  </span><br><span class="line">rdbcompression yes  </span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="AOF增量持久化配置"><a href="#AOF增量持久化配置" class="headerlink" title="AOF增量持久化配置"></a><font style="color:rgb(79, 79, 79);">AOF增量持久化配置</font></h3><p>可以简单的认为 AOF 就是日志文件，此文件只会记录“变更操作”(例如：set&#x2F;del 等)，如果 server 中持续的大量变更操作，将会导致 AOF 文件非常的庞大，意味着 server 失效后，数据恢复的过程将会很长；事实上，一条数据经过多次变更，将会产生多条 AOF 记录，其实只要保存当前的状态，历史的操作记录是可以抛弃的；因为 AOF 持久化模式还伴生了“AOF rewrite”。</p>
+<p>优点：可以保持更高的数据完整性，如果设置追加file的时间是1s，如果redis发生故障，最多会丢失1s的数据；且如果日志写入不完整支持redis-check-aof来进行日志修复；AOF文件没被rewrite之前（文件过大时会对命令进行合并重写），可以删除其中的某些命令（比如误操作的flushall）</p>
+<p>缺点：AOF文件比RDB文件大，且恢复速度慢。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 是否开启AOF 默认：no</span><br><span class="line">appendonly yes  </span><br><span class="line"></span><br><span class="line"># 指定AOF文件名称  </span><br><span class="line">appendfilename appendonly.aof  </span><br><span class="line"></span><br><span class="line"># 用于设置AOF文件的同步策略 默认：everysec</span><br><span class="line">## 可以选择&quot;always&quot;、&quot;everysec&quot;或&quot;no&quot;。always表示每次写入都同步，everysec表示每秒同步一次，no表示由操作系统决定何时同步</span><br><span class="line">appendfsync everysec  </span><br><span class="line"></span><br><span class="line">#当同时执行主进程的写操作和子进程的重写操作时，两者都会操作磁盘，而重写往往会涉及到大量的磁盘操作，这样就会造成主进程在写aof文件的时候出现阻塞的情形。</span><br><span class="line">##如果该参数设置为no，是最安全的方式，不会丢失数据，但是要忍受阻塞的问题；</span><br><span class="line">##如果设置为yes，这就相当于将appendfsync设置为no，这说明并没有执行磁盘操作，只是写入了缓冲区。因此这样并不会造成阻塞（因为没有竞争磁盘），但是如果这个时候redis挂掉，就会丢失数据。丢失多少数据呢？在linux的操作系统的默认设置下，最多会丢失30s的数据。</span><br><span class="line">##如果应用系统无法忍受延迟，而可以容忍少量的数据丢失，则设置为yes；如果应用系统无法忍受数据丢失，则设置为no。</span><br><span class="line">no-appendfsync-on-rewrite no</span><br><span class="line"></span><br><span class="line"># 用于设置自动AOF重写的阈值。当AOF文件的扩展比例超过该值时，Redis会自动执行重写操作。默认值为100，表示当AOF文件的大小是上一次重写后大小的一倍时触发重写。  </span><br><span class="line">auto-aof-rewrite-percentage 100  </span><br><span class="line"></span><br><span class="line"># 用于设置自动AOF重写的最小大小。只有在AOF文件的大小大于该值时，才会执行重写操作。默认值为64MB，建议512mb</span><br><span class="line">auto-aof-rewrite-min-size 64mb  </span><br><span class="line"></span><br><span class="line"># 用于设置在执行AOF文件重写时是否禁用同步。如果设置为yes，则在进行重写时不会进行同步操作，默认：no</span><br><span class="line">no-appendfsync-on-rewrite no  </span><br><span class="line"></span><br><span class="line"># 用于设置在加载AOF文件时是否允许Redis忽略出现错误的命令。如果设置为&quot;yes&quot;，则忽略错误；如果设置为&quot;no&quot;，则不允许加载出现错误的AOF文件。默认：yes</span><br><span class="line">aof-load-truncated yes</span><br><span class="line"></span><br><span class="line"># 用于设置AOF文件的开头是否包含RDB格式的部分。如果设置为&quot;yes&quot;，则在AOF文件的开头会先保存一份RDB格式的数据，这有助于加速数据加载。默认：no</span><br><span class="line">aof-use-rdb-preamble no</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="安全认证配置"><a href="#安全认证配置" class="headerlink" title="安全认证配置"></a>安全认证配置</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 连接密码配置 默认无密码</span><br><span class="line">requirepass 123456</span><br></pre></td></tr></table></figure>
+
+<h2 id="主从复制配置"><a href="#主从复制配置" class="headerlink" title="主从复制配置"></a>主从复制配置</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 主库的ip及端口 5.0以上使用replica的指令</span><br><span class="line"># slaveof &lt;masterip&gt; &lt;masterport&gt;</span><br><span class="line"></span><br><span class="line"># 主库，如果设置密码，需要加主库的密码</span><br><span class="line"># masterauth &lt;master-password&gt;</span><br><span class="line"></span><br><span class="line"># 当从节点与主节点连接失败了。这是yes，则表示从节点继续应答客户端；设置no，所有连接到这台从节点的客户端，会提示正在与主节点进行同步</span><br><span class="line">slave-serve-stale-data yes</span><br><span class="line"></span><br><span class="line"># 从节点只读。</span><br><span class="line">slave-read-only yes</span><br><span class="line"></span><br><span class="line"># 新的从节点或者从节点与主节点长期没有增量同步，需要全量同步</span><br><span class="line"># 使用磁盘模式，会在从节点上新建redis快照的文件（根据配置）</span><br><span class="line"># 使用socket方式，同步数据到从节点，不落地磁盘上，效率更高， 主节点可并行传输到多个从节点上。</span><br><span class="line">repl-diskless-sync no</span><br><span class="line"></span><br><span class="line"># 从节点，配置x秒，向主节点ping一次。</span><br><span class="line"># repl-ping-slave-period 10</span><br><span class="line"></span><br><span class="line"># 同时时间设置</span><br><span class="line"># repl-timeout 60</span><br><span class="line"></span><br><span class="line"># 使用更少的宽带同步，但是会导致从节点数据延迟，建议不设置</span><br><span class="line">repl-disable-tcp-nodelay no</span><br><span class="line"></span><br><span class="line"># 当从节点与主节点断开后，主节点同步的数据会缓存到缓冲区；开启这个配置，设置大小</span><br><span class="line"># 如果不开启配置，则不缓存</span><br><span class="line"># repl-backlog-size 1mb</span><br><span class="line"></span><br><span class="line"># 当从节点一直没起来，设置这个数据为了是否缓冲区，如果配置0，则永久不释放。</span><br><span class="line"># repl-backlog-ttl 3600</span><br><span class="line"></span><br><span class="line"># 选举权重，越小权重越大，设置0，不参与</span><br><span class="line">slave-priority 100</span><br><span class="line"></span><br><span class="line"># 副本同步会存在延迟，至少3个写操作，时间延迟小于等于10秒的副本，主节点就停止写入操作。这两个参数只要一个设置为0，就禁用该功能</span><br><span class="line"># min-slaves-to-write 3</span><br><span class="line"># min-slaves-max-lag 10</span><br><span class="line">#</span><br><span class="line"># redis服务没有跟哨兵在同一个网络，比如：在容器里面跑，info replication查看到IP和端口，哨兵就有可能访问不到，这时候就需要，指定对外的IP和端口，提供给哨兵检测。</span><br><span class="line"># slave-announce-ip 5.5.5.5</span><br><span class="line"># slave-announce-port 1234</span><br></pre></td></tr></table></figure>
+
+<h2 id="Redis-key过期监听配置"><a href="#Redis-key过期监听配置" class="headerlink" title="Redis key过期监听配置"></a><font style="color:rgb(79, 79, 79);">Redis key过期监听配置</font></h2><p><font style="color:rgb(77, 77, 77);">过期key事件监听可用于订单超时处理和已完成订单自动评价等功能，当给对应的key设置的过期时间到了会自动通知客户端，客户端将监听到的数据进行处理。</font></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># key过期监听 默认：&quot;&quot;（关闭），将notify-keyspace-events设置为Ex代表开启</span><br><span class="line">notify-keyspace-events Ex</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="Redis内存淘汰策略"><a href="#Redis内存淘汰策略" class="headerlink" title="Redis内存淘汰策略"></a>Redis内存淘汰策略</h2><p>内存淘汰算法</p>
+<p>noeviction：当内存使用超过配置的时候会返回错误，不会驱逐任何键</p>
+<p>allkeys-lru：加入键的时候，如果过限，首先通过LRU算法驱逐最久没有使用的键</p>
+<p>volatile-lru：加入键的时候如果过限，首先从设置了过期时间的键集合中驱逐最久没有使用的键</p>
+<p>allkeys-random：加入键的时候如果过限，从所有key随机删除</p>
+<p>volatile-random：加入键的时候如果过限，从过期键的集合中随机驱逐</p>
+<p>volatile-ttl：从配置了过期时间的键中驱逐马上就要过期的键</p>
+<p>volatile-lfu：从所有配置了过期时间的键中驱逐使用频率最少的键</p>
+<p>allkeys-lfu：从所有键中驱逐使用频率最少的键</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 将redis存储内存设置100mb的界限，当超过这个数值开始走淘汰策略</span><br><span class="line">maxmemory 100mb</span><br><span class="line"></span><br><span class="line"># 配置策略 默认：noeviction</span><br><span class="line">maxmemory-policy allkeys-lru</span><br><span class="line"></span><br><span class="line"># LRU、LFU和最小TTL算法不是精确算法，而是近似算法</span><br><span class="line">算法（为了节省内存），因此您可以根据速度或精确默认情况下，Redis将检查五个键并选择最近使用较少，可以使用以下命令更改样本大小</span><br><span class="line">配置指令。默认值为5会产生足够好的结果。10非常接近真正的LRU，但成本更高的CPU。3更快，但不是很准确。</span><br><span class="line"># maxmemory-samples 5</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="LAZY-FREEING（惰性删除主要用于bigkey删除）"><a href="#LAZY-FREEING（惰性删除主要用于bigkey删除）" class="headerlink" title="LAZY FREEING（惰性删除主要用于bigkey删除）"></a>LAZY FREEING（惰性删除主要用于bigkey删除）</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># lazy free可以认为是惰性删除或延迟释放，针对bigkey也有很好的释放策略，有效的针对bigkey带来的性能问题</span><br><span class="line"># lazyfree-lazy-eviction 针对redis的超过了maxmeory，并设置了meory-prolicy情况下，在淘汰，释放使用lazy-free</span><br><span class="line">lazyfree-lazy-eviction no</span><br><span class="line"># lazyfree-lazy-expire 针对redis设置ttl淘汰策略，达到过期后，是否使用lazy-free</span><br><span class="line">lazyfree-lazy-expire no</span><br><span class="line"># lazyfree-lazy-server-del 是针对已经存在的key，会存在隐式的带来del操作，比如rename操作，就是先del操作。如果有bigkey，就可能会带来阻塞的情况</span><br><span class="line">lazyfree-lazy-server-del no</span><br><span class="line"># slave-lazy-flush 针对slave进行全量数据同步，slave在加载master的RDB文件前，会运行flushall来清理自己的数据场景， 参数设置决定是否采用异常flush机制</span><br><span class="line">slave-lazy-flush no</span><br></pre></td></tr></table></figure>
+
+<h2 id="lua-脚本"><a href="#lua-脚本" class="headerlink" title="lua 脚本"></a>lua 脚本</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># lua脚本执行最大的时间</span><br><span class="line"># lua脚本的好处①高效，在服务器上执行，节省了网络传输开销等，特别lua脚本，执行多个脚本，好处就体现出来了。</span><br><span class="line"># lua脚本的好处②原子性；一个业务需要多个指令完成，lua脚本比较好的选择</span><br><span class="line"># lua脚本的坏处：那就是如果你lua过于复杂，假如在里面取bigkey操作了，就会阻塞；执行时间过长；</span><br><span class="line">lua-time-limit 5000</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="redis-cluster-集群"><a href="#redis-cluster-集群" class="headerlink" title="redis cluster 集群"></a>redis cluster 集群</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">#</span><br><span class="line"># 是否开启集群</span><br><span class="line"># cluster-enabled yes</span><br><span class="line"></span><br><span class="line"># 集群配置文件名，这个文件不需要人为配置，集群会自动更新这个配置</span><br><span class="line"># cluster-config-file nodes-6379.conf</span><br><span class="line"></span><br><span class="line"># 节点连接超时时间(毫秒)</span><br><span class="line"># cluster-node-timeout 15000</span><br><span class="line"></span><br><span class="line"># 在master宕机后，所有slave节点都会申请成为master；当由于redis节点与master连接过久，数据过于陈旧了。可能不适合做为master</span><br><span class="line">#  通过过下公式可以来判断是否不适合</span><br><span class="line">#   (node-timeout * slave-validity-factor) + repl-ping-slave-period</span><br><span class="line">#  假设15秒超时 * 这个默认配置10 + 从节点配置ping一次时间</span><br><span class="line"># 15 * 10 + 10  = 160</span><br><span class="line"># cluster-slave-validity-factor 10</span><br><span class="line"></span><br><span class="line"># master的slave节点大于这个配置，则尝试把这个节点迁移到其他的master上。</span><br><span class="line"># cluster-migration-barrier 1</span><br><span class="line"></span><br><span class="line"># 默认情况下，集群全部的slot有节点负责，集群状态才为ok，才能提供服务。设置为no，可以在slot没有全</span><br><span class="line">部分配的时候提供服务。不建议打开该配置，这样会造成分区的时候，小分区的master一直在接受写请求，而</span><br><span class="line">造成很长时间数据不一致</span><br><span class="line"># cluster-slave-no-failover no</span><br></pre></td></tr></table></figure>
+
+<h2 id="慢记录-SLOW-LOG"><a href="#慢记录-SLOW-LOG" class="headerlink" title="慢记录 SLOW LOG"></a>慢记录 SLOW LOG</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 记录执行慢的指令，建议开启，这里单位是微妙</span><br><span class="line"># 1000000 这里就是1秒;10000 = 100毫秒 = 0.1秒</span><br><span class="line"># 设置0，强制记录所有，设置 &lt; 0 则不记录慢日志</span><br><span class="line">slowlog-log-slower-than 10000</span><br><span class="line"></span><br><span class="line"># 慢查询日志长度。当一个新的命令被写进日志的时候，最老的那个记录会被删掉。这个长度没有限制。只要有足</span><br><span class="line">够的内存就行。你可以通过 SLOWLOG RESET 来释放内存</span><br><span class="line"># Redis使用了一个列表来存储慢查询日志。Redis 使用了一个List 实现了一个先进先出的队列</span><br><span class="line">slowlog-max-len 128</span><br><span class="line"></span><br><span class="line"># 可通过slowlog get 数量 slowlog len | slowlog reset</span><br></pre></td></tr></table></figure>
+
+<h2 id="高级设置"><a href="#高级设置" class="headerlink" title="高级设置"></a>高级设置</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># hash命令，个数及长度大于阈值就进行压缩，这里内部是为了节省空间</span><br><span class="line">hash-max-ziplist-entries 512</span><br><span class="line">hash-max-ziplist-value 64</span><br><span class="line"></span><br><span class="line"># </span><br><span class="line">list-max-ziplist-size -2</span><br><span class="line"></span><br><span class="line"># list指令，是否可以进行压缩 0：表示禁止列表压缩 1：表示内部节点压缩</span><br><span class="line"># 头部 -&gt; 节点 -&gt; 节点 ...&gt; 尾部；内部节点进行压缩</span><br><span class="line">list-compress-depth 0</span><br><span class="line"></span><br><span class="line">set-max-intset-entries 512</span><br><span class="line"></span><br><span class="line"># zset指令，个数及长度大于阈值就进行压缩，这里内部是为了节省空间</span><br><span class="line">zset-max-ziplist-entries 128</span><br><span class="line">zset-max-ziplist-value 64</span><br><span class="line"></span><br><span class="line"># HyperLogLog 指令设置</span><br><span class="line">activerehashing yes</span><br><span class="line"></span><br><span class="line"># 客户端输出缓冲区阈值设置，达到这些上限，客户端会断开连接</span><br><span class="line">client-output-buffer-limit normal 0 0 0</span><br><span class="line">client-output-buffer-limit slave 256mb 64mb 60</span><br><span class="line">client-output-buffer-limit pubsub 32mb 8mb 60</span><br><span class="line"> </span><br><span class="line"># client-query-buffer-limit 1gb</span><br><span class="line"></span><br><span class="line"># proto-max-bulk-len 512mb</span><br><span class="line"></span><br><span class="line">hz 10</span><br><span class="line"></span><br><span class="line">aof-rewrite-incremental-fsync yes</span><br><span class="line"></span><br><span class="line"># lfu-log-factor 10</span><br><span class="line"># lfu-decay-time 1</span><br></pre></td></tr></table></figure>
+
+<h2 id="碎片清理"><a href="#碎片清理" class="headerlink" title="碎片清理"></a>碎片清理</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 为什么会有redis内存碎片？</span><br><span class="line"># Redis存储存储数据的时候向操作系统申请的内存空间可能会大于数据实际需要的存储空间或者频繁的进行修改 就会导致内存碎片</span><br><span class="line"># redis 内存碎片整理，默认是关闭，打开就开启内存碎片整理；要么就直接重启</span><br><span class="line"># 要么设置这个地方</span><br><span class="line"># activedefrag yes</span><br><span class="line"></span><br><span class="line"># 内存碎片大于100m的时候就进行清理</span><br><span class="line"># 内存碎片：used_memory_rss - used_memory</span><br><span class="line"># active-defrag-ignore-bytes 100mb</span><br><span class="line"></span><br><span class="line"># 内存碎片率计算：used_memory_rss(从操作角度来看，给redis分配的空间)/used_memory (redis使用的内容) ; 如果这里超过1.5，内存碎片就比较严重 </span><br><span class="line"># active-defrag-threshold-lower 10</span><br><span class="line"></span><br><span class="line"># Maximum percentage of fragmentation at which we use maximum effort</span><br><span class="line"># active-defrag-threshold-upper 100</span><br><span class="line"></span><br><span class="line"># 内存碎片清理占用cpu比例不读与25</span><br><span class="line"># active-defrag-cycle-min 25</span><br><span class="line"></span><br><span class="line"># 内存碎片清理占用cpu比例不读与75</span><br><span class="line"># active-defrag-cycle-max 75</span><br></pre></td></tr></table></figure>
+
+]]></content>
+      <categories>
+        <category>redis</category>
+      </categories>
+      <tags>
+        <tag>redis</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Redis通信协议-RESP</title>
+    <url>/2024/11/06/Redis%E9%80%9A%E4%BF%A1%E5%8D%8F%E8%AE%AE-RESP/</url>
+    <content><![CDATA[<p><font style="background:#F8CED3;color:#70000D">Redis</font> <font style="background:#DBF1B7;color:#2A4200">通信协议</font> <font style="background:#C0DDFC;color:#00346B">RESP</font></p>
+<h1 id="1、简介"><a href="#1、简介" class="headerlink" title="1、简介"></a>1、简介</h1><p>Redis 的通信协议是 Redis Serialization Protocol，翻译为 Redis 序列化协议，简称 RESP。它具有如下特征：</p>
+<ul>
+<li><font style="color:#4A4A4A;">在 TCP 层</font></li>
+<li><font style="color:#4A4A4A;">是二进制安全的</font></li>
+<li><font style="color:#4A4A4A;">基于请求 - 响应模式</font></li>
+<li><font style="color:#4A4A4A;">简单、易懂（人都可以看懂）</font></li>
+</ul>
+<p>RESP 所描述的是 Redis 客户端 - 服务端的交互方式。</p>
+<span id="more"></span>
+<h1 id="2、RESP-描述"><a href="#2、RESP-描述" class="headerlink" title="2、RESP 描述"></a>2、RESP 描述</h1><p>Redis 协议将传输的结构数据分为 5 种类型，单元结束时统一加上回车换行符号 <code>\r\n</code>。</p>
+<ul>
+<li><font style="color:#4A4A4A;">单行字符串，第一个字节为 </font><code>&lt;font style=&quot;color:#4A4A4A;&quot;&gt;+&lt;/font&gt;</code></li>
+<li><font style="color:#4A4A4A;">错误消息，第一个字节为 </font><code>&lt;font style=&quot;color:#4A4A4A;&quot;&gt;-&lt;/font&gt;</code></li>
+<li><font style="color:#4A4A4A;">整型数字，第一个字节为 </font><code>&lt;font style=&quot;color:#4A4A4A;&quot;&gt;:&lt;/font&gt;</code><font style="color:#4A4A4A;">，后跟整数的字符串</font></li>
+<li><font style="color:#4A4A4A;">多行字符串，第一个字节为 </font><code>&lt;font style=&quot;color:#4A4A4A;&quot;&gt;$&lt;/font&gt;</code><font style="color:#4A4A4A;">，后跟字符串的长度</font></li>
+<li><font style="color:#4A4A4A;">数组，第一个字节为 </font><code>&lt;font style=&quot;color:#4A4A4A;&quot;&gt;*&lt;/font&gt;</code><font style="color:#4A4A4A;">，后跟跟着数组的长度</font></li>
+</ul>
+<p><strong>单行字符串</strong> chenssy</p>
+<blockquote>
+<p>+chenssy</p>
+</blockquote>
+<p><strong>错误消息</strong></p>
+<blockquote>
+<p>-ERR unknown command ‘sets’….</p>
+</blockquote>
+<p><strong>整型字符串</strong> 29</p>
+<blockquote>
+<p>:29</p>
+</blockquote>
+<p><strong>多行字符串</strong> chenssy</p>
+<blockquote>
+<p>$7 chenssy</p>
+</blockquote>
+<p><strong>数组</strong>[chenssy,29]</p>
+<blockquote>
+<p>*2 $7 chenssy $2 29</p>
+</blockquote>
+<p><strong>为了更加直观的阅读，将 <strong><code>**\r\n**</code></strong> 替换为换行</strong></p>
+<h3 id="请求命令"><a href="#请求命令" class="headerlink" title="请求命令"></a>请求命令</h3><p>Redis 对每一条请求命令都做了统一规范，格式如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">*&lt;number of arguments&gt; CR LF</span><br><span class="line">$&lt;number of bytes of argument 1&gt; CR LF</span><br><span class="line">&lt;argument data&gt; CR LF</span><br><span class="line">...</span><br><span class="line">$&lt;number of bytes of argument N&gt; CR LF</span><br><span class="line">&lt;argument data&gt; CR LF</span><br></pre></td></tr></table></figure>
+
+<p>翻译如下：</p>
+<ul>
+<li><font style="color:#4A4A4A;">number of arguments ：参数的数量</font></li>
+<li><font style="color:#4A4A4A;">CR LF：\r\n</font></li>
+<li><font style="color:#4A4A4A;">number of bytes of argument 1：参数 1 的字节数</font></li>
+<li><font style="color:#4A4A4A;">number of bytes of argument N：参数 N 的字节数</font></li>
+</ul>
+<p>以命令 <code>setuserName chenssy</code> 为例，如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">*3</span><br><span class="line">$3</span><br><span class="line">SET</span><br><span class="line">$8</span><br><span class="line">userName</span><br><span class="line">$7</span><br><span class="line">chenssy</span><br></pre></td></tr></table></figure>
+
+<p>解释：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">*3 数组，表明有三个参数 SET、userName、chenssy</span><br><span class="line">$3 多行字符串，第一个参数 SET ，有 3 个字符</span><br><span class="line">$8 多行字符串，第二个参数 userName，有 8 个字符</span><br><span class="line">$7 多行字符串，第三个参数 chenssy，有 7 个字符</span><br></pre></td></tr></table></figure>
+
+<p>上面只是格式化显示的结果，真正传输的结果如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">*3\r\n$3\r\nSET\r\n$8\r\nuserName\r\n$7\r\nchenssy\r\n</span><br></pre></td></tr></table></figure>
+
+<h3 id="回复命令"><a href="#回复命令" class="headerlink" title="回复命令"></a>回复命令</h3><p>Redis 服务端响应要支持多种数据格式，所以回复命令一般都会显得复杂些，但是无论如何它都逃脱不了上面 5 中类型及其组合。</p>
+<p><strong>单行字符串</strong></p>
+<blockquote>
+<p>set name chenssy +OK</p>
+</blockquote>
+<p>当行字符串响应一般都用于状态类的请求，比如 set、del、hset 等等诸如此类的</p>
+<p><strong>错误消息</strong></p>
+<blockquote>
+<p>sets birthday 02-30 -ERR unknown command ‘sets’….</p>
+</blockquote>
+<p>因为没有 <code>sets</code> 这个命令，所以回复错误信息</p>
+<p><strong>整数型</strong></p>
+<blockquote>
+<p>incrby age 29 :58</p>
+</blockquote>
+<p><strong>多行字符串</strong></p>
+<blockquote>
+<p>get name $7 chenssy</p>
+</blockquote>
+<p>返回的 value chenssy 有 7 个字符，所以类型为 <code>$7</code></p>
+<p><strong><font style="color:#000000;">数组类型</font></strong></p>
+<blockquote>
+<p>mget name age *2 $7 chenssy $2 58</p>
+</blockquote>
+<p>通过 mget 获取 name 和 age 的值，因为结果要返回两个结果集，所以 <code>*2</code> 表示返回的结果类型为数组且有两个元素， <code>$7</code>、 <code>$2</code> 就不过多解释了。</p>
+<blockquote>
+<p>lrange listkey 0 -1 *4 $8 chenssy3 $8 chenssy2 $8 chenssy1 $7 chenssy</p>
+</blockquote>
+<p>lrange 命令是获取列表（list）中的数据的，返回结果依然是以数组方式组合起来的，和 mget 命令返回的结果集一致。</p>
+<p>RESP 协议是非常简单直观的一种协议，而且数据结构类型也只有五种。</p>
+]]></content>
+      <categories>
+        <category>redis</category>
+      </categories>
+      <tags>
+        <tag>redis</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Window安装Redis</title>
+    <url>/2024/11/06/Window%E5%AE%89%E8%A3%85Redis/</url>
+    <content><![CDATA[<p><font style="background:#F8CED3;color:#70000D">Window</font> <font style="background:#C0DDFC;color:#00346B">Redis3.2</font></p>
+<h2 id="1、安装包-Package"><a href="#1、安装包-Package" class="headerlink" title="1、安装包-Package"></a>1、安装包-Package</h2><h3 id="官网下载地址"><a href="#官网下载地址" class="headerlink" title="官网下载地址"></a>官网下载地址</h3><p><a href="https://github.com/microsoftarchive/redis/releases">Redis安装包github的下载地址</a></p>
+<p><a href="https://github.com/microsoftarchive/redis/releases">https://github.com/microsoftarchive/redis/releases</a></p>
+<span id="more"></span>
+<h3 id="版本-Version"><a href="#版本-Version" class="headerlink" title="版本-Version"></a>版本-Version</h3><h4 id="Redis-x64-3-2-100"><a href="#Redis-x64-3-2-100" class="headerlink" title="Redis-x64-3.2.100"></a>Redis-x64-3.2.100</h4><p><a href="https://www.yuque.com/attachments/yuque/0/2024/zip/25873401/1718855561276-8a74eae9-2a27-4e5a-bae7-a99646a716f9.zip">Redis-x64-3.2.100.zip</a></p>
+<h2 id="2、安装步骤-Install-Step"><a href="#2、安装步骤-Install-Step" class="headerlink" title="2、安装步骤-Install Step"></a>2、安装步骤-Install Step</h2><h3 id="将下载的压缩包解压并放在指定的程序包目录"><a href="#将下载的压缩包解压并放在指定的程序包目录" class="headerlink" title="将下载的压缩包解压并放在指定的程序包目录"></a>将下载的压缩包解压并放在指定的程序包目录</h3><h3 id="配置环境变量"><a href="#配置环境变量" class="headerlink" title="配置环境变量"></a>配置环境变量</h3><h4 id="此电脑-属性"><a href="#此电脑-属性" class="headerlink" title="此电脑-属性"></a>此电脑-属性</h4><p><img src="https://cdn.fbbizyy.com/yuque/0/2020/png/396745/1593443356355-ee8074e2-f999-43b4-8042-9d8d4b8e1d8e.png"></p>
+<h4 id="高级系统设置-gt-环境变量-gt-在Path变量添加Redis解压包的路径-gt-依次确定后退出"><a href="#高级系统设置-gt-环境变量-gt-在Path变量添加Redis解压包的路径-gt-依次确定后退出" class="headerlink" title="高级系统设置-&gt;环境变量-&gt;在Path变量添加Redis解压包的路径-&gt;依次确定后退出"></a>高级系统设置-&gt;环境变量-&gt;在Path变量添加Redis解压包的路径-&gt;依次确定后退出</h4><p><img src="https://cdn.fbbizyy.com/yuque/0/2020/png/396745/1593443628678-59ef1ed4-6767-4cb2-b7f8-b575820fd79f.png"></p>
+<h3 id="在Redis目录下启动Redis服务"><a href="#在Redis目录下启动Redis服务" class="headerlink" title="在Redis目录下启动Redis服务"></a>在Redis目录下启动Redis服务</h3><h4 id="在文件夹打开Redis目录，选中路径栏输入cmd回车"><a href="#在文件夹打开Redis目录，选中路径栏输入cmd回车" class="headerlink" title="在文件夹打开Redis目录，选中路径栏输入cmd回车"></a>在文件夹打开Redis目录，选中路径栏输入cmd回车</h4><p><img src="https://cdn.fbbizyy.com/yuque/0/2020/png/396745/1593444904380-efc3d45f-2f58-4339-8a23-91ecaf3a655d.png"></p>
+<h4 id="在弹出的命令行输入命令启动程序"><a href="#在弹出的命令行输入命令启动程序" class="headerlink" title="在弹出的命令行输入命令启动程序"></a>在弹出的命令行输入命令启动程序</h4><figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line">D:\DevTools\Redis&gt;redis<span class="literal">-server</span>.exe redis.windows.conf</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2020/png/396745/1593443818990-c67ec8ca-cb30-4a1e-845f-7002fa44469b.png"></p>
+<h3 id="注册Redis服务到Window服务下"><a href="#注册Redis服务到Window服务下" class="headerlink" title="注册Redis服务到Window服务下"></a>注册Redis服务到Window服务下</h3><h4 id="在Redis目录下新开一个cmd命令行程序"><a href="#在Redis目录下新开一个cmd命令行程序" class="headerlink" title="在Redis目录下新开一个cmd命令行程序"></a>在Redis目录下新开一个cmd命令行程序</h4><figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line">D:\DevTools\Redis&gt;redis<span class="literal">-server</span> <span class="literal">--service-install</span> redis.windows<span class="literal">-service</span>.conf <span class="literal">--loglevel</span> verbose</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2020/png/396745/1593444017304-7fab3561-79e4-48f7-ab9f-d483bcb942e3.png"></p>
+<h3 id="启动Redis服务"><a href="#启动Redis服务" class="headerlink" title="启动Redis服务"></a>启动Redis服务</h3><h4 id="不以管理员身份启动报权限访问错误"><a href="#不以管理员身份启动报权限访问错误" class="headerlink" title="不以管理员身份启动报权限访问错误"></a>不以管理员身份启动报权限访问错误</h4><p><img src="https://cdn.fbbizyy.com/yuque/0/2020/png/396745/1593444115535-5c3c234e-a4cb-48af-8c9a-529c3730e1b5.png"></p>
+<h4 id="以管理员身份打开cmd"><a href="#以管理员身份打开cmd" class="headerlink" title="以管理员身份打开cmd"></a>以管理员身份打开cmd</h4><p><img src="https://cdn.fbbizyy.com/yuque/0/2020/png/396745/1593444158272-8a4e518e-2162-4abc-bb75-e05f7cd9b4c5.png"></p>
+<h4 id="输入Redis服务启动命令"><a href="#输入Redis服务启动命令" class="headerlink" title="输入Redis服务启动命令"></a>输入Redis服务启动命令</h4><figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line">C:\WINDOWS\system32&gt;net <span class="built_in">start</span> Redis</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2020/png/396745/1593444257405-e7f9a422-0073-4168-a5d5-6ea43bf8ea68.png"></p>
+<h3 id="打开Redis客户端进行测试"><a href="#打开Redis客户端进行测试" class="headerlink" title="打开Redis客户端进行测试"></a>打开Redis客户端进行测试</h3><h4 id="在cmd命令行输入打开客户端的目录redis-cli"><a href="#在cmd命令行输入打开客户端的目录redis-cli" class="headerlink" title="在cmd命令行输入打开客户端的目录redis-cli"></a>在cmd命令行输入打开客户端的目录redis-cli</h4><figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line">C:\WINDOWS\system32&gt;redis<span class="literal">-cli</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2020/png/396745/1593444303955-4c2af323-1f9b-43e7-8352-01999ce61796.png"></p>
+<h4 id="使用ping命令检测Redis服务器是否启动"><a href="#使用ping命令检测Redis服务器是否启动" class="headerlink" title="使用ping命令检测Redis服务器是否启动"></a>使用ping命令检测Redis服务器是否启动</h4><p><img src="https://cdn.fbbizyy.com/yuque/0/2020/png/396745/1593444413003-ab4602cf-8223-4b0e-87cc-cf560a87796a.png"></p>
+<h4 id="进行简单的赋值取值操作"><a href="#进行简单的赋值取值操作" class="headerlink" title="进行简单的赋值取值操作"></a>进行简单的赋值取值操作</h4><figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line">C:\WINDOWS\system32&gt;redis<span class="literal">-cli</span></span><br><span class="line"><span class="number">127.0</span>.<span class="number">0.1</span>:<span class="number">6379</span>&gt; ping</span><br><span class="line">PONG</span><br><span class="line"><span class="number">127.0</span>.<span class="number">0.1</span>:<span class="number">6379</span>&gt; <span class="built_in">set</span> <span class="built_in">Fc</span> <span class="number">123</span></span><br><span class="line">OK</span><br><span class="line"><span class="number">127.0</span>.<span class="number">0.1</span>:<span class="number">6379</span>&gt; get <span class="built_in">Fc</span></span><br><span class="line"><span class="string">&quot;123&quot;</span></span><br><span class="line"><span class="number">127.0</span>.<span class="number">0.1</span>:<span class="number">6379</span>&gt;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2020/png/396745/1593444443388-280dcb98-8584-4cc9-91bb-f8db4a80a8e0.png"></p>
+<h3 id="配置Redis服务器访问的密码"><a href="#配置Redis服务器访问的密码" class="headerlink" title="配置Redis服务器访问的密码"></a>配置Redis服务器访问的密码</h3><h4 id="在Redis文件夹下打开redis-windows-service-conf文件"><a href="#在Redis文件夹下打开redis-windows-service-conf文件" class="headerlink" title="在Redis文件夹下打开redis.windows-service.conf文件"></a>在Redis文件夹下打开redis.windows-service.conf文件</h4><p><img src="https://cdn.fbbizyy.com/yuque/0/2020/png/396745/1593444506317-362797f0-2750-41e6-bd0d-a728db85f424.png"></p>
+<h4 id="编辑444行设置访问密码"><a href="#编辑444行设置访问密码" class="headerlink" title="编辑444行设置访问密码"></a>编辑444行设置访问密码</h4><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">requirepass 123456</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2020/png/396745/1593444669428-998e70de-3ba6-43d2-babb-108187bd2d64.png"></p>
+<h3 id="重启Redis服务使密码生效"><a href="#重启Redis服务使密码生效" class="headerlink" title="重启Redis服务使密码生效"></a>重启Redis服务使密码生效</h3><figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line">C:\WINDOWS\system32&gt;net stop Redis</span><br><span class="line"></span><br><span class="line">Redis 服务已成功停止。</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">C:\WINDOWS\system32&gt;net <span class="built_in">start</span> Redis</span><br><span class="line"></span><br><span class="line">Redis 服务已经启动成功。</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">C:\WINDOWS\system32&gt;redis<span class="literal">-cli</span></span><br><span class="line"><span class="number">127.0</span>.<span class="number">0.1</span>:<span class="number">6379</span>&gt; ping</span><br><span class="line">(error) NOAUTH Authentication required.</span><br><span class="line"><span class="number">127.0</span>.<span class="number">0.1</span>:<span class="number">6379</span>&gt; auth <span class="number">123456</span></span><br><span class="line">OK</span><br><span class="line"><span class="number">127.0</span>.<span class="number">0.1</span>:<span class="number">6379</span>&gt; ping</span><br><span class="line">PONG</span><br><span class="line"><span class="number">127.0</span>.<span class="number">0.1</span>:<span class="number">6379</span>&gt;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2020/png/396745/1593444794452-3cb01b6f-8a67-467b-a05b-3f98ff491d67.png"></p>
+]]></content>
+      <categories>
+        <category>redis</category>
+      </categories>
+      <tags>
+        <tag>redis</tag>
       </tags>
   </entry>
 </search>

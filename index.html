@@ -9,7 +9,8 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
   <link rel="mask-icon" href="/images/logo.svg" color="#222">
-
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8335634399768246"
+     crossorigin="anonymous"></script>
 <link rel="stylesheet" href="/css/main.css">
 
 
@@ -129,12 +130,12 @@
   </li>
         <li class="menu-item menu-item-categories">
 
-    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">8</span></a>
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">9</span></a>
 
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">54</span></a>
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">69</span></a>
 
   </li>
       <li class="menu-item menu-item-search">
@@ -191,6 +192,86 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/14/Redis%E4%B8%BB%E4%BB%8E%E6%9E%B6%E6%9E%84/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/03/14/Redis%E4%B8%BB%E4%BB%8E%E6%9E%B6%E6%9E%84/" class="post-title-link" itemprop="url">未命名</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-03-14 13:48:48 / 修改时间：13:48:51" itemprop="dateCreated datePublished" datetime="2025-03-14T13:48:48+08:00">2025-03-14</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p><font style="background:#F8CED3;color:#70000D">Redis</font></p>
+<p><font style="color:rgb(34, 34, 34);">单机的 Redis，能够承载的 QPS 大概就在上万到几万不等。对于缓存来说，一般都是用来支撑</font><strong><font style="color:rgb(34, 34, 34);">读高并发</font></strong><font style="color:rgb(34, 34, 34);">的。因此架构做成主从(master-slave)架构，一主多从，主负责写，并且将数据复制到其它的 slave 节点，从节点负责读。所有的</font><strong><font style="color:rgb(34, 34, 34);">读请求全部走从节点</font></strong><font style="color:rgb(34, 34, 34);">。这样也可以很轻松实现水平扩容，</font><strong><font style="color:rgb(34, 34, 34);">支撑读高并发</font></strong><font style="color:rgb(34, 34, 34);">。</font></p>
+<p><img src="https://cdn.nlark.com/yuque/0/2023/png/396745/1676981173688-47d05856-4a20-4709-9f23-ee252ae8f2d9.png"></p>
+<p><font style="color:rgb(34, 34, 34);">Redis replication -&gt; 主从架构 -&gt; 读写分离 -&gt; 水平扩容支撑读高并发</font></p>
+<h2 id="Redis-replication-的核心机制"><a href="#Redis-replication-的核心机制" class="headerlink" title="Redis replication 的核心机制"></a><font style="color:rgb(53, 179, 120);">Redis replication 的核心机制</font></h2><ul>
+<li><font style="color:rgb(34, 34, 34);">Redis 采用</font><strong><font style="color:rgb(34, 34, 34);">异步方式</font></strong><font style="color:rgb(34, 34, 34);">复制数据到 slave 节点，不过 Redis2.8 开始，slave node 会周期性地确认自己每次复制的数据量；</font></li>
+<li><font style="color:rgb(34, 34, 34);">一个 master node 是可以配置多个 slave node 的；</font></li>
+<li><font style="color:rgb(34, 34, 34);">slave node 也可以连接其他的 slave node；</font></li>
+<li><font style="color:rgb(34, 34, 34);">slave node 做复制的时候，不会 block master node 的正常工作；</font></li>
+<li><font style="color:rgb(34, 34, 34);">slave node 在做复制的时候，也不会 block 对自己的查询操作，它会用旧的数据集来提供服务；但是复制完成的时候，需要删除旧数据集，加载新数据集，这个时候就会暂停对外服务了；</font></li>
+<li><font style="color:rgb(34, 34, 34);">slave node 主要用来进行横向扩容，做读写分离，扩容的 slave node 可以提高读的吞吐量。</font></li>
+</ul>
+<p><font style="color:rgb(34, 34, 34);">注意，如果采用了主从架构，那么建议必须</font><strong><font style="color:rgb(34, 34, 34);">开启</font></strong><font style="color:rgb(34, 34, 34);"> master node 的持久化，不建议用 slave node 作为 master node 的数据热备，因为那样的话，如果关掉 master 的持久化，可能在 master 宕机重启的时候数据是空的，然后可能一经过复制， slave node 的数据也丢了。</font></p>
+<p><font style="color:rgb(34, 34, 34);">另外，master 的各种备份方案，也需要做。万一本地的所有文件丢失了，从备份中挑选一份 rdb 去恢复 master，这样才能</font><strong><font style="color:rgb(34, 34, 34);">确保启动的时候，是有数据的</font></strong><font style="color:rgb(34, 34, 34);">，即使采用了后续讲解的高可用机制，slave node 可以自动接管 master node，但也可能 sentinel 还没检测到 master failure，master node 就自动重启了，还是可能导致上面所有的 slave node 数据被清空。</font></p>
+<h2 id="Redis-主从复制的核心原理"><a href="#Redis-主从复制的核心原理" class="headerlink" title="Redis 主从复制的核心原理"></a><font style="color:rgb(53, 179, 120);">Redis 主从复制的核心原理</font></h2><p><font style="color:rgb(34, 34, 34);">当启动一个 slave node 的时候，它会发送一个 <code>PSYNC</code> 命令给 master node。</font></p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2025/03/14/Redis%E4%B8%BB%E4%BB%8E%E6%9E%B6%E6%9E%84/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://example.com/2025/01/15/%E9%A1%B9%E7%9B%AE%E5%8F%AF%E7%94%A8%E6%80%A7%E6%8F%90%E5%8D%87%E6%80%9D%E8%80%83/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -222,7 +303,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-10 10:32:34" itemprop="dateModified" datetime="2025-03-10T10:32:34+08:00">2025-03-10</time>
+                <time title="修改时间：2025-03-14 13:44:43" itemprop="dateModified" datetime="2025-03-14T13:44:43+08:00">2025-03-14</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -246,8 +327,7 @@
 
       
           <p>项目是一个在运营中的项目，在后续新功能开发的时候线上总是出现各种问题，让客户对项目的信任度降低很多，也对公司造成了经济损失。于是就有了一个任务，提高项目的可用性。经过一段时间的实践，总结出来了一个公式</p>
-<p>:::info<br><strong>提升系统的稳定性&#x3D;减少故障的数量+提升发现速度+提升恢复速度</strong></p>
-<p>:::</p>
+<p><strong>提升系统的稳定性&#x3D;减少故障的数量+提升发现速度+提升恢复速度</strong></p>
 <h3 id="减少故障的数量"><a href="#减少故障的数量" class="headerlink" title="减少故障的数量"></a>减少故障的数量</h3><p>线上的故障主要分为依赖类故障、变更类故障、容量类故障、固件类故障</p>
 <h4 id="依赖类故障"><a href="#依赖类故障" class="headerlink" title="依赖类故障"></a>依赖类故障</h4><p><font style="color:rgba(0, 0, 0, 0.9);">在现在分布式架构盛行的背景下，一个微服务的直接和间接依赖是非常多的。下游的某个服务、缓存、DB如果挂了，自己就会被“牵连”，无法提供正常服务。</font></p>
           <!--noindex-->
@@ -276,7 +356,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2024/10/19/%E8%87%AA%E5%AE%9A%E4%B9%89%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/11/06/Docker%E5%AE%89%E8%A3%85Redis%E5%B9%B6%E5%90%AF%E5%8A%A8/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/custom/avatar.jpg">
@@ -290,7 +370,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2024/10/19/%E8%87%AA%E5%AE%9A%E4%B9%89%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1/" class="post-title-link" itemprop="url">OpenFeign调用时如何传递传递Token并且多线程环境也能适用</a>
+            <a href="/2024/11/06/Docker%E5%AE%89%E8%A3%85Redis%E5%B9%B6%E5%90%AF%E5%8A%A8/" class="post-title-link" itemprop="url">Docker安装Redis并启动</a>
         </h2>
 
         <div class="post-meta">
@@ -300,14 +380,14 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2024-10-19 00:00:00" itemprop="dateCreated datePublished" datetime="2024-10-19T00:00:00+08:00">2024-10-19</time>
+              <time title="创建时间：2024-11-06 00:00:00" itemprop="dateCreated datePublished" datetime="2024-11-06T00:00:00+08:00">2024-11-06</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-06 15:39:21" itemprop="dateModified" datetime="2025-03-06T15:39:21+08:00">2025-03-06</time>
+                <time title="修改时间：2025-03-14 14:00:46" itemprop="dateModified" datetime="2025-03-14T14:00:46+08:00">2025-03-14</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -315,7 +395,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AA%E8%84%9A%E6%89%8B%E6%9E%B6/" itemprop="url" rel="index"><span itemprop="name">从零搭建一个脚手架</span></a>
+                  <a href="/categories/redis/" itemprop="url" rel="index"><span itemprop="name">redis</span></a>
                 </span>
             </span>
 
@@ -330,11 +410,13 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h2 id="为什么要自定义负载均衡"><a href="#为什么要自定义负载均衡" class="headerlink" title="为什么要自定义负载均衡"></a>为什么要自定义负载均衡</h2><p>在实际的开发中总是会遇到如下的场景：A,B两个成员一起开发，A在开发C服务，B在开发D服务，测试环境中也部署有C服务和D服务，A和B的诉求是不互相干扰对方。但是实际中nacos中注册了服务之后默认的负载策略是根据权重来决定访问哪个服务，当权重一致时就是各50%的访问，很容易就对其他成员造成干扰，所以我们需要一个自定义负载均衡器来做一个分流。</p>
-<h2 id="负载均衡的实现"><a href="#负载均衡的实现" class="headerlink" title="负载均衡的实现"></a>负载均衡的实现</h2><p>在springcloud的解决方案中负载均衡器使用的LoadBalancer框架，我们需要实现ReactorServiceInstanceLoadBalancer接口来完成自定义负载均衡。所以我们的思路就是在网关中进行打标，然后通过自定义负载均衡器来确定具体调用的服务。</p>
+          <p><font style="background:#F8CED3;color:#70000D">Docker</font> <font style="background:#DBF1B7;color:#2A4200">Redis</font></p>
+<h2 id="1、拉取Redis镜像"><a href="#1、拉取Redis镜像" class="headerlink" title="1、拉取Redis镜像"></a>1、拉取Redis镜像</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker pull redis</span><br></pre></td></tr></table></figure>
+
+<h2 id="2、启动Redis实例"><a href="#2、启动Redis实例" class="headerlink" title="2、启动Redis实例"></a>2、启动Redis实例</h2><p><font style="color:#F5222D;">不推荐</font>直接启动，请使用设置密码启动的命令</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2024/10/19/%E8%87%AA%E5%AE%9A%E4%B9%89%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1/#more" rel="contents">
+              <a class="btn" href="/2024/11/06/Docker%E5%AE%89%E8%A3%85Redis%E5%B9%B6%E5%90%AF%E5%8A%A8/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -358,7 +440,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2024/10/16/OpenFeign%E8%B0%83%E7%94%A8%E6%97%B6%E5%A6%82%E4%BD%95%E4%BC%A0%E9%80%92%E4%BC%A0%E9%80%92Token%E5%B9%B6%E4%B8%94%E5%A4%9A%E7%BA%BF%E7%A8%8B%E7%8E%AF%E5%A2%83%E4%B9%9F%E8%83%BD%E9%80%82%E7%94%A8%EF%BC%9F/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/11/06/Redis%20Cluster%20%E9%85%8D%E7%BD%AE/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/custom/avatar.jpg">
@@ -372,7 +454,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2024/10/16/OpenFeign%E8%B0%83%E7%94%A8%E6%97%B6%E5%A6%82%E4%BD%95%E4%BC%A0%E9%80%92%E4%BC%A0%E9%80%92Token%E5%B9%B6%E4%B8%94%E5%A4%9A%E7%BA%BF%E7%A8%8B%E7%8E%AF%E5%A2%83%E4%B9%9F%E8%83%BD%E9%80%82%E7%94%A8%EF%BC%9F/" class="post-title-link" itemprop="url">OpenFeign调用时如何传递传递Token并且多线程环境也能适用</a>
+            <a href="/2024/11/06/Redis%20Cluster%20%E9%85%8D%E7%BD%AE/" class="post-title-link" itemprop="url">Redis Cluster 配置</a>
         </h2>
 
         <div class="post-meta">
@@ -382,14 +464,14 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2024-10-16 00:00:00" itemprop="dateCreated datePublished" datetime="2024-10-16T00:00:00+08:00">2024-10-16</time>
+              <time title="创建时间：2024-11-06 00:00:00" itemprop="dateCreated datePublished" datetime="2024-11-06T00:00:00+08:00">2024-11-06</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-06 15:39:17" itemprop="dateModified" datetime="2025-03-06T15:39:17+08:00">2025-03-06</time>
+                <time title="修改时间：2025-03-14 14:02:32" itemprop="dateModified" datetime="2025-03-14T14:02:32+08:00">2025-03-14</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -397,7 +479,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AA%E8%84%9A%E6%89%8B%E6%9E%B6/" itemprop="url" rel="index"><span itemprop="name">从零搭建一个脚手架</span></a>
+                  <a href="/categories/redis/" itemprop="url" rel="index"><span itemprop="name">redis</span></a>
                 </span>
             </span>
 
@@ -412,10 +494,14 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>在上一片文章中我<font style="color:rgb(47, 48, 52);">们解决了网关层认证后向后端服务传递用户信息的问题。今天我们来解决另外一个问题：如何在 OpenFeign 中传递 Token，并且保证多线程情况下也能适用。</font></p>
+          <p><font style="background:#F8CED3;color:#70000D">Redis</font><font style="background:#DBF1B7;color:#2A4200">Redis Cluster</font></p>
+<p><font style="color:rgba(0, 0, 0, 0.85);">Redis Cluster 集群相关配置，使用集群方式的必须重视和知晓。别嘴上原理说的头头是道，而集群有哪些配置？如何配置让集群快到飞起，实现真正的高可用却一头雾水，通过下面这些配置详解也让你对集群原理更加深刻。</font></p>
+<h3 id="cluster-enabled"><a href="#cluster-enabled" class="headerlink" title="cluster-enabled"></a><font style="color:rgb(244, 138, 0);">cluster-enabled</font></h3><p><font style="color:rgba(0, 0, 0, 0.85);">普通的 Redis 实例是不能成为集群的一员，想要将该节点加入 Redis Cluster，需要设置 </font><font style="color:rgb(244, 138, 0);">cluster-enabled yes</font><font style="color:rgba(0, 0, 0, 0.85);">。</font></p>
+<h3 id="cluster-config-file"><a href="#cluster-config-file" class="headerlink" title="cluster-config-file"></a><font style="color:rgb(244, 138, 0);">cluster-config-file</font></h3><p><font style="color:rgb(244, 138, 0);">cluster-config-file nodes-6379.conf</font><font style="color:rgba(0, 0, 0, 0.85);"> 指定集群中的每个节点文件。</font></p>
+<p><font style="color:rgba(0, 0, 0, 0.85);">集群中的每个节点都有一个配置文件，这个文件并不是让程序员编辑的，是自己创建和更新的，每个节点都要使用不同的配置文件，一定要确保同一个集群中的不同节点使用的是不同的文件。</font></p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2024/10/16/OpenFeign%E8%B0%83%E7%94%A8%E6%97%B6%E5%A6%82%E4%BD%95%E4%BC%A0%E9%80%92%E4%BC%A0%E9%80%92Token%E5%B9%B6%E4%B8%94%E5%A4%9A%E7%BA%BF%E7%A8%8B%E7%8E%AF%E5%A2%83%E4%B9%9F%E8%83%BD%E9%80%82%E7%94%A8%EF%BC%9F/#more" rel="contents">
+              <a class="btn" href="/2024/11/06/Redis%20Cluster%20%E9%85%8D%E7%BD%AE/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -439,7 +525,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2024/10/11/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B8%AD%E7%9A%84SpringCloudGateway%E5%A6%82%E4%BD%95%E4%BC%A0%E9%80%92%E7%94%A8%E6%88%B7%E4%BF%A1%E6%81%AF/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/11/06/Redis%20Linux%E5%AE%89%E8%A3%85/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/custom/avatar.jpg">
@@ -453,7 +539,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2024/10/11/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B8%AD%E7%9A%84SpringCloudGateway%E5%A6%82%E4%BD%95%E4%BC%A0%E9%80%92%E7%94%A8%E6%88%B7%E4%BF%A1%E6%81%AF/" class="post-title-link" itemprop="url">微服务中的SpringCloudGateway如何传递用户信息</a>
+            <a href="/2024/11/06/Redis%20Linux%E5%AE%89%E8%A3%85/" class="post-title-link" itemprop="url">Redis Linux安装</a>
         </h2>
 
         <div class="post-meta">
@@ -463,14 +549,14 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2024-10-11 00:00:00" itemprop="dateCreated datePublished" datetime="2024-10-11T00:00:00+08:00">2024-10-11</time>
+              <time title="创建时间：2024-11-06 00:00:00" itemprop="dateCreated datePublished" datetime="2024-11-06T00:00:00+08:00">2024-11-06</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-06 15:37:51" itemprop="dateModified" datetime="2025-03-06T15:37:51+08:00">2025-03-06</time>
+                <time title="修改时间：2025-03-14 13:54:12" itemprop="dateModified" datetime="2025-03-14T13:54:12+08:00">2025-03-14</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -478,7 +564,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AA%E8%84%9A%E6%89%8B%E6%9E%B6/" itemprop="url" rel="index"><span itemprop="name">从零搭建一个脚手架</span></a>
+                  <a href="/categories/redis/" itemprop="url" rel="index"><span itemprop="name">redis</span></a>
                 </span>
             </span>
 
@@ -493,12 +579,13 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>我们在权限验证中提到了在网关中会通过缓存取出用户数据。当我们获取到用户信息后应该怎么传递下去，有两种方案：</p>
-<p>一种是通过redis对数据进行存储，在不同的服务中通过同一个redis进行调用。</p>
-<p>第二种：在SpringCloudGateway中将数据取出后放入请求头，然后通过请求头进行传输</p>
+          <h2 id="1-下载官方镜像"><a href="#1-下载官方镜像" class="headerlink" title="1.下载官方镜像"></a>1.下载官方镜像</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker pull redis:7.0.5</span><br></pre></td></tr></table></figure>
+
+<h2 id="2-准备安装位置"><a href="#2-准备安装位置" class="headerlink" title="2.准备安装位置"></a>2.准备安装位置</h2><p>执行命令</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">mkdir -p /opt/server/redis/conf</span><br><span class="line">chmod -R 777 /opt/server/redis</span><br><span class="line">cd /opt/server/redis/conf</span><br><span class="line">wget http://download.redis.io/redis-stable/redis.conf #下载redis的配置文件 (跳此步,直接下一步,我已经写好配置了)</span><br><span class="line">vim redis.conf #更改配置文件, 让宿主机可以访问redis-server #保存并退出</span><br></pre></td></tr></table></figure>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2024/10/11/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B8%AD%E7%9A%84SpringCloudGateway%E5%A6%82%E4%BD%95%E4%BC%A0%E9%80%92%E7%94%A8%E6%88%B7%E4%BF%A1%E6%81%AF/#more" rel="contents">
+              <a class="btn" href="/2024/11/06/Redis%20Linux%E5%AE%89%E8%A3%85/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -522,7 +609,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2024/10/08/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B8%AD%E7%9A%84ACL%E4%B8%8EOpenFeign%E7%9A%84%E7%BB%9D%E4%BD%B3%E9%85%8D%E5%90%88/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/11/06/Redis%20%E8%BF%90%E7%BB%B4%E5%B7%A5%E5%85%B7/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/custom/avatar.jpg">
@@ -536,7 +623,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2024/10/08/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B8%AD%E7%9A%84ACL%E4%B8%8EOpenFeign%E7%9A%84%E7%BB%9D%E4%BD%B3%E9%85%8D%E5%90%88/" class="post-title-link" itemprop="url">微服务中的ACL与OpenFeign的绝佳配合</a>
+            <a href="/2024/11/06/Redis%20%E8%BF%90%E7%BB%B4%E5%B7%A5%E5%85%B7/" class="post-title-link" itemprop="url">Redis 运维工具</a>
         </h2>
 
         <div class="post-meta">
@@ -546,14 +633,14 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2024-10-08 00:00:00" itemprop="dateCreated datePublished" datetime="2024-10-08T00:00:00+08:00">2024-10-08</time>
+              <time title="创建时间：2024-11-06 00:00:00" itemprop="dateCreated datePublished" datetime="2024-11-06T00:00:00+08:00">2024-11-06</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-06 15:36:11" itemprop="dateModified" datetime="2025-03-06T15:36:11+08:00">2025-03-06</time>
+                <time title="修改时间：2025-03-14 14:01:47" itemprop="dateModified" datetime="2025-03-14T14:01:47+08:00">2025-03-14</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -561,7 +648,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AA%E8%84%9A%E6%89%8B%E6%9E%B6/" itemprop="url" rel="index"><span itemprop="name">从零搭建一个脚手架</span></a>
+                  <a href="/categories/redis/" itemprop="url" rel="index"><span itemprop="name">redis</span></a>
                 </span>
             </span>
 
@@ -576,12 +663,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h2 id="ACL的概念"><a href="#ACL的概念" class="headerlink" title="ACL的概念"></a>ACL的概念</h2><p>在一些情况下我们需要引入第三方的接口来进行操作，但是当我们引用第三方接口的时候也会有一些隐患，第三方&#x3D;不可空，没准哪一天对方的接口参数突然就变掉了，如果我们直接在多个地方引用了第三方的接口，我们就需要在不同的地方处理接口方法，这时我们就需要引入防腐层的概念</p>
-<h3 id="什么是防腐层"><a href="#什么是防腐层" class="headerlink" title="什么是防腐层"></a>什么是防腐层</h3><p>在许多情况下，我们的系统需要依赖其他系统，但被依赖的系统可能具有不合理的数据结构、API、协议或技术实现。如果我们强烈依赖外部系统，就会导致我们的系统受到<strong>“腐蚀”</strong>。在这种情况下，通过引入防腐层，可以有效地隔离外部依赖和内部逻辑，无论外部如何变化，内部代码尽可能保持不变。</p>
-<p><img src="https://cdn.fbbizyy.com/yuque/0/2025/png/25873401/1737213600511-5dd8e777-8274-4482-92b6-db88a7a8179e.png"></p>
+          <h1 id="10-1-运维脚本"><a href="#10-1-运维脚本" class="headerlink" title="10.1 运维脚本"></a>10.1 运维脚本</h1><p>[root@db01 ~]# cat redis_shell.sh</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2024/10/08/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B8%AD%E7%9A%84ACL%E4%B8%8EOpenFeign%E7%9A%84%E7%BB%9D%E4%BD%B3%E9%85%8D%E5%90%88/#more" rel="contents">
+              <a class="btn" href="/2024/11/06/Redis%20%E8%BF%90%E7%BB%B4%E5%B7%A5%E5%85%B7/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -605,7 +690,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2024/10/06/%E7%BB%9F%E4%B8%80%E8%BF%94%E5%9B%9E%E6%97%B6%E9%97%B4%E6%A0%BC%E5%BC%8F/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/11/06/Redis%20%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/custom/avatar.jpg">
@@ -619,7 +704,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2024/10/06/%E7%BB%9F%E4%B8%80%E8%BF%94%E5%9B%9E%E6%97%B6%E9%97%B4%E6%A0%BC%E5%BC%8F/" class="post-title-link" itemprop="url">统一返回时间格式</a>
+            <a href="/2024/11/06/Redis%20%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF/" class="post-title-link" itemprop="url">Redis 使用场景</a>
         </h2>
 
         <div class="post-meta">
@@ -629,14 +714,14 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2024-10-06 00:00:00" itemprop="dateCreated datePublished" datetime="2024-10-06T00:00:00+08:00">2024-10-06</time>
+              <time title="创建时间：2024-11-06 00:00:00" itemprop="dateCreated datePublished" datetime="2024-11-06T00:00:00+08:00">2024-11-06</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-05 18:06:15" itemprop="dateModified" datetime="2025-03-05T18:06:15+08:00">2025-03-05</time>
+                <time title="修改时间：2025-03-14 14:01:57" itemprop="dateModified" datetime="2025-03-14T14:01:57+08:00">2025-03-14</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -644,7 +729,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AA%E8%84%9A%E6%89%8B%E6%9E%B6/" itemprop="url" rel="index"><span itemprop="name">从零搭建一个脚手架</span></a>
+                  <a href="/categories/redis/" itemprop="url" rel="index"><span itemprop="name">redis</span></a>
                 </span>
             </span>
 
@@ -659,10 +744,12 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>在springboot中@RestController的返回会使用Jackson来将响应序列化为json格式，所以构建统一的响应中的日期格式可以定义统一的序列化参数来实现，springboot自带的时间格式定义怎么处理的</p>
+          <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a><strong><font style="color:rgb(72, 179, 120);">前言</font></strong></h2><p><font style="color:rgb(63, 63, 63);">Redis作为一种优秀的基于key&#x2F;value的缓存，有非常不错的性能和稳定性，无论是在工作中，还是面试中，都经常会出现。</font></p>
+<p><font style="color:rgb(63, 63, 63);">总结一下在实际工作中使用Redis的10种场景，希望对你会有所帮助。</font></p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2024/png/396745/1705650079483-5a10f8da-dfe0-40b3-bea7-8d61661f6012.png"></p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2024/10/06/%E7%BB%9F%E4%B8%80%E8%BF%94%E5%9B%9E%E6%97%B6%E9%97%B4%E6%A0%BC%E5%BC%8F/#more" rel="contents">
+              <a class="btn" href="/2024/11/06/Redis%20%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -686,7 +773,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2024/10/06/%E5%9F%BA%E4%BA%8ESa-Token%E7%9A%84%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%9D%83%E9%99%90%E9%AA%8C%E8%AF%81/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/11/06/Redis-Pipeline%E7%AE%A1%E9%81%93/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/custom/avatar.jpg">
@@ -700,7 +787,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2024/10/06/%E5%9F%BA%E4%BA%8ESa-Token%E7%9A%84%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%9D%83%E9%99%90%E9%AA%8C%E8%AF%81/" class="post-title-link" itemprop="url">基于Sa-Token的微服务权限验证</a>
+            <a href="/2024/11/06/Redis-Pipeline%E7%AE%A1%E9%81%93/" class="post-title-link" itemprop="url">Redis-Pipeline管道</a>
         </h2>
 
         <div class="post-meta">
@@ -710,14 +797,14 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2024-10-06 00:00:00" itemprop="dateCreated datePublished" datetime="2024-10-06T00:00:00+08:00">2024-10-06</time>
+              <time title="创建时间：2024-11-06 00:00:00" itemprop="dateCreated datePublished" datetime="2024-11-06T00:00:00+08:00">2024-11-06</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-06 15:30:10" itemprop="dateModified" datetime="2025-03-06T15:30:10+08:00">2025-03-06</time>
+                <time title="修改时间：2025-03-14 14:01:00" itemprop="dateModified" datetime="2025-03-14T14:01:00+08:00">2025-03-14</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -725,7 +812,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AA%E8%84%9A%E6%89%8B%E6%9E%B6/" itemprop="url" rel="index"><span itemprop="name">从零搭建一个脚手架</span></a>
+                  <a href="/categories/redis/" itemprop="url" rel="index"><span itemprop="name">redis</span></a>
                 </span>
             </span>
 
@@ -740,11 +827,21 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p><strong><font style="color:rgb(44, 62, 80);">Sa-Token</font></strong><font style="color:rgb(52, 73, 94);"> 是一个轻量级 Java 权限认证框架主，要解决：</font><strong><font style="color:rgb(44, 62, 80);">登录认证</font></strong><font style="color:rgb(52, 73, 94);">、</font><strong><font style="color:rgb(44, 62, 80);">权限认证</font></strong><font style="color:rgb(52, 73, 94);">、</font><strong><font style="color:rgb(44, 62, 80);">单点登录</font></strong><font style="color:rgb(52, 73, 94);">、</font><strong><font style="color:rgb(44, 62, 80);">OAuth2.0</font></strong><font style="color:rgb(52, 73, 94);">、</font><strong><font style="color:rgb(44, 62, 80);">分布式Session会话</font></strong><font style="color:rgb(52, 73, 94);">、</font><strong><font style="color:rgb(44, 62, 80);">微服务网关鉴权</font></strong><font style="color:rgb(52, 73, 94);"> 等一系列权限相关问题。Sa-Token 旨在以简单、优雅的方式完成系统的权限认证部分。</font></p>
-<p><font style="color:rgb(52, 73, 94);">官网地址：</font><a target="_blank" rel="noopener" href="https://sa-token.cc/">https://sa-token.cc/</a></p>
+          <p><font style="background:#F8CED3;color:#70000D">Redis</font> <font style="background:#DBF1B7;color:#2A4200">Pipeline</font> <font style="background:#C0DDFC;color:#00346B">管道</font></p>
+<h1 id="环境说明"><a href="#环境说明" class="headerlink" title="环境说明"></a>环境说明</h1><blockquote>
+<p>Linux（CentOS7.3）-Redis6.0.5源码编译版</p>
+</blockquote>
+<hr>
+<h1 id="1、Redis客户端与服务端通信分析"><a href="#1、Redis客户端与服务端通信分析" class="headerlink" title="1、Redis客户端与服务端通信分析"></a>1、Redis客户端与服务端通信分析</h1><p>Redis 性能瓶颈主要是网络，主要原因就在于 Redis 执行命令的时间通常在微秒级别。正常情况下，执行一条 Redis 命令流程要经过如下几个步骤：</p>
+<ol>
+<li><font style="color:#4A4A4A;">客户端发送 Redis 命令，阻塞等待 Redis 应答</font></li>
+<li><font style="color:#4A4A4A;">Redis 接收到命令，执行命令</font></li>
+<li><font style="color:#4A4A4A;">应答，客户端收到响应信息</font></li>
+</ol>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2020/png/396745/1593255821904-3b60671e-8865-423a-893e-f9abdf6cc908.png"></p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2024/10/06/%E5%9F%BA%E4%BA%8ESa-Token%E7%9A%84%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%9D%83%E9%99%90%E9%AA%8C%E8%AF%81/#more" rel="contents">
+              <a class="btn" href="/2024/11/06/Redis-Pipeline%E7%AE%A1%E9%81%93/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -768,7 +865,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2024/10/03/%E5%AE%9E%E7%8E%B0%E7%94%A8%E6%88%B7%E9%85%8D%E7%BD%AE%E6%95%B0%E6%8D%AE%E6%BA%90%E5%BC%95%E7%94%A8%E5%88%87%E6%8D%A2/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/11/06/Redis/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/custom/avatar.jpg">
@@ -782,7 +879,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2024/10/03/%E5%AE%9E%E7%8E%B0%E7%94%A8%E6%88%B7%E9%85%8D%E7%BD%AE%E6%95%B0%E6%8D%AE%E6%BA%90%E5%BC%95%E7%94%A8%E5%88%87%E6%8D%A2/" class="post-title-link" itemprop="url">实现用户配置数据源引用切换</a>
+            <a href="/2024/11/06/Redis/" class="post-title-link" itemprop="url">Redis</a>
         </h2>
 
         <div class="post-meta">
@@ -792,14 +889,14 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2024-10-03 00:00:00" itemprop="dateCreated datePublished" datetime="2024-10-03T00:00:00+08:00">2024-10-03</time>
+              <time title="创建时间：2024-11-06 00:00:00" itemprop="dateCreated datePublished" datetime="2024-11-06T00:00:00+08:00">2024-11-06</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-05 18:03:12" itemprop="dateModified" datetime="2025-03-05T18:03:12+08:00">2025-03-05</time>
+                <time title="修改时间：2025-03-14 14:00:50" itemprop="dateModified" datetime="2025-03-14T14:00:50+08:00">2025-03-14</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -807,7 +904,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AA%E8%84%9A%E6%89%8B%E6%9E%B6/" itemprop="url" rel="index"><span itemprop="name">从零搭建一个脚手架</span></a>
+                  <a href="/categories/redis/" itemprop="url" rel="index"><span itemprop="name">redis</span></a>
                 </span>
             </span>
 
@@ -822,10 +919,11 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h2 id="需求来源"><a href="#需求来源" class="headerlink" title="需求来源"></a>需求来源</h2><p>实现代码生成器的时候因为做了分库，所以在实现代码生成时就需要根据不同的配置去拉取不同的表结构，所以需要实现不同的库使用不同的数据源</p>
+          <h4 id="Redis是什么"><a href="#Redis是什么" class="headerlink" title="Redis是什么"></a>Redis是什么</h4><p><em><font style="color:rgb(247, 49, 49);">Redis</font></em><font style="color:rgb(51, 51, 51);">（Remote Dictionary Server )，即远程字典服务，是一个开源的使用ANSI C语言编写、支持网络、可基于内存亦可持久化的日志型、Key-Value数据库，并提供多种语言的API。官网地址为：</font><font style="color:rgb(51, 51, 51);">redis.io</font></p>
+<p><font style="color:rgb(51, 51, 51);"></font></p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2024/10/03/%E5%AE%9E%E7%8E%B0%E7%94%A8%E6%88%B7%E9%85%8D%E7%BD%AE%E6%95%B0%E6%8D%AE%E6%BA%90%E5%BC%95%E7%94%A8%E5%88%87%E6%8D%A2/#more" rel="contents">
+              <a class="btn" href="/2024/11/06/Redis/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -849,7 +947,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2024/10/03/%E6%9D%83%E9%99%90%E6%A8%A1%E5%9E%8BRBAC%E6%A8%A1%E5%9E%8B/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/11/06/Redis%E5%86%85%E5%AD%98%E4%BC%98%E5%8C%96/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/custom/avatar.jpg">
@@ -863,7 +961,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2024/10/03/%E6%9D%83%E9%99%90%E6%A8%A1%E5%9E%8BRBAC%E6%A8%A1%E5%9E%8B/" class="post-title-link" itemprop="url">权限模型RBAC模型</a>
+            <a href="/2024/11/06/Redis%E5%86%85%E5%AD%98%E4%BC%98%E5%8C%96/" class="post-title-link" itemprop="url">Redis内存优化</a>
         </h2>
 
         <div class="post-meta">
@@ -873,14 +971,14 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2024-10-03 00:00:00" itemprop="dateCreated datePublished" datetime="2024-10-03T00:00:00+08:00">2024-10-03</time>
+              <time title="创建时间：2024-11-06 00:00:00" itemprop="dateCreated datePublished" datetime="2024-11-06T00:00:00+08:00">2024-11-06</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-05 18:03:04" itemprop="dateModified" datetime="2025-03-05T18:03:04+08:00">2025-03-05</time>
+                <time title="修改时间：2025-03-14 14:01:11" itemprop="dateModified" datetime="2025-03-14T14:01:11+08:00">2025-03-14</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -888,7 +986,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AA%E8%84%9A%E6%89%8B%E6%9E%B6/" itemprop="url" rel="index"><span itemprop="name">从零搭建一个脚手架</span></a>
+                  <a href="/categories/redis/" itemprop="url" rel="index"><span itemprop="name">redis</span></a>
                 </span>
             </span>
 
@@ -903,91 +1001,14 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h3 id="什么是RBAC模型"><a href="#什么是RBAC模型" class="headerlink" title="什么是RBAC模型"></a>什么是RBAC模型</h3><p>权限是需要给对应的用户的，当用户太多的时候如果一个一个用户的设定权限就会显得很复杂，这时候我们可以引入角色，<font style="color:rgb(74, 74, 74);">每个角色可以拥有多个权限，每个用户可以分配多个角色，这样用户就拥有了多个角色的多个权限</font></p>
+          <h2 id="内存配置和查看"><a href="#内存配置和查看" class="headerlink" title="内存配置和查看"></a>内存配置和查看</h2><p><strong>Redis最大内存配置建议</strong></p>
+<ul>
+<li>Redis默认占用的内存：在64位操作系统下不限制内存大小，在32位操作系统下最多使用3GB。</li>
+<li>在生产环境下，一般推荐设置为最大物理内存的四分之三。</li>
+<li>配置单位是字节Bytes，如果设置为<code>maxmemory 0</code>即代表内存无限制。
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2024/10/03/%E6%9D%83%E9%99%90%E6%A8%A1%E5%9E%8BRBAC%E6%A8%A1%E5%9E%8B/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2024/10/03/%E6%9E%84%E5%BB%BA%E7%BB%9F%E4%B8%80%E8%BF%94%E5%9B%9E%E4%BB%A5%E5%8F%8A%E5%85%A8%E5%B1%80%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/custom/avatar.jpg">
-      <meta itemprop="name" content="139">
-      <meta itemprop="description" content="一个普通的JAVA开发的博客">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="进学阁">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2024/10/03/%E6%9E%84%E5%BB%BA%E7%BB%9F%E4%B8%80%E8%BF%94%E5%9B%9E%E4%BB%A5%E5%8F%8A%E5%85%A8%E5%B1%80%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86/" class="post-title-link" itemprop="url">构建统一返回以及全局异常处理</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2024-10-03 00:00:00" itemprop="dateCreated datePublished" datetime="2024-10-03T00:00:00+08:00">2024-10-03</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-05 18:02:56" itemprop="dateModified" datetime="2025-03-05T18:02:56+08:00">2025-03-05</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AA%E8%84%9A%E6%89%8B%E6%9E%B6/" itemprop="url" rel="index"><span itemprop="name">从零搭建一个脚手架</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="统一返回格式"><a href="#统一返回格式" class="headerlink" title="统一返回格式"></a>统一返回格式</h2><h3 id="为什么需要统一返回格式"><a href="#为什么需要统一返回格式" class="headerlink" title="为什么需要统一返回格式"></a>为什么需要统一返回格式</h3><p><font style="color:rgb(47, 48, 52);">接口的返回值类型众多，有的直接返回数据传输对象（DTO），甚至直接返回数据对象（DO），还有的返回Result对象。这样对外交互时对方处理起来特别的复杂，所以需要统一的返回格式。</font></p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2024/10/03/%E6%9E%84%E5%BB%BA%E7%BB%9F%E4%B8%80%E8%BF%94%E5%9B%9E%E4%BB%A5%E5%8F%8A%E5%85%A8%E5%B1%80%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86/#more" rel="contents">
+              <a class="btn" href="/2024/11/06/Redis%E5%86%85%E5%AD%98%E4%BC%98%E5%8C%96/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -1010,7 +1031,7 @@
 
   
   <nav class="pagination">
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><span class="space">&hellip;</span><a class="page-number" href="/page/6/">6</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><span class="space">&hellip;</span><a class="page-number" href="/page/7/">7</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
   </nav>
 
 
@@ -1078,14 +1099,14 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">54</span>
+          <span class="site-state-item-count">69</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-count">9</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">

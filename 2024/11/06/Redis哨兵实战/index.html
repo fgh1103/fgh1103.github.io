@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8335634399768246"
+     crossorigin="anonymous"></script>
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="7.1 哨兵介绍 Redis 的主从模式下，主节点一旦发生故障不能提供服务，需要人工干预，将从节点晋升为主节点， 同时还需要修改客户端配置。对于很多应用场景这种方式无法接受。  Sentinel（哨兵）架构解决了 redis 主从人工干预的问题。 Redis Sentinel 是 redis 的高可用实现方案，实际生产环境中，对提高整个系统可用性非常有帮助的。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis哨兵实战">
+<meta property="og:url" content="http://example.com/2024/11/06/Redis%E5%93%A8%E5%85%B5%E5%AE%9E%E6%88%98/index.html">
+<meta property="og:site_name" content="进学阁">
+<meta property="og:description" content="7.1 哨兵介绍 Redis 的主从模式下，主节点一旦发生故障不能提供服务，需要人工干预，将从节点晋升为主节点， 同时还需要修改客户端配置。对于很多应用场景这种方式无法接受。  Sentinel（哨兵）架构解决了 redis 主从人工干预的问题。 Redis Sentinel 是 redis 的高可用实现方案，实际生产环境中，对提高整个系统可用性非常有帮助的。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2021/png/1581532/1610877929723-a1dfc439-0ef4-4327-971d-cec37e372e9a.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2021/png/1581532/1610878275263-d98266eb-1c71-447f-a62b-b4355e9c0e2a.png">
+<meta property="og:image" content="https://cdn.fbbizyy.com/yuque/0/2021/png/1581532/1610878608305-2435777b-43db-456e-91bb-e1a8ea97033c.png">
+<meta property="article:published_time" content="2024-11-05T16:00:00.000Z">
+<meta property="article:modified_time" content="2025-03-14T06:02:07.556Z">
+<meta property="article:author" content="139">
+<meta property="article:tag" content="redis">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.fbbizyy.com/yuque/0/2021/png/1581532/1610877929723-a1dfc439-0ef4-4327-971d-cec37e372e9a.png">
+
+<link rel="canonical" href="http://example.com/2024/11/06/Redis%E5%93%A8%E5%85%B5%E5%AE%9E%E6%88%98/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Redis哨兵实战 | 进学阁</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">进学阁</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">业精于勤荒于嬉，行成于思毁于随</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">38</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">9</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">69</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/11/06/Redis%E5%93%A8%E5%85%B5%E5%AE%9E%E6%88%98/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Redis哨兵实战
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-11-06 00:00:00" itemprop="dateCreated datePublished" datetime="2024-11-06T00:00:00+08:00">2024-11-06</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-14 14:02:07" itemprop="dateModified" datetime="2025-03-14T14:02:07+08:00">2025-03-14</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/redis/" itemprop="url" rel="index"><span itemprop="name">redis</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="7-1-哨兵介绍"><a href="#7-1-哨兵介绍" class="headerlink" title="7.1 哨兵介绍"></a>7.1 哨兵介绍</h1><p> Redis 的<font style="color:#F5222D;">主从模式下</font>，主节点一旦发生故障不能提供服务，<font style="color:#F5222D;">需要人工干预</font>，将从节点晋升为主节点， 同时还<font style="color:#F5222D;">需要修改客户端配置。</font>对于很多应用场景这种方式无法接受。 </p>
+<p>Sentinel（哨兵）架构解决了 redis 主从人工干预的问题。 Redis Sentinel 是 redis 的高可用实现方案，实际生产环境中，对提高整个系统可用性非常有帮助的。</p>
+<span id="more"></span>
+
+<h1 id="7-2-哨兵主要功能"><a href="#7-2-哨兵主要功能" class="headerlink" title="7.2 哨兵主要功能"></a>7.2 哨兵主要功能</h1><p>Redis Sentinel 是一个分布式系统， Redis Sentinel 为 Redis 提供高可用性。<font style="color:#F5222D;">可以在没有人为干预的 情况下阻止某种类型的故障。</font> Redis 的 Sentinel 系统用于管理多个 Redis 服务器（instance）该系统执行以下三个任务：</p>
+<p>1.监控（Monitoring）：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="title class_">Sentinel</span> 会不断地定期检查你的主服务器和从服务器是否运作正常。</span><br></pre></td></tr></table></figure>
+
+<p>2.提醒（Notification）：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">当被监控的某个 <span class="title class_">Redis</span> 服务器出现问题时， <span class="title class_">Sentinel</span> 可以通过 <span class="variable constant_">API</span> 向管理员或者其他应用程序发送通知。</span><br></pre></td></tr></table></figure>
+
+<p>3.<font style="color:#F5222D;">自动故障迁移（Automatic failover）</font>：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">当一个主服务器不能正常工作时， <span class="title class_">Sentinel</span> 会开始一次自动故障迁移操作， 它会将失效主服务器的其中一个从服务器升级为新的主服务器， 并让失效主服务器的其他从服务器改为复制新的主服务器； 当客户端试图连接失效的主服务器时， 集群也会向客户端返回新主服务器的地址， 使得集群可以使用新主服务器代替失效服务器</span><br></pre></td></tr></table></figure>
+
+<p>架构图：</p>
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2021/png/1581532/1610877929723-a1dfc439-0ef4-4327-971d-cec37e372e9a.png"></p>
+<h1 id="7-3-目录规划"><a href="#7-3-目录规划" class="headerlink" title="7.3 目录规划"></a>7.3 目录规划</h1><table>
+<thead>
+<tr>
+<th>**角色 **</th>
+<th><strong>IP</strong></th>
+<th><strong>端口</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Master</td>
+<td>10.0.0.51</td>
+<td>6379</td>
+</tr>
+<tr>
+<td>Sentinel-01</td>
+<td></td>
+<td>26379</td>
+</tr>
+<tr>
+<td>slave01</td>
+<td>10.0.0.52</td>
+<td>6379</td>
+</tr>
+<tr>
+<td>Sentinel-02</td>
+<td></td>
+<td>26379</td>
+</tr>
+<tr>
+<td>slave02</td>
+<td>10.0.0.53</td>
+<td>26379</td>
+</tr>
+<tr>
+<td>Sentinel-03</td>
+<td></td>
+<td>26379</td>
+</tr>
+</tbody></table>
+<h1 id="7-4-安装配置命令"><a href="#7-4-安装配置命令" class="headerlink" title="7.4 安装配置命令"></a>7.4 安装配置命令</h1><p>哨兵是基于主从复制，所以需要先部署好主从复制</p>
+<p>手工操作步骤如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1.</span>先配置和创建好 <span class="number">1</span> 台服务器的节点和哨兵</span><br><span class="line"><span class="number">2.</span>使用 rsync 传输到另外 <span class="number">2</span> 台机器</span><br><span class="line"><span class="number">3.</span>修改另外两台机器的 <span class="variable constant_">IP</span> 地址</span><br><span class="line">	<span class="attr">ps</span>: 建议使用 ansible 剧本批量部署</span><br></pre></td></tr></table></figure>
+
+<h3 id="7-4-1-db01-命令"><a href="#7-4-1-db01-命令" class="headerlink" title="7.4.1 db01 命令"></a>7.4.1 db01 命令</h3><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">mkdir -p /data/redis_cluster/redis_26379</span><br><span class="line">mkdir -p /opt/redis_cluster/redis_26379/&#123;conf,pid,logs&#125;</span><br><span class="line"></span><br><span class="line">cat &gt; <span class="regexp">/opt/</span>redis_cluster/redis_26379/conf/redis_26379.<span class="property">conf</span>&lt;&lt;<span class="variable constant_">EOF</span></span><br><span class="line">bind <span class="number">10.0</span><span class="number">.0</span><span class="number">.51</span></span><br><span class="line">port <span class="number">26379</span></span><br><span class="line">daemonize yes</span><br><span class="line">logfile /opt/redis_cluster/redis_26379/logs/redis_26379.<span class="property">log</span></span><br><span class="line">dir /data/redis_cluster/redis_26379</span><br><span class="line">sentinel monitor mymaster <span class="number">10.0</span><span class="number">.0</span><span class="number">.51</span> <span class="number">6379</span> <span class="number">2</span></span><br><span class="line">sentinel down-after-milliseconds mymaster <span class="number">3000</span></span><br><span class="line">sentinel parallel-syncs mymaster <span class="number">1</span></span><br><span class="line">sentinel failover-timeout mymaster <span class="number">1800</span></span><br><span class="line"><span class="variable constant_">EOF</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="7-4-2-db02-命令"><a href="#7-4-2-db02-命令" class="headerlink" title="7.4.2 db02 命令"></a>7.4.2 db02 命令</h3><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">mkdir -p /data/redis_cluster/redis_26379</span><br><span class="line">mkdir -p /opt/redis_cluster/redis_26379/&#123;conf,pid,logs&#125;</span><br><span class="line"></span><br><span class="line">cat &gt; <span class="regexp">/opt/</span>redis_cluster/redis_26379/conf/redis_26379.<span class="property">conf</span>&lt;&lt;<span class="variable constant_">EOF</span></span><br><span class="line">bind <span class="number">10.0</span><span class="number">.0</span><span class="number">.52</span></span><br><span class="line">port <span class="number">26379</span></span><br><span class="line">daemonize yes</span><br><span class="line">logfile /opt/redis_cluster/redis_26379/logs/redis_26379.<span class="property">log</span></span><br><span class="line">dir /data/redis_cluster/redis_26379</span><br><span class="line">sentinel monitor mymaster <span class="number">10.0</span><span class="number">.0</span><span class="number">.51</span> <span class="number">6379</span> <span class="number">2</span></span><br><span class="line">sentinel down-after-milliseconds mymaster <span class="number">3000</span></span><br><span class="line">sentinel parallel-syncs mymaster <span class="number">1</span></span><br><span class="line">sentinel failover-timeout mymaster <span class="number">1800</span></span><br><span class="line"><span class="variable constant_">EOF</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="7-4-3-db03-命令"><a href="#7-4-3-db03-命令" class="headerlink" title="7.4.3 db03 命令"></a>7.4.3 db03 命令</h3><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">mkdir -p /data/redis_cluster/redis_26379</span><br><span class="line">mkdir -p /opt/redis_cluster/redis_26379/&#123;conf,pid,logs&#125;</span><br><span class="line">cat &gt; <span class="regexp">/opt/</span>redis_cluster/redis_26379/conf/redis_26379.<span class="property">conf</span>&lt;&lt;<span class="variable constant_">EOF</span></span><br><span class="line">bind <span class="number">10.0</span><span class="number">.0</span><span class="number">.53</span></span><br><span class="line">port <span class="number">26379</span></span><br><span class="line">daemonize yes</span><br><span class="line">logfile /opt/redis_cluster/redis_26379/logs/redis_26379.<span class="property">log</span></span><br><span class="line">dir /data/redis_cluster/redis_26379</span><br><span class="line">sentinel monitor mymaster <span class="number">10.0</span><span class="number">.0</span><span class="number">.51</span> <span class="number">6379</span> <span class="number">2</span></span><br><span class="line">sentinel down-after-milliseconds mymaster <span class="number">3000</span></span><br><span class="line">sentinel parallel-syncs mymaster <span class="number">1</span></span><br><span class="line">sentinel failover-timeout mymaster <span class="number">1800</span></span><br><span class="line"><span class="variable constant_">EOF</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="7-4-4-配置文件解释"><a href="#7-4-4-配置文件解释" class="headerlink" title="7.4.4 配置文件解释"></a>7.4.4 配置文件解释</h3><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">sentinel monitor mymaster <span class="number">10.0</span><span class="number">.0</span><span class="number">.51</span> <span class="number">6379</span> <span class="number">2</span></span><br><span class="line">#mymaster 主节点别名 主节点 ip 和端口，判断主节点失败，两个 sentinel 节点同意</span><br><span class="line">sentinel down-after-milliseconds mymaster <span class="number">3000</span></span><br><span class="line">#选项指定了 <span class="title class_">Sentinel</span> 认为服务器已经断线所需的毫秒数。</span><br><span class="line">sentinel parallel-syncs mymaster <span class="number">1</span></span><br><span class="line">#向新的主节点发起复制操作的从节点个数，<span class="number">1</span> 轮询发起复制</span><br><span class="line">sentinel failover-timeout mymaster <span class="number">18000</span></span><br><span class="line">#故障转移超时时间</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.fbbizyy.com/yuque/0/2021/png/1581532/1610878275263-d98266eb-1c71-447f-a62b-b4355e9c0e2a.png"></p>
+<h3 id="7-4-5-db02-x2F-db03-命令"><a href="#7-4-5-db02-x2F-db03-命令" class="headerlink" title="7.4.5 db02&#x2F;db03 命令"></a>7.4.5 db02&#x2F;db03 命令</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">-db01</span><br><span class="line">rsync -avz /opt/* db02:/opt/</span><br><span class="line">rsync -avz /opt/* db03:/opt/</span><br><span class="line"></span><br><span class="line">-db02</span><br><span class="line"><span class="built_in">mkdir</span> -p /data/redis_cluster/redis_26379</span><br><span class="line"><span class="built_in">cd</span> /opt/redis_cluster/redis</span><br><span class="line">make install</span><br><span class="line">sed -i <span class="string">&#x27;s#bind 10.0.0.51#bind 10.0.0.52#g&#x27;</span> /opt/redis_cluster/redis_6379/conf/redis_6379.conf</span><br><span class="line">sed -i <span class="string">&#x27;s#bind 10.0.0.51#bind 10.0.0.52#g&#x27;</span> /opt/redis_cluster/redis_26379/conf/redis_26379.conf</span><br><span class="line"></span><br><span class="line">-db03</span><br><span class="line"><span class="built_in">mkdir</span> -p /data/redis_cluster/redis_26379</span><br><span class="line"><span class="built_in">cd</span> /opt/redis_cluster/redis</span><br><span class="line">make install</span><br><span class="line"></span><br><span class="line">sed -i <span class="string">&#x27;s#bind 10.0.0.51#bind 10.0.0.53#g&#x27;</span> /opt/redis_cluster/redis_6379/conf/redis_6379.conf</span><br><span class="line">sed -i <span class="string">&#x27;s#bind 10.0.0.51#bind 10.0.0.53#g&#x27;</span> /opt/redis_cluster/redis_26379/conf/redis_26379.conf</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="7-4-6-配置主从关系"><a href="#7-4-6-配置主从关系" class="headerlink" title="7.4.6 配置主从关系"></a>7.4.6 配置主从关系</h3><p>db02 和 db03</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">redis-server /opt/redis_cluster/redis_6379/conf/redis_6379.conf</span><br><span class="line">redis-cli slaveof 10.0.0.51 6379</span><br><span class="line">ps -ef|grep redis</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="7-4-7-启动哨兵"><a href="#7-4-7-启动哨兵" class="headerlink" title="7.4.7 启动哨兵"></a>7.4.7 启动哨兵</h3><p>3 台都操作</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis-sentinel /opt/redis_cluster/redis_26379/conf/redis_26379.conf</span><br></pre></td></tr></table></figure>
+
+<h1 id="7-5-配置文件的变化"><a href="#7-5-配置文件的变化" class="headerlink" title="7.5 配置文件的变化"></a>7.5 配置文件的变化</h1><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">当所有节点启动后,配置文件的内容发生了变化,体现在三个方面:</span><br><span class="line">1)Sentinel 节点自动发现了从节点,其余 Sentinel 节点</span><br><span class="line">2)去掉了默认配置,例如 parallel-syncs failover-timeout 参数</span><br><span class="line">3)添加了配置纪元相关参数</span><br></pre></td></tr></table></figure>
+
+<p>查看配置文件命令</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">[root@db01 ~]<span class="comment"># tail -6 /opt/redis_cluster/redis_26379/conf/redis_26379.conf</span></span><br><span class="line"><span class="comment"># Generated by CONFIG REWRITE</span></span><br><span class="line">sentinel known-slave mymaster 10.0.0.52 6379</span><br><span class="line">sentinel known-slave mymaster 10.0.0.53 6379</span><br><span class="line">sentinel known-sentinel mymaster 10.0.0.53 26379 7794fbbb9dfb62f4d2d7f06ddef06bacb62e4c97</span><br><span class="line">sentinel known-sentinel mymaster 10.0.0.52 26379 17bfab23bc53a531571790b9b31558dddeaeca40</span><br><span class="line">sentinel current-epoch 0</span><br></pre></td></tr></table></figure>
+
+<h1 id="7-6-哨兵常用操作-API"><a href="#7-6-哨兵常用操作-API" class="headerlink" title="7.6 哨兵常用操作 API"></a>7.6 哨兵常用操作 API</h1><p>登陆命令</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[root@db01 ~]<span class="comment"># redis-cli -h db01 -p 26379</span></span><br></pre></td></tr></table></figure>
+
+<p>Sentinel 节点是一个特殊的 Redis 节点,他们有自己专属的 API</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Info Sentinel</span><br><span class="line">Sentinel masters</span><br><span class="line">Sentinel master &lt;master name&gt;</span><br><span class="line">Sentinel slaves &lt;master name&gt;</span><br><span class="line">Sentinel sentinels &lt;master name&gt;</span><br><span class="line">Sentinel get-master-addr-by-name &lt;master name&gt;</span><br><span class="line">Sentinel failover &lt;master name&gt;</span><br><span class="line">Sentinel flushconfig</span><br></pre></td></tr></table></figure>
+
+<h1 id="7-7-模拟故障转移"><a href="#7-7-模拟故障转移" class="headerlink" title="7.7 模拟故障转移"></a>7.7 模拟故障转移</h1><p><img src="https://cdn.fbbizyy.com/yuque/0/2021/png/1581532/1610878608305-2435777b-43db-456e-91bb-e1a8ea97033c.png"></p>
+<ul>
+<li>停掉其中 1 个节点，然后观察其他节点的日志变化 故障转移后配置文件变化</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Redis Sentinel 存在多个从节点时,如果想将指定的从节点晋升为主节点,可以将其他从节点的 slavepriority 配置为 0,但是需要注意 failover 后,将 slave-priority 调回原值.</span><br><span class="line"></span><br><span class="line">1.查询命令:CONFIG GET slave-priority</span><br><span class="line">2.设置命令:CONFIG SET slave-priority 0</span><br><span class="line">3.主动切换:sentinel failover mymaster</span><br></pre></td></tr></table></figure>
+
+<p>操作过程： db02&#x2F;db03 操作</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -h db02 -p 6379 CONFIG SET slave-priority 0</span><br><span class="line">redis-cli -h db03 -p 6379 CONFIG SET slave-priority 0</span><br></pre></td></tr></table></figure>
+
+<p>db01 操作</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -h db01 -p 26379 Sentinel failover mymaster</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/redis/" rel="tag"><i class="fa fa-tag"></i> redis</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2024/11/06/Redis%E7%9A%84%E6%8C%81%E4%B9%85%E5%8C%96%E6%9C%BA%E5%88%B6%EF%BC%9ARDB%E5%92%8CAOF/" rel="prev" title="Redis的持久化机制：RDB和AOF">
+      <i class="fa fa-chevron-left"></i> Redis的持久化机制：RDB和AOF
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2024/11/06/Redis%E5%86%85%E5%AD%98%E4%BC%98%E5%8C%96/" rel="next" title="Redis内存优化">
+      Redis内存优化 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#7-1-%E5%93%A8%E5%85%B5%E4%BB%8B%E7%BB%8D"><span class="nav-number">1.</span> <span class="nav-text">7.1 哨兵介绍</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#7-2-%E5%93%A8%E5%85%B5%E4%B8%BB%E8%A6%81%E5%8A%9F%E8%83%BD"><span class="nav-number">2.</span> <span class="nav-text">7.2 哨兵主要功能</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#7-3-%E7%9B%AE%E5%BD%95%E8%A7%84%E5%88%92"><span class="nav-number">3.</span> <span class="nav-text">7.3 目录规划</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#7-4-%E5%AE%89%E8%A3%85%E9%85%8D%E7%BD%AE%E5%91%BD%E4%BB%A4"><span class="nav-number">4.</span> <span class="nav-text">7.4 安装配置命令</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#7-4-1-db01-%E5%91%BD%E4%BB%A4"><span class="nav-number">4.0.1.</span> <span class="nav-text">7.4.1 db01 命令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-4-2-db02-%E5%91%BD%E4%BB%A4"><span class="nav-number">4.0.2.</span> <span class="nav-text">7.4.2 db02 命令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-4-3-db03-%E5%91%BD%E4%BB%A4"><span class="nav-number">4.0.3.</span> <span class="nav-text">7.4.3 db03 命令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-4-4-%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E8%A7%A3%E9%87%8A"><span class="nav-number">4.0.4.</span> <span class="nav-text">7.4.4 配置文件解释</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-4-5-db02-x2F-db03-%E5%91%BD%E4%BB%A4"><span class="nav-number">4.0.5.</span> <span class="nav-text">7.4.5 db02&#x2F;db03 命令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-4-6-%E9%85%8D%E7%BD%AE%E4%B8%BB%E4%BB%8E%E5%85%B3%E7%B3%BB"><span class="nav-number">4.0.6.</span> <span class="nav-text">7.4.6 配置主从关系</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-4-7-%E5%90%AF%E5%8A%A8%E5%93%A8%E5%85%B5"><span class="nav-number">4.0.7.</span> <span class="nav-text">7.4.7 启动哨兵</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#7-5-%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E7%9A%84%E5%8F%98%E5%8C%96"><span class="nav-number">5.</span> <span class="nav-text">7.5 配置文件的变化</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#7-6-%E5%93%A8%E5%85%B5%E5%B8%B8%E7%94%A8%E6%93%8D%E4%BD%9C-API"><span class="nav-number">6.</span> <span class="nav-text">7.6 哨兵常用操作 API</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#7-7-%E6%A8%A1%E6%8B%9F%E6%95%85%E9%9A%9C%E8%BD%AC%E7%A7%BB"><span class="nav-number">7.</span> <span class="nav-text">7.7 模拟故障转移</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="139"
+      src="/images/custom/avatar.jpg">
+  <p class="site-author-name" itemprop="name">139</p>
+  <div class="site-description" itemprop="description">一个普通的JAVA开发的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">69</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">38</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+  <div class="beian"><a href="https://beian.miit.gov.cn/" rel="noopener" target="_blank">浙ICP备2023004484号-1 </a>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">139</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8335634399768246"
+     crossorigin="anonymous"></script>
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

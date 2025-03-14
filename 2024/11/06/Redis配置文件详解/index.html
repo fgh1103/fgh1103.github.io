@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8335634399768246"
+     crossorigin="anonymous"></script>
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Redis服务配置">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis配置文件详解">
+<meta property="og:url" content="http://example.com/2024/11/06/Redis%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E8%AF%A6%E8%A7%A3/index.html">
+<meta property="og:site_name" content="进学阁">
+<meta property="og:description" content="Redis服务配置">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-11-05T16:00:00.000Z">
+<meta property="article:modified_time" content="2025-03-14T06:02:20.728Z">
+<meta property="article:author" content="139">
+<meta property="article:tag" content="redis">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2024/11/06/Redis%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E8%AF%A6%E8%A7%A3/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Redis配置文件详解 | 进学阁</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">进学阁</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">业精于勤荒于嬉，行成于思毁于随</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">38</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">9</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">69</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/11/06/Redis%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E8%AF%A6%E8%A7%A3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/custom/avatar.jpg">
+      <meta itemprop="name" content="139">
+      <meta itemprop="description" content="一个普通的JAVA开发的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="进学阁">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Redis配置文件详解
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-11-06 00:00:00" itemprop="dateCreated datePublished" datetime="2024-11-06T00:00:00+08:00">2024-11-06</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-14 14:02:20" itemprop="dateModified" datetime="2025-03-14T14:02:20+08:00">2025-03-14</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/redis/" itemprop="url" rel="index"><span itemprop="name">redis</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="Redis服务配置"><a href="#Redis服务配置" class="headerlink" title="Redis服务配置"></a>Redis服务配置</h2><span id="more"></span>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"># 是否以守护进程启动 默认：no</span><br><span class="line">daemonize no</span><br><span class="line"># 用于设置Redis绑定的网络接口（网卡）。如果不配置bind，默认情况下Redis监听所有可用的网卡，redis只接受来自绑定网络接口的请求。</span><br><span class="line"># Redis的配置文件中一般默认有bind 127.0.0.1，只允许本地连接，如果想要被远程访问注释掉bind配置或者bind外网ip即可。</span><br><span class="line">bind 127.0.0.1</span><br><span class="line"># 是否开启保护模式 默认：yes，是否有效会被bind和requirepass配置影响</span><br><span class="line">## 当protected-mode为yes</span><br><span class="line">### 注释bind和requirepass，redis的保护模式生效，只能通过本地连接</span><br><span class="line">### 只注释bind，配置requirepass，redis的保护模式失效，可以通过密码远程连接</span><br><span class="line">### 只注释requirepass，redis的保护模式失效，可以通过bind的ip无密码连接</span><br><span class="line">## 当protected-mode为no</span><br><span class="line">### 无论上面的哪种场景，客户端都可以根据 bind 及 requirepass 实际参数来连接到 redis</span><br><span class="line">protected-mode yes</span><br><span class="line"># redis服务端口 默认：6379</span><br><span class="line">port 6379</span><br><span class="line"># 客户端连接空闲时间单位秒，如果在指定时间内没有操作则会断开连接 默认：0（不超时）</span><br><span class="line">timeout 0</span><br><span class="line"># tcp心跳检测时间单位秒，对访问客户端的一种心跳检测，每个n秒检测一次 默认：0（不检测），建议设置成60</span><br><span class="line">tcp-keepalive 0</span><br><span class="line"># 客户端最大连接数，设置redis同时可以与多少个客户端进行连接 默认：10000</span><br><span class="line">maxclients 10000</span><br><span class="line"># 日志级别配置 默认：notice</span><br><span class="line">## debug：能设置的最高的日志级别，打印所有信息，包括debug信息。</span><br><span class="line">## verbose：打印除了debug日志之外的所有日志。</span><br><span class="line">## notice：打印除了debug和verbose级别的所有日志。</span><br><span class="line">## warning：仅打印非常重要的信息。</span><br><span class="line">loglevel notice</span><br><span class="line"># 日志文件输出路径配置</span><br><span class="line">## 该路径默认为空。可以根据自己需要把日志文件输出到指定位置。</span><br><span class="line">logfile &quot;&quot;</span><br><span class="line"># 数据库数量配置 默认：16</span><br><span class="line">databases 16</span><br></pre></td></tr></table></figure>
+
+<h2 id="持久化配置"><a href="#持久化配置" class="headerlink" title="持久化配置"></a>持久化配置</h2><h3 id="RDB全量持久化配置（默认开启）"><a href="#RDB全量持久化配置（默认开启）" class="headerlink" title="RDB全量持久化配置（默认开启）"></a>RDB全量持久化配置（默认开启）</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"># 持久化数据存储在本地的文件名称 默认：dump.rdb</span><br><span class="line">dbfilename dump.rdb</span><br><span class="line"># 持久化数据存储在本地的路径，默认：./（当前工作目录）</span><br><span class="line">dir /data</span><br><span class="line"></span><br><span class="line"># 用于设置RDB持久化的时间间隔和条件</span><br><span class="line">## 表示每900秒内有至少1个写操作就保存一次RDB文件</span><br><span class="line">save 900 1</span><br><span class="line">## 表示每300秒内有至少10个写操作就保存一次RDB文件</span><br><span class="line">save 300 10</span><br><span class="line">## 表示每10秒内有至少1000个写操作就保存一次RDB文件</span><br><span class="line">save 60 10000</span><br><span class="line"></span><br><span class="line"># 当RDB持久化时出现错误无法继续时，是否阻塞客户端变更操作，错误可能因为磁盘已满/磁盘故障/OS级别异常等 默认：yes</span><br><span class="line">stop-writes-on-bgsave-error yes  </span><br><span class="line"># 是否启用RDB文件压缩，默认: yes，压缩往往意味着额外的cpu消耗，同时也意味这较小的文件尺寸以及较短的网络传输时间  </span><br><span class="line">rdbcompression yes  </span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="AOF增量持久化配置"><a href="#AOF增量持久化配置" class="headerlink" title="AOF增量持久化配置"></a><font style="color:rgb(79, 79, 79);">AOF增量持久化配置</font></h3><p>可以简单的认为 AOF 就是日志文件，此文件只会记录“变更操作”(例如：set&#x2F;del 等)，如果 server 中持续的大量变更操作，将会导致 AOF 文件非常的庞大，意味着 server 失效后，数据恢复的过程将会很长；事实上，一条数据经过多次变更，将会产生多条 AOF 记录，其实只要保存当前的状态，历史的操作记录是可以抛弃的；因为 AOF 持久化模式还伴生了“AOF rewrite”。</p>
+<p>优点：可以保持更高的数据完整性，如果设置追加file的时间是1s，如果redis发生故障，最多会丢失1s的数据；且如果日志写入不完整支持redis-check-aof来进行日志修复；AOF文件没被rewrite之前（文件过大时会对命令进行合并重写），可以删除其中的某些命令（比如误操作的flushall）</p>
+<p>缺点：AOF文件比RDB文件大，且恢复速度慢。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"># 是否开启AOF 默认：no</span><br><span class="line">appendonly yes  </span><br><span class="line"></span><br><span class="line"># 指定AOF文件名称  </span><br><span class="line">appendfilename appendonly.aof  </span><br><span class="line"></span><br><span class="line"># 用于设置AOF文件的同步策略 默认：everysec</span><br><span class="line">## 可以选择&quot;always&quot;、&quot;everysec&quot;或&quot;no&quot;。always表示每次写入都同步，everysec表示每秒同步一次，no表示由操作系统决定何时同步</span><br><span class="line">appendfsync everysec  </span><br><span class="line"></span><br><span class="line">#当同时执行主进程的写操作和子进程的重写操作时，两者都会操作磁盘，而重写往往会涉及到大量的磁盘操作，这样就会造成主进程在写aof文件的时候出现阻塞的情形。</span><br><span class="line">##如果该参数设置为no，是最安全的方式，不会丢失数据，但是要忍受阻塞的问题；</span><br><span class="line">##如果设置为yes，这就相当于将appendfsync设置为no，这说明并没有执行磁盘操作，只是写入了缓冲区。因此这样并不会造成阻塞（因为没有竞争磁盘），但是如果这个时候redis挂掉，就会丢失数据。丢失多少数据呢？在linux的操作系统的默认设置下，最多会丢失30s的数据。</span><br><span class="line">##如果应用系统无法忍受延迟，而可以容忍少量的数据丢失，则设置为yes；如果应用系统无法忍受数据丢失，则设置为no。</span><br><span class="line">no-appendfsync-on-rewrite no</span><br><span class="line"></span><br><span class="line"># 用于设置自动AOF重写的阈值。当AOF文件的扩展比例超过该值时，Redis会自动执行重写操作。默认值为100，表示当AOF文件的大小是上一次重写后大小的一倍时触发重写。  </span><br><span class="line">auto-aof-rewrite-percentage 100  </span><br><span class="line"></span><br><span class="line"># 用于设置自动AOF重写的最小大小。只有在AOF文件的大小大于该值时，才会执行重写操作。默认值为64MB，建议512mb</span><br><span class="line">auto-aof-rewrite-min-size 64mb  </span><br><span class="line"></span><br><span class="line"># 用于设置在执行AOF文件重写时是否禁用同步。如果设置为yes，则在进行重写时不会进行同步操作，默认：no</span><br><span class="line">no-appendfsync-on-rewrite no  </span><br><span class="line"></span><br><span class="line"># 用于设置在加载AOF文件时是否允许Redis忽略出现错误的命令。如果设置为&quot;yes&quot;，则忽略错误；如果设置为&quot;no&quot;，则不允许加载出现错误的AOF文件。默认：yes</span><br><span class="line">aof-load-truncated yes</span><br><span class="line"></span><br><span class="line"># 用于设置AOF文件的开头是否包含RDB格式的部分。如果设置为&quot;yes&quot;，则在AOF文件的开头会先保存一份RDB格式的数据，这有助于加速数据加载。默认：no</span><br><span class="line">aof-use-rdb-preamble no</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="安全认证配置"><a href="#安全认证配置" class="headerlink" title="安全认证配置"></a>安全认证配置</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># 连接密码配置 默认无密码</span><br><span class="line">requirepass 123456</span><br></pre></td></tr></table></figure>
+
+<h2 id="主从复制配置"><a href="#主从复制配置" class="headerlink" title="主从复制配置"></a>主从复制配置</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"># 主库的ip及端口 5.0以上使用replica的指令</span><br><span class="line"># slaveof &lt;masterip&gt; &lt;masterport&gt;</span><br><span class="line"></span><br><span class="line"># 主库，如果设置密码，需要加主库的密码</span><br><span class="line"># masterauth &lt;master-password&gt;</span><br><span class="line"></span><br><span class="line"># 当从节点与主节点连接失败了。这是yes，则表示从节点继续应答客户端；设置no，所有连接到这台从节点的客户端，会提示正在与主节点进行同步</span><br><span class="line">slave-serve-stale-data yes</span><br><span class="line"></span><br><span class="line"># 从节点只读。</span><br><span class="line">slave-read-only yes</span><br><span class="line"></span><br><span class="line"># 新的从节点或者从节点与主节点长期没有增量同步，需要全量同步</span><br><span class="line"># 使用磁盘模式，会在从节点上新建redis快照的文件（根据配置）</span><br><span class="line"># 使用socket方式，同步数据到从节点，不落地磁盘上，效率更高， 主节点可并行传输到多个从节点上。</span><br><span class="line">repl-diskless-sync no</span><br><span class="line"></span><br><span class="line"># 从节点，配置x秒，向主节点ping一次。</span><br><span class="line"># repl-ping-slave-period 10</span><br><span class="line"></span><br><span class="line"># 同时时间设置</span><br><span class="line"># repl-timeout 60</span><br><span class="line"></span><br><span class="line"># 使用更少的宽带同步，但是会导致从节点数据延迟，建议不设置</span><br><span class="line">repl-disable-tcp-nodelay no</span><br><span class="line"></span><br><span class="line"># 当从节点与主节点断开后，主节点同步的数据会缓存到缓冲区；开启这个配置，设置大小</span><br><span class="line"># 如果不开启配置，则不缓存</span><br><span class="line"># repl-backlog-size 1mb</span><br><span class="line"></span><br><span class="line"># 当从节点一直没起来，设置这个数据为了是否缓冲区，如果配置0，则永久不释放。</span><br><span class="line"># repl-backlog-ttl 3600</span><br><span class="line"></span><br><span class="line"># 选举权重，越小权重越大，设置0，不参与</span><br><span class="line">slave-priority 100</span><br><span class="line"></span><br><span class="line"># 副本同步会存在延迟，至少3个写操作，时间延迟小于等于10秒的副本，主节点就停止写入操作。这两个参数只要一个设置为0，就禁用该功能</span><br><span class="line"># min-slaves-to-write 3</span><br><span class="line"># min-slaves-max-lag 10</span><br><span class="line">#</span><br><span class="line"># redis服务没有跟哨兵在同一个网络，比如：在容器里面跑，info replication查看到IP和端口，哨兵就有可能访问不到，这时候就需要，指定对外的IP和端口，提供给哨兵检测。</span><br><span class="line"># slave-announce-ip 5.5.5.5</span><br><span class="line"># slave-announce-port 1234</span><br></pre></td></tr></table></figure>
+
+<h2 id="Redis-key过期监听配置"><a href="#Redis-key过期监听配置" class="headerlink" title="Redis key过期监听配置"></a><font style="color:rgb(79, 79, 79);">Redis key过期监听配置</font></h2><p><font style="color:rgb(77, 77, 77);">过期key事件监听可用于订单超时处理和已完成订单自动评价等功能，当给对应的key设置的过期时间到了会自动通知客户端，客户端将监听到的数据进行处理。</font></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"># key过期监听 默认：&quot;&quot;（关闭），将notify-keyspace-events设置为Ex代表开启</span><br><span class="line">notify-keyspace-events Ex</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="Redis内存淘汰策略"><a href="#Redis内存淘汰策略" class="headerlink" title="Redis内存淘汰策略"></a>Redis内存淘汰策略</h2><p>内存淘汰算法</p>
+<p>noeviction：当内存使用超过配置的时候会返回错误，不会驱逐任何键</p>
+<p>allkeys-lru：加入键的时候，如果过限，首先通过LRU算法驱逐最久没有使用的键</p>
+<p>volatile-lru：加入键的时候如果过限，首先从设置了过期时间的键集合中驱逐最久没有使用的键</p>
+<p>allkeys-random：加入键的时候如果过限，从所有key随机删除</p>
+<p>volatile-random：加入键的时候如果过限，从过期键的集合中随机驱逐</p>
+<p>volatile-ttl：从配置了过期时间的键中驱逐马上就要过期的键</p>
+<p>volatile-lfu：从所有配置了过期时间的键中驱逐使用频率最少的键</p>
+<p>allkeys-lfu：从所有键中驱逐使用频率最少的键</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"># 将redis存储内存设置100mb的界限，当超过这个数值开始走淘汰策略</span><br><span class="line">maxmemory 100mb</span><br><span class="line"></span><br><span class="line"># 配置策略 默认：noeviction</span><br><span class="line">maxmemory-policy allkeys-lru</span><br><span class="line"></span><br><span class="line"># LRU、LFU和最小TTL算法不是精确算法，而是近似算法</span><br><span class="line">算法（为了节省内存），因此您可以根据速度或精确默认情况下，Redis将检查五个键并选择最近使用较少，可以使用以下命令更改样本大小</span><br><span class="line">配置指令。默认值为5会产生足够好的结果。10非常接近真正的LRU，但成本更高的CPU。3更快，但不是很准确。</span><br><span class="line"># maxmemory-samples 5</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="LAZY-FREEING（惰性删除主要用于bigkey删除）"><a href="#LAZY-FREEING（惰性删除主要用于bigkey删除）" class="headerlink" title="LAZY FREEING（惰性删除主要用于bigkey删除）"></a>LAZY FREEING（惰性删除主要用于bigkey删除）</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"># lazy free可以认为是惰性删除或延迟释放，针对bigkey也有很好的释放策略，有效的针对bigkey带来的性能问题</span><br><span class="line"># lazyfree-lazy-eviction 针对redis的超过了maxmeory，并设置了meory-prolicy情况下，在淘汰，释放使用lazy-free</span><br><span class="line">lazyfree-lazy-eviction no</span><br><span class="line"># lazyfree-lazy-expire 针对redis设置ttl淘汰策略，达到过期后，是否使用lazy-free</span><br><span class="line">lazyfree-lazy-expire no</span><br><span class="line"># lazyfree-lazy-server-del 是针对已经存在的key，会存在隐式的带来del操作，比如rename操作，就是先del操作。如果有bigkey，就可能会带来阻塞的情况</span><br><span class="line">lazyfree-lazy-server-del no</span><br><span class="line"># slave-lazy-flush 针对slave进行全量数据同步，slave在加载master的RDB文件前，会运行flushall来清理自己的数据场景， 参数设置决定是否采用异常flush机制</span><br><span class="line">slave-lazy-flush no</span><br></pre></td></tr></table></figure>
+
+<h2 id="lua-脚本"><a href="#lua-脚本" class="headerlink" title="lua 脚本"></a>lua 脚本</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># lua脚本执行最大的时间</span><br><span class="line"># lua脚本的好处①高效，在服务器上执行，节省了网络传输开销等，特别lua脚本，执行多个脚本，好处就体现出来了。</span><br><span class="line"># lua脚本的好处②原子性；一个业务需要多个指令完成，lua脚本比较好的选择</span><br><span class="line"># lua脚本的坏处：那就是如果你lua过于复杂，假如在里面取bigkey操作了，就会阻塞；执行时间过长；</span><br><span class="line">lua-time-limit 5000</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="redis-cluster-集群"><a href="#redis-cluster-集群" class="headerlink" title="redis cluster 集群"></a>redis cluster 集群</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">#</span><br><span class="line"># 是否开启集群</span><br><span class="line"># cluster-enabled yes</span><br><span class="line"></span><br><span class="line"># 集群配置文件名，这个文件不需要人为配置，集群会自动更新这个配置</span><br><span class="line"># cluster-config-file nodes-6379.conf</span><br><span class="line"></span><br><span class="line"># 节点连接超时时间(毫秒)</span><br><span class="line"># cluster-node-timeout 15000</span><br><span class="line"></span><br><span class="line"># 在master宕机后，所有slave节点都会申请成为master；当由于redis节点与master连接过久，数据过于陈旧了。可能不适合做为master</span><br><span class="line">#  通过过下公式可以来判断是否不适合</span><br><span class="line">#   (node-timeout * slave-validity-factor) + repl-ping-slave-period</span><br><span class="line">#  假设15秒超时 * 这个默认配置10 + 从节点配置ping一次时间</span><br><span class="line"># 15 * 10 + 10  = 160</span><br><span class="line"># cluster-slave-validity-factor 10</span><br><span class="line"></span><br><span class="line"># master的slave节点大于这个配置，则尝试把这个节点迁移到其他的master上。</span><br><span class="line"># cluster-migration-barrier 1</span><br><span class="line"></span><br><span class="line"># 默认情况下，集群全部的slot有节点负责，集群状态才为ok，才能提供服务。设置为no，可以在slot没有全</span><br><span class="line">部分配的时候提供服务。不建议打开该配置，这样会造成分区的时候，小分区的master一直在接受写请求，而</span><br><span class="line">造成很长时间数据不一致</span><br><span class="line"># cluster-slave-no-failover no</span><br></pre></td></tr></table></figure>
+
+<h2 id="慢记录-SLOW-LOG"><a href="#慢记录-SLOW-LOG" class="headerlink" title="慢记录 SLOW LOG"></a>慢记录 SLOW LOG</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"># 记录执行慢的指令，建议开启，这里单位是微妙</span><br><span class="line"># 1000000 这里就是1秒;10000 = 100毫秒 = 0.1秒</span><br><span class="line"># 设置0，强制记录所有，设置 &lt; 0 则不记录慢日志</span><br><span class="line">slowlog-log-slower-than 10000</span><br><span class="line"></span><br><span class="line"># 慢查询日志长度。当一个新的命令被写进日志的时候，最老的那个记录会被删掉。这个长度没有限制。只要有足</span><br><span class="line">够的内存就行。你可以通过 SLOWLOG RESET 来释放内存</span><br><span class="line"># Redis使用了一个列表来存储慢查询日志。Redis 使用了一个List 实现了一个先进先出的队列</span><br><span class="line">slowlog-max-len 128</span><br><span class="line"></span><br><span class="line"># 可通过slowlog get 数量 slowlog len | slowlog reset</span><br></pre></td></tr></table></figure>
+
+<h2 id="高级设置"><a href="#高级设置" class="headerlink" title="高级设置"></a>高级设置</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"># hash命令，个数及长度大于阈值就进行压缩，这里内部是为了节省空间</span><br><span class="line">hash-max-ziplist-entries 512</span><br><span class="line">hash-max-ziplist-value 64</span><br><span class="line"></span><br><span class="line"># </span><br><span class="line">list-max-ziplist-size -2</span><br><span class="line"></span><br><span class="line"># list指令，是否可以进行压缩 0：表示禁止列表压缩 1：表示内部节点压缩</span><br><span class="line"># 头部 -&gt; 节点 -&gt; 节点 ...&gt; 尾部；内部节点进行压缩</span><br><span class="line">list-compress-depth 0</span><br><span class="line"></span><br><span class="line">set-max-intset-entries 512</span><br><span class="line"></span><br><span class="line"># zset指令，个数及长度大于阈值就进行压缩，这里内部是为了节省空间</span><br><span class="line">zset-max-ziplist-entries 128</span><br><span class="line">zset-max-ziplist-value 64</span><br><span class="line"></span><br><span class="line"># HyperLogLog 指令设置</span><br><span class="line">activerehashing yes</span><br><span class="line"></span><br><span class="line"># 客户端输出缓冲区阈值设置，达到这些上限，客户端会断开连接</span><br><span class="line">client-output-buffer-limit normal 0 0 0</span><br><span class="line">client-output-buffer-limit slave 256mb 64mb 60</span><br><span class="line">client-output-buffer-limit pubsub 32mb 8mb 60</span><br><span class="line"> </span><br><span class="line"># client-query-buffer-limit 1gb</span><br><span class="line"></span><br><span class="line"># proto-max-bulk-len 512mb</span><br><span class="line"></span><br><span class="line">hz 10</span><br><span class="line"></span><br><span class="line">aof-rewrite-incremental-fsync yes</span><br><span class="line"></span><br><span class="line"># lfu-log-factor 10</span><br><span class="line"># lfu-decay-time 1</span><br></pre></td></tr></table></figure>
+
+<h2 id="碎片清理"><a href="#碎片清理" class="headerlink" title="碎片清理"></a>碎片清理</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"># 为什么会有redis内存碎片？</span><br><span class="line"># Redis存储存储数据的时候向操作系统申请的内存空间可能会大于数据实际需要的存储空间或者频繁的进行修改 就会导致内存碎片</span><br><span class="line"># redis 内存碎片整理，默认是关闭，打开就开启内存碎片整理；要么就直接重启</span><br><span class="line"># 要么设置这个地方</span><br><span class="line"># activedefrag yes</span><br><span class="line"></span><br><span class="line"># 内存碎片大于100m的时候就进行清理</span><br><span class="line"># 内存碎片：used_memory_rss - used_memory</span><br><span class="line"># active-defrag-ignore-bytes 100mb</span><br><span class="line"></span><br><span class="line"># 内存碎片率计算：used_memory_rss(从操作角度来看，给redis分配的空间)/used_memory (redis使用的内容) ; 如果这里超过1.5，内存碎片就比较严重 </span><br><span class="line"># active-defrag-threshold-lower 10</span><br><span class="line"></span><br><span class="line"># Maximum percentage of fragmentation at which we use maximum effort</span><br><span class="line"># active-defrag-threshold-upper 100</span><br><span class="line"></span><br><span class="line"># 内存碎片清理占用cpu比例不读与25</span><br><span class="line"># active-defrag-cycle-min 25</span><br><span class="line"></span><br><span class="line"># 内存碎片清理占用cpu比例不读与75</span><br><span class="line"># active-defrag-cycle-max 75</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/redis/" rel="tag"><i class="fa fa-tag"></i> redis</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2024/11/06/Redis%E9%80%9A%E4%BF%A1%E5%8D%8F%E8%AE%AE-RESP/" rel="prev" title="Redis通信协议-RESP">
+      <i class="fa fa-chevron-left"></i> Redis通信协议-RESP
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2024/11/06/Redis%E7%9A%84VM%E6%9C%BA%E5%88%B6/" rel="next" title="Redis的VM机制">
+      Redis的VM机制 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Redis%E6%9C%8D%E5%8A%A1%E9%85%8D%E7%BD%AE"><span class="nav-number">1.</span> <span class="nav-text">Redis服务配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8C%81%E4%B9%85%E5%8C%96%E9%85%8D%E7%BD%AE"><span class="nav-number">2.</span> <span class="nav-text">持久化配置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#RDB%E5%85%A8%E9%87%8F%E6%8C%81%E4%B9%85%E5%8C%96%E9%85%8D%E7%BD%AE%EF%BC%88%E9%BB%98%E8%AE%A4%E5%BC%80%E5%90%AF%EF%BC%89"><span class="nav-number">2.1.</span> <span class="nav-text">RDB全量持久化配置（默认开启）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#AOF%E5%A2%9E%E9%87%8F%E6%8C%81%E4%B9%85%E5%8C%96%E9%85%8D%E7%BD%AE"><span class="nav-number">2.2.</span> <span class="nav-text">AOF增量持久化配置</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E5%85%A8%E8%AE%A4%E8%AF%81%E9%85%8D%E7%BD%AE"><span class="nav-number">3.</span> <span class="nav-text">安全认证配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6%E9%85%8D%E7%BD%AE"><span class="nav-number">4.</span> <span class="nav-text">主从复制配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Redis-key%E8%BF%87%E6%9C%9F%E7%9B%91%E5%90%AC%E9%85%8D%E7%BD%AE"><span class="nav-number">5.</span> <span class="nav-text">Redis key过期监听配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Redis%E5%86%85%E5%AD%98%E6%B7%98%E6%B1%B0%E7%AD%96%E7%95%A5"><span class="nav-number">6.</span> <span class="nav-text">Redis内存淘汰策略</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#LAZY-FREEING%EF%BC%88%E6%83%B0%E6%80%A7%E5%88%A0%E9%99%A4%E4%B8%BB%E8%A6%81%E7%94%A8%E4%BA%8Ebigkey%E5%88%A0%E9%99%A4%EF%BC%89"><span class="nav-number">7.</span> <span class="nav-text">LAZY FREEING（惰性删除主要用于bigkey删除）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#lua-%E8%84%9A%E6%9C%AC"><span class="nav-number">8.</span> <span class="nav-text">lua 脚本</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#redis-cluster-%E9%9B%86%E7%BE%A4"><span class="nav-number">9.</span> <span class="nav-text">redis cluster 集群</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%85%A2%E8%AE%B0%E5%BD%95-SLOW-LOG"><span class="nav-number">10.</span> <span class="nav-text">慢记录 SLOW LOG</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%AB%98%E7%BA%A7%E8%AE%BE%E7%BD%AE"><span class="nav-number">11.</span> <span class="nav-text">高级设置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A2%8E%E7%89%87%E6%B8%85%E7%90%86"><span class="nav-number">12.</span> <span class="nav-text">碎片清理</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="139"
+      src="/images/custom/avatar.jpg">
+  <p class="site-author-name" itemprop="name">139</p>
+  <div class="site-description" itemprop="description">一个普通的JAVA开发的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">69</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">38</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+  <div class="beian"><a href="https://beian.miit.gov.cn/" rel="noopener" target="_blank">浙ICP备2023004484号-1 </a>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">139</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8335634399768246"
+     crossorigin="anonymous"></script>
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
